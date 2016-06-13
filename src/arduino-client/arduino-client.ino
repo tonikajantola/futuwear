@@ -1,4 +1,5 @@
 #include <ESP8266WiFi.h>
+#include "cJSON.h"
 
 const char* ssid     = "Eino-Huawei-Y6";
 const char* password = "jeejeejoojoo";

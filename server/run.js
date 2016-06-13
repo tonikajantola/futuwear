@@ -4,6 +4,7 @@ var port = 8080
 var http = require("http")
 var fs = require("fs")
 var express = require('express');
+
 var app = express();
 
 // Serve all static files
@@ -34,7 +35,7 @@ app.post('/', function (req, res) {
 	var datestr = d.getTime()
 	var filename = "sensordata/packet" + datestr + ".json"; 
 	
-	if (isJSON(content)) {
+	if (isJSON(content) && content != "") {
 		fs.writeFile(filename, content, function(err) {
 			if (err) {
 				return console.log("Data save error: " + err);

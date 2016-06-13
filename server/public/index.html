@@ -4,13 +4,56 @@
 	<meta content='width=device-width, height=device-height, initial-scale=1' name='viewport' />
 	<meta name="google-site-verification" content="fKY1Vnd6hFqrI4kcWdIvcZJmB555guMLNZVBMG_i_CE" />
 	<script type="text/javascript" src="js/jquery.min.js"></script>
+	<link rel="stylesheet" type="text/css" href="/css/bootstrap.css">
 	<title>Futuwear</title>
+	<style>
+		.app {
+			max-width:500px;
+			padding:2em;
+			margin: 0 auto;
+		}
+		#stage {
+			min-height:2em;
+		}
+	</style>
 </head>
-</body>
-	<p>Hello world, POST JSON here: </p>
-	<form action="/" method="post">
-		<input name="data" value='{"test": "toimii"}'><br>
-		<input type="submit">
-	</form>
+<body>
+	<div class="app">
+		<h3>The Futuwear Portal</h3>
+		<br><br><br><br><br><br>
+		<form role="form">
+			<div class="form-group">
+				<h4>Save mock JSON data here</h4>
+			</div>
+			<div class="form-group">
+				<label for="input">Data content</label>
+				<input class="form-control" id="input" type="text" value="Hello world">
+				<div id="stage"></div>
+			</div>
+			<div class="form-group">
+				<input type="button" value="Upload" id="btn" class="btn">
+			</div>
+		</form>
+	</div>
+	
+	<script>
+		function logToServer(j) {
+			console.log(JSON.parse(JSON.stringify(j)))
+			$.post("/", "data=" + JSON.stringify(j), function (r) {
+				$("#stage").html(r)
+				setTimeout(function () {
+					$("#stage").html("")
+				}, 1000)
+			})
+		}
+		
+		$(document).ready(function () {
+			$("#btn").click(function () {
+				var d = new Date()
+				var submission = {timestamp: d.getTime(), input: $("#input").val() }
+				logToServer(submission)
+			})
+		})
+	</script>
 </body>
 </html>

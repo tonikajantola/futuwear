@@ -1,13 +1,13 @@
-var http = require("http")
-var fs = require("fs")
-
 var port = 8080
 
+// Dependencies
+var http = require("http")
+var fs = require("fs")
 var express = require('express');
 var app = express();
 
+// Serve all static files
 app.use(express.static('public'));
-
 
 // Request parsers
 var bodyParser = require('body-parser')
@@ -16,7 +16,6 @@ app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
   extended: true
 })); 
 
-/*http://stackoverflow.com/questions/3710204/how-to-check-if-a-string-is-a-valid-json-string-in-javascript-without-using-try */
 function isJSON(str) {
     try {
         JSON.parse(str);
@@ -31,8 +30,9 @@ app.post('/', function (req, res) {
 	console.log("Data received: " + req.body.data);
 	
 	var content = req.body.data
-	var filename = "sensordata/packet" + Math.random() + ".json"; 
-	
+	var d = new Date()
+	var datestr = d.getTime()
+	var filename = "sensordata/packet" + datestr + ".json"; 
 	
 	if (isJSON(content)) {
 		fs.writeFile(filename, content, function(err) {
@@ -51,5 +51,3 @@ app.post('/', function (req, res) {
 app.listen(port, function () {
 	console.log('Listening on port ' + port.toString());
 });
-
-

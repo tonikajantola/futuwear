@@ -1,0 +1,67 @@
+import serial
+#import bpy
+import math
+import bge
+
+#potikan aariarvot: 0-1023
+
+"""
+#Rotaatio ei toimi nain reaaliajassa.
+#Arduinon antaman arvon luku ja printtaus kuitenkin toimii.
+
+
+knob = bpy.data.objects["Cube"]
+knob.rotation_mode = 'XYZ'
+
+ser=serial.Serial('COM3',9600)
+
+while(1==1):
+    line=ser.readline()
+    try:
+        line=int(line)
+    except ValueError:
+        pass
+    
+    line=float(line)
+    angle = (2*3.14)/1024*line
+    knob.rotation_euler = ( 0, 0, angle)
+    print("{:.2f}".format(angle))
+    
+"""
+
+
+a=0.0
+
+def AnaLoop():
+     line=ser.readline()#Turha kasky, mutta todistaa ettei serial import toimi maaritellyssa funktiossa tallaisenaan.
+     while(ser.inWaiting()!=0):
+         global a
+         line=ser.readline()
+         try:
+            a=int(line)
+         except ValueError:
+            k = 42
+         a=float(a)
+         #a = (2*3.14)/1024*a
+         print (a)
+      
+"""
+#Alla maaritellyn Cuben testausta varten.        
+def AnaLoop():                
+     a=a+1    
+     global a                    
+     print (a)    
+"""    
+        
+def Cube():
+    global a
+    scene = bge.logic.getCurrentScene()     #Locate current device
+    cont = bge.logic.getCurrentController()
+    own = cont.owner   
+ 
+    xyz = own.localOrientation.to_euler()   #Extract the Rotation Data    
+    xyz[0] = math.radians(a)                #PreLoad your RX data
+                                            #xyz[0] x Rotation axis
+                                            #xyz[1] y Rotation axis
+                                            #xyz[2] z Rotation axis
+    own.localOrientation = xyz.to_matrix()  #Apply your rotation data

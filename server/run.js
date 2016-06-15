@@ -47,6 +47,21 @@ app.post('/', function (req, res) {
 	else res.send('Error (JSON-related)')
 	
 });
+app.get('/fetch', function (req, res) {
+	
+	//console.log("Data received: " + req.body.data);
+	
+	var content = req.body
+	
+	function rand() {
+		Math.floor(Math.random() * 900) + 100  
+	}
+	
+	var feedback = {"sensors": [{"name": "flex1", "collection": [{"value": Math.floor(Math.random() * 900) + 100  , "timestamp": 0}, {"value": Math.floor(Math.random() * 900) + 100  , "timestamp": 100}]}]} // Temporary stub data
+	
+	res.setHeader('Content-Type', 'application/json');
+    res.send(JSON.stringify(feedback, null, 3));	
+});
 
 
 app.listen(port, function () {

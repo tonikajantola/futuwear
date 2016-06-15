@@ -2,6 +2,8 @@ import serial
 #import bpy
 import math
 import bge
+from math import *
+import mathutils
 
 #potikan aariarvot: 0-1023
 
@@ -31,19 +33,24 @@ while(1==1):
 
 
 a=0.0
+aMin = 9999
+aMax = 0
+ser=serial.Serial('COM3',9600)
 
 def AnaLoop():
-     line=ser.readline()#Turha kasky, mutta todistaa ettei serial import toimi maaritellyssa funktiossa tallaisenaan.
      while(ser.inWaiting()!=0):
-         global a
+         global a, aMin, aMax
          line=ser.readline()
          try:
-            a=int(line)
+            a=float(line)
          except ValueError:
             k = 42
-         a=float(a)
          #a = (2*3.14)/1024*a
-         print (a)
+         if a > aMax:
+             aMax = a
+         if a < aMin:
+             aMin = a
+         print("a:{:.2f} aMin:{:.2f} aMax:{:.2f}".format(a,aMin,aMax))
       
 """
 #Alla maaritellyn Cuben testausta varten.        
@@ -65,3 +72,21 @@ def Cube():
                                             #xyz[1] y Rotation axis
                                             #xyz[2] z Rotation axis
     own.localOrientation = xyz.to_matrix()  #Apply your rotation data
+    
+    
+    
+    
+    
+def Luusto():
+    #a:n arvot flex-sensorin testauksella n.400-800
+    global a, aMin, aMax
+    scene = bge.logic.getCurrentScene()     #Locate current device
+    source = scene.objects
+    arm = source.get('Luusto')
+    
+    ob = bge.logic.getCurrentController().owner
+    
+    b = -((a-aMin)/(aMax - aMin))
+    ob.channels['Bone.001'].joint_rotation = mathutils.Vector([0,0,b])
+    ob.update()
+    

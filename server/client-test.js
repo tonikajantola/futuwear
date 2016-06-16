@@ -22,6 +22,8 @@ client.on('disconnect', () => console.log(`Client socket disconnected ${SOCKET_S
 client.on('reconnect_attempt', error => console.error(`Error - cannot connect to ${SOCKET_SERVER} : ${error} : ${new Date()}`));
 client.on('error', error => console.error(`Error - socket connection: ${error} : ${new Date()}`));
 
+client.on('message', msg => console.error(`Got: ${JSON.stringify(msg)}`));
+
 /*
 // Trigger camera frequently.
 const triggerCameraSource$ = Rx.Observable.interval(UPDATE_TIME)

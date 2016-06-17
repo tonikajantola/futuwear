@@ -1,9 +1,11 @@
-var port = 8080
+const UI_PORT = 8080	// Port to serve HTML UI on
+const SOCKET_SERVER = "http://futuwear.tunk.org:13337/"; // Where to listen to Vör messages
 
 // Dependencies
-var http = require("http")
-var fs = require("fs")
-var express = require('express');
+const http = require("http")
+const fs = require("fs")
+const express = require('express');
+const socketIO = require('socket.io-client');
 
 var app = express();
 
@@ -49,21 +51,31 @@ app.post('/', function (req, res) {
 });
 app.get('/fetch', function (req, res) {
 	
-	//console.log("Data received: " + req.body.data);
-	
 	var content = req.body
 	
-	function rand() {
-		Math.floor(Math.random() * 900) + 100  
-	}
-	
-	var feedback = {"sensors": [{"name": "flex1", "collection": [{"value": Math.floor(Math.random() * 900) + 100  , "timestamp": 0}, {"value": Math.floor(Math.random() * 900) + 100  , "timestamp": 100}]}]} // Temporary stub data
+	var feedback = lastMessage
 	
 	res.setHeader('Content-Type', 'application/json');
     res.send(JSON.stringify(feedback, null, 3));	
 });
 
 
-app.listen(port, function () {
-	console.log('Listening on port ' + port.toString());
+app.listen(UI_PORT, function () {
+	console.log('Serving on port ' + UI_PORT.toString());
 });
+
+var lastMessage = {}
+
+
+// connect to socket server
+const client = socketIO.connect(SOCKET_SERVER);
+client.on('connect', () => console.log(`Connected to Vör socket ${SOCKET_SERVER}`));
+client.on('disconnect', () => console.log(`Client socket disconnected ${SOCKET_SERVER} :  ${new Date()}`));
+client.on('reconnect_attempt', error => console.error(`Error - cannot connect to ${SOCKET_SERVER} : ${error} : ${new Date()}`));
+client.on('error', error => console.error(`Error - socket connection: ${error} : ${new Date()}`));
+
+client.on('message', msg => {
+	lastMessage = msg
+	console.log(`Message from vör: ${JSON.stringify(lastMessage)}`)
+});
+

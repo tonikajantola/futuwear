@@ -49,29 +49,29 @@
 		var sensorBounds = [0, 1000] //TODO: Make this dynamic
 
 		function fetch() {
-			$.get("http://futuwear.tunk.org/fetch", "", function (resp) {
+			$.get("/fetch", "", function (resp) {
 				try {
 					var sensors = resp["sensors"]
 					for (var i = 0; i < sensors.length; i++) {
 						var sensorName = sensors[i]["name"]
 						var dataPoints = sensors[i]["collection"]
 						
-						var average = dataPoints.reduce(function (prev, curr, i, arr) {
+						var average = Math.round(dataPoints.reduce(function (prev, curr, i, arr) {
 							return prev + curr["value"] / (sensors.length + 1)
-						}, 0)
+						}, 0))
 
 						if ($("#" + sensorName).length <= 0)
 							$("#knobs").append("<input type='range' id='" + sensorName + "' min='" + sensorBounds[0] + "' max='" + sensorBounds[1] + "' value='0'>\n")
 						else if ($("#" + sensorName).val() == average) {
-							$("#status").val("Received data might be stagnant. (run simulate-sensor.js?")
+							$("#status").val("Received data is stagnant. Run simulate-sensor.js")
 						}
 						else {
-							$("#status").val("Received fresh data from server.")
+							$("#status").val("Received fresh data from server (avg " + average + ")")
 						}
 
 						$("#" + sensorName).val(average)
 
-						var picRange = 76 // Last frame of the css sprite
+						var picRange = 6 // Last frame of the css sprite
 						var picFrame = Math.round(average/(sensorBounds[1] + 1) * picRange)
 						$("#figure").attr("class", "frame frame-" + picFrame)
 

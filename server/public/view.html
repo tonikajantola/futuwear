@@ -14,34 +14,63 @@
 		#stage {
 			min-height:2em;
 		}
+		.frame { 
+			 background-color: transparent;
+			 background-image: url(sprite-posture28ef0e6bf505c22e983297120bedf6d4.jpg);
+			 background-repeat: no-repeat;
+			 width: 680px;  
+			 height: 700px;
+		}
+		.frame-0 { background-position: 0 0; }
+		.frame-1 { background-position: -1360px 0; } 
+		.frame-2 { background-position: -2040px 0; } 
+		.frame-3 { background-position: -2720px 0; } 
+		.frame-4 { background-position: -3400px 0; } 
+		.frame-5 { background-position: -4080px 0; } 
+		.frame-6 { background-position: -4760px 0; } 
+		.frame-7 { background-position: -5440px 0; } 
 	</style>
 </head>
 <body>
 	<div class="app">
 		<h3>The Futuwear Portal</h3>
 		<br><br><br><br><br><br>
-		<div id="knobs">
-		</div>
-		<button onclick="fetch()">Refresh</button>
+		<div id="knobs"></div>
+		<div id="figure" class="frame frame-0"></div>
+
+		<button onclick="fetch()" style="display:none;">Refresh</button>
 	</div>
 	
 	<script>
+
+		var sensorBounds = [0, 1000] //TODO: Make this dynamic
+
 		function fetch() {
-			$.get("/fetch", "", function (r) {
-				//TODO: Safety
-				var sensors = r["sensors"]
-				for (var i = 0; i < sensors.length; i++) {
-					var sensorName = sensors[i]["name"]
-					var dataPoints = sensors[i]["collection"]
-					
-					var average = dataPoints.reduce(function (prev, curr, i, arr) {
-						return prev + curr["value"] / (sensors.length + 1)
-					}, 0)
-					if ($("#" + sensorName).length <= 0)
-						$("#knobs").append("<input type='range' id='" + sensorName + "' min='0' max='1000' value='0'>\n")
-					$("#" + sensorName).val(average)
-				}				
-				
+			$.get("http://futuwear.tunk.org/fetch", "", function (resp) {
+				try {
+					var sensors = resp["sensors"]
+					for (var i = 0; i < sensors.length; i++) {
+						var sensorName = sensors[i]["name"]
+						var dataPoints = sensors[i]["collection"]
+						
+						var average = dataPoints.reduce(function (prev, curr, i, arr) {
+							return prev + curr["value"] / (sensors.length + 1)
+						}, 0)
+
+						if ($("#" + sensorName).length <= 0)
+							$("#knobs").append("<input type='range' id='" + sensorName + "' min='" + sensorBounds(0) + "' max='" + sensorBounds(1) + "' value='0'>\n")
+
+						$("#" + sensorName).val(average)
+
+						var picRange = 7 // Last frame of the css sprite
+						var picFrame = Math.round(average/sensorBounds(1) * picRange)
+						$("#figure").attr("class", "frame frame-" + picFrame)
+
+
+					}				
+				} catch (e) {
+					console.log("Did not understand JSON sensor data")
+				}
 			})
 		}
 		

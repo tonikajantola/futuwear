@@ -21,23 +21,28 @@ bMax = 0        #Real time calibrated max value for sensor readings
 #USB port defining. First variable is the used port and second is baud rate (Arduino baud rate).
 #Uncomment the one you use
 
-#ser=serial.Serial('COM4',9600)              #For Windows
+ser=serial.Serial('COM4',9600)              #For Windows
 #ser=serial.Serial('/dev/ttyACM0',9600)     #For Linux
 
 
 #Function for reading serial data.
 #Needs to be enabled for one of the objects in scene (at the Logic Editor tab).
 #This updates the read serial value in a global variable.
-"""
+
 def AnaLoop():
-   while(1==1):
-     global a, aMin, aMax, b, bMin, bMax
+   if(ser.inWaiting() != 0):
+     global a
+     global aMin
+     global aMax
+     global b
+     global bMin
+     global bMax
      line=ser.readline()
      line=line.decode("utf-8")
      try:
         osat=line.split(" ") 
-        a=float(osat[0])
-        b=float(osat[1])
+        a=int(osat[0])
+        b=int(osat[1])
         if a > aMax:
            aMax = a
         if a < aMin:
@@ -46,12 +51,12 @@ def AnaLoop():
            bMax = b
         if b < bMin:
            bMin = b
-        #print("a:{:.2f} aMin:{:.2f} aMax:{:.2f} b:{:.2f} bMin:{:.2f} bMax:{:.2f}".format(a,aMin,aMax,b,bMin,bMax))
-        time.sleep(0.1)
-     except:
+        print("a:{:.2f} aMin:{:.2f} aMax:{:.2f} b:{:.2f} bMin:{:.2f} bMax:{:.2f}".format(a,aMin,aMax,b,bMin,bMax))
+        #time.sleep(1)
+     except ValueError:
         k=9001
         print("OVER 9000")
-"""       
+     
         
 """        
 def AnaLoop():                
@@ -69,30 +74,13 @@ def AnaLoop():
      global bMax
      global b 
 """
-
+"""
 def AnaLoop():                
-     a=a+1    
+     a=a+0.01    
      global a
      time.sleep(0.1)  
-     
-"""
-#Simple test script for rotating an object.
-def Cube():
-    global a
-    scene = bge.logic.getCurrentScene()     #Locate current device
-    cont = bge.logic.getCurrentController()
-    own = cont.owner   
- 
-    xyz = own.localOrientation.to_euler()   #Extract the Rotation Data    
-    a = 2
-    xyz[0] = math.radians(a)                #PreLoad your RX data
-                                            #xyz[0] x Rotation axis
-                                            #xyz[1] y Rotation axis
-                                            #xyz[2] z Rotation axis
-    own.localOrientation = xyz.to_matrix()  #Apply your rotation data
-"""   
-    
-    
+"""  
+      
 
 #Function for rotating and moving the armature bones.
 #Bone names are:
@@ -138,13 +126,53 @@ def BoneRot():
     """
     global a
     scene = bge.logic.getCurrentScene()
-    source = scene.objects
-    arm = source.get('Armature.001')
+    #source = scene.objects
+    #arm = source.get('Armature.001')
     
     ob = bge.logic.getCurrentController().owner
     
     #a_rot = ((a-aMin)/(aMax - aMin))
     a_rot = a
     ob.channels['Bone.001'].joint_rotation = mathutils.Vector([a_rot,a_rot,a_rot])
+    ob.update()
+    
+    
+    
+def LuustoRot():
+    global a
+    global b
+    global aMax
+    global aMin
+    global bMax
+    global bMin
+    scene = bge.logic.getCurrentScene()
+    source = scene.objects
+    #arm = source.get('Armature')
+    
+    ob = bge.logic.getCurrentController().owner
+    try:
+        a_rot = ((a-aMin)/(aMax - aMin))
+        b_rot = ((b-bMin)/(bMax - bMin))
+        ob.channels['Bone.003'].joint_rotation = mathutils.Vector([b_rot,0,0])
+    except ZeroDivisionError:
+        a_rot = 0
+        b_rot = 0
+      
+    #arska = scene.objects['Arnold']
+    #arska.color = [0,1.0, 0, 1.0]
+    
+    
+    """
+    a_rot = a/100
+    ob.channels['Bone.004'].joint_rotation = mathutils.Vector([a_rot,a_rot,a_rot])
+    a_rot = b
+    ob.channels['Bone.005'].joint_rotation = mathutils.Vector([a_rot,a_rot,a_rot])
+    
+    a_rot = a/50
+    ob.channels['Bone.007'].joint_rotation = mathutils.Vector([a_rot,a_rot,a_rot])
+    a_rot = b
+    ob.channels['Bone.008'].joint_rotation = mathutils.Vector([a_rot,a_rot,a_rot])
+    """
+    
     ob.update()
     

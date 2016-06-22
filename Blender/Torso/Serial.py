@@ -53,7 +53,7 @@ def AnaLoop():
         print("OVER 9000")
 """       
         
-        
+"""        
 def AnaLoop():                
      a=a+1    
      global a                    
@@ -68,6 +68,13 @@ def AnaLoop():
      global aMax
      global bMax
      global b 
+"""
+
+def AnaLoop():                
+     a=a+1    
+     global a
+     time.sleep(0.1)  
+     
 """
 #Simple test script for rotating an object.
 def Cube():
@@ -115,6 +122,7 @@ def BoneRot():
 
     main_arm.update()
     """
+    """
     #a:n arvot flex-sensorin testauksella n.400-800
     global a, aMin, aMax, b, bMin, bMax
     scene = bge.logic.getCurrentScene()
@@ -127,5 +135,16 @@ def BoneRot():
     a_rot = 30
     ob.channels['Neck'].joint_rotation = mathutils.Vector([a_rot,0,0])
     ob.update()
+    """
+    global a
+    scene = bge.logic.getCurrentScene()
+    source = scene.objects
+    arm = source.get('Armature.001')
     
+    ob = bge.logic.getCurrentController().owner
+    
+    #a_rot = ((a-aMin)/(aMax - aMin))
+    a_rot = a
+    ob.channels['Bone.001'].joint_rotation = mathutils.Vector([a_rot,a_rot,a_rot])
+    ob.update()
     

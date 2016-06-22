@@ -35,9 +35,10 @@ void send_sensor_data() {
     }
     Serial.println(F("Created JSON"));
     char *output = aJson.print(dump);
+    aJson.deleteItem(dump);
     //output += "\n";
     Serial.println(output);
     iwrap_send_data(lastReceivedChannel, strlen(output), (uint8_t*)output, IWRAP_MODE_MUX);
-    aJson.deleteItem(dump);
-    delay(1000);
+    free(output);
+    iwrap_send_data(lastReceivedChannel, 2, (uint8_t*)"\n", IWRAP_MODE_MUX);
 }

@@ -4,9 +4,9 @@
 #include <Arduino.h>
 
 //Global measurement smoothing factor
-#define SMOOTH_FACTOR 0.05f
+#define SMOOTH_FACTOR 0.1f
 #define NUM_SENSORS 2
-#define SENSOR_UPDATE_INTERVAL 500 //milliseconds
+#define SENSOR_UPDATE_INTERVAL 50 //milliseconds
 
 
 typedef enum {

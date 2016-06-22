@@ -5,6 +5,7 @@
 #
 # $Id: rfcomm-client.py 424 2006-08-24 03:35:54Z albert $
 
+from __future__ import print_function
 from bluetooth import *
 import sys
 
@@ -44,9 +45,9 @@ sock.send("READY\n");
 
 print("connected.  type stuff")
 while True:
-    data = sock.recv(1024);
+    data = sock.recv(128);
     if len(data) == 0: break
     #sock.send(data)
-    print(data);
+    print(data, end="");
 
 sock.close()

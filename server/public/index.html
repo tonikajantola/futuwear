@@ -46,7 +46,7 @@
 	
 	<script>
 
-		var sensorBounds = [0, 100] //TODO: Make this dynamic
+		var sensorBounds = [500, 600] //TODO: Make this dynamic
 
 		function fetch() {
 			$.get("/fetch", "", function (resp) {
@@ -82,7 +82,7 @@
 						$("#" + sensorName).val(average)
 
 						var picRange = 6 // Last frame of the css sprite
-						var picFrame = Math.min(Math.round(average/(sensorBounds[1] + 1) * picRange), picRange)
+						var picFrame = Math.min(Math.round(Math.max(average - sensorBounds[0], 0)/(sensorBounds[1] + 1) * picRange), picRange)
 						$("#figure").attr("class", "frame frame-" + picFrame)
 						
 						var sensorPackage = sensors[i + 1]

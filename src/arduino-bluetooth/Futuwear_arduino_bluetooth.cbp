@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="Futuwear_arduino_bluetooth" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug">
+				<Option output="bin/Futuwear_arduino_bluetooth" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-g" />
+					<Add directory="include" />
+				</Compiler>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+		</Compiler>
+		<Unit filename="arduino-bluetooth.ino" />
+		<Unit filename="communication.cpp" />
+		<Unit filename="communication.h" />
+		<Unit filename="iwrapper.cpp" />
+		<Unit filename="iwrapper.h" />
+		<Unit filename="lib/AltSoftSerial/AltSoftSerial.cpp" />
+		<Unit filename="lib/AltSoftSerial/AltSoftSerial.h" />
+		<Unit filename="lib/AltSoftSerial/config/AltSoftSerial_Boards.h" />
+		<Unit filename="lib/AltSoftSerial/config/AltSoftSerial_Timers.h" />
+		<Unit filename="lib/aJson-master/aJSON.cpp" />
+		<Unit filename="lib/aJson-master/aJSON.h" />
+		<Unit filename="lib/aJson-master/utility/stringbuffer.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="lib/aJson-master/utility/stringbuffer.h" />
+		<Unit filename="lib/iWRAP/iWRAP.cpp" />
+		<Unit filename="lib/iWRAP/iWRAP.h" />
+		<Unit filename="sensors.cpp" />
+		<Unit filename="sensors.h" />
+		<Unit filename="src/Sensors.cpp" />
+		<Extensions>
+			<code_completion>
+				<search_path add="/home/elmo/Downloads/arduino-1.6.6/hardware/arduino/avr/cores/arduino" />
+				<search_path add="/home/elmo/Arduino" />
+			</code_completion>
+			<debugger />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

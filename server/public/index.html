@@ -46,13 +46,13 @@
 	
 	<script>
 
-		var sensorBounds = [500, 600] //TODO: Make this dynamic
+		var sensorBounds = [500, 800] //TODO: Make this dynamic
 
 		function fetch() {
 			$.get("/fetch", "", function (resp) {
 				try {
 					var sensors = resp["sensors"]
-					var devices = sensors.length
+					var devices = sensors.lengt8
 					var sensorPackage
 					
 					// Deal with single-sensor JSON data

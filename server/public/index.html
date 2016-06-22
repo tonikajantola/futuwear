@@ -66,10 +66,7 @@
 						var sensorName = sensorPackage["name"]
 						var dataPoints = sensorPackage["collection"]
 						
-						var average = Math.round(dataPoints.reduce(function (prev, curr, i, arr) {
-							return prev + curr["value"] / (devices + 1)
-						}, 0))
-
+						var average = parseInt(dataPoints[0].value)
 						if ($("#" + sensorName).length <= 0)
 							$("#knobs").append("<input type='range' id='" + sensorName + "' min='" + sensorBounds[0] + "' max='" + sensorBounds[1] + "' value='0'>\n")
 						else if ($("#" + sensorName).val() == average) {

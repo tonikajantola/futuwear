@@ -3,6 +3,7 @@
 #include <math.h>
 
 unsigned long lastSensorsUpdate = 0;
+unsigned long lastDataDump = 0;
 
 //List of all sensors connected.
 Sensor sensorList[NUM_SENSORS] = {
@@ -17,13 +18,15 @@ void sensors_init() {
 }
 
 void sensors_update() {
-    if ((millis() - lastSensorsUpdate) > SENSOR_UPDATE_INTERVAL) {
+    if ((millis() - lastSensorsUpdate) > SENSOR_MEASURE_INTERVAL) {
         for (int i=0; i < NUM_SENSORS; i++) {
             sensor_update(&sensorList[i]);
         }
         lastSensorsUpdate = millis();
-        //Serial.println();
+    }
+    if ((millis() - lastDataDump) > SENSOR_UPDATE_INTERVAL) {
         send_sensor_data();
+        lastDataDump = millis();
     }
 }
 

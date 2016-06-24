@@ -1,6 +1,7 @@
 #include "iwrapper.h"
 #include "sensors.h"
 #include "communication.h"
+#include <MemoryFree.h>
 
 
 void setup() {

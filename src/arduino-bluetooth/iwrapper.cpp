@@ -51,8 +51,8 @@ iwrap_connection_t *iwrap_connection_map[IWRAP_MAX_PAIRINGS];
 void iwrapper_setup() {
     #if defined(PLATFORM_ARDUINO_UNO)
         // open the hardware serial port for debug/status output and software serial for iWRAP
-        Serial.begin(HOST_BAUD);
-        mySerial.begin(IWRAP_BAUD);
+        //Serial.begin(HOST_BAUD);
+        Serial.begin(IWRAP_BAUD);
     #elif defined(PLATFORM_TEENSY2)
         // open the USB serial port for debug/status output and Serial1 for iWRAP
         Serial.begin(HOST_BAUD);
@@ -83,10 +83,11 @@ void iwrapper_setup() {
     iwrap_evt_ring = my_iwrap_evt_ring;
 
     // boot message to host
-    serial_out(F("iWRAP host library generic demo started\n"));
+    //serial_out(F("iWRAP host library generic demo started\n"));
     //iwrap_send_command("SET CONTROL MUX 0", iwrap_mode);
     //iwrap_send_command("SET CONTROL CONFIG 3400 0040 07A1", iwrap_mode);
     //iwrap_send_command("SET PROFILE SPP Futuwear_data", iwrap_mode);
+    //iwrap_send_command("SET CONTROL BAUD 500000", iwrap_mode);
     //while (1) {}
 }
 
@@ -169,7 +170,7 @@ void iwrapper_loop() {
 
     // check for incoming iWRAP data
     #if defined(PLATFORM_ARDUINO_UNO)
-        if ((result = mySerial.read()) < 256) iwrap_parse(result & 0xFF, iwrap_mode);
+        if ((result = Serial.read()) < 256) iwrap_parse(result & 0xFF, iwrap_mode);
     #elif defined(PLATFORM_TEENSY2)
         if ((result = Serial1.read()) < 256) iwrap_parse(result & 0xFF, iwrap_mode);
     #endif
@@ -182,7 +183,7 @@ void iwrapper_loop() {
             iwrap_pending_commands = 0; // normally handled by the parser, but comms failed
         }
     }
-
+/*
     // check for incoming host data
     #if defined(PLATFORM_ARDUINO_UNO)
         if ((result = Serial.read()) < 256)
@@ -191,7 +192,7 @@ void iwrapper_loop() {
     #endif
     {
         process_demo_choice(result & 0xFF);
-    }
+    }*/
 }
 
 /* ============================================================================
@@ -406,15 +407,16 @@ uint8_t remove_mapped_connection(uint8_t link_id) {
 #if defined(PLATFORM_ARDUINO_UNO)
     int serial_out(const char *str) {
         // debug output to host goes through hardware serial
-        return Serial.print(str);
+        return 0;//Serial.print(str);
     }
     int serial_out(const __FlashStringHelper *str) {
         // debug output to host goes through hardware serial
-        return Serial.print(str);
+        return 0;//Serial.print(str);
     }
     int iwrap_out(int len, unsigned char *data) {
         // iWRAP output to module goes through software serial
-        return mySerial.write(data, len);
+        // ElmoEdit: actually hw-serial
+        return Serial.write(data, len);
     }
 #elif defined(PLATFORM_TEENSY2)
     int serial_out(const char *str) {

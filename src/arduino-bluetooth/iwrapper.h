@@ -5,8 +5,8 @@
 #include <iWRAP.h>
 #include <AltSoftSerial.h>
 
-#define HOST_BAUD                   38400   // works with 8MHz CPU clock
-#define IWRAP_BAUD                  38400   // works with 8MHz CPU clock (REQUIRES iWRAP RECONFIGURATION, DEFAULT IS 115200)
+#define HOST_BAUD                   115200   // works with 8MHz CPU clock
+#define IWRAP_BAUD                  500000   // works with 8MHz CPU clock (REQUIRES iWRAP RECONFIGURATION, DEFAULT IS 115200)
 #define MODULE_RESET_PIN            12      // optional connection for MCU-based module reset
 
 // -------- iWRAP configuration definitions --------

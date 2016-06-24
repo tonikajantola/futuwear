@@ -6,11 +6,14 @@
 # $Id: rfcomm-client.py 424 2006-08-24 03:35:54Z albert $
 
 from __future__ import print_function
+#import curses
 from bluetooth import *
 import sys
 
 if sys.version < '3':
     input = raw_input
+
+#stdscr = curses.initscr();
 
 addr = None
 

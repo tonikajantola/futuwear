@@ -1,11 +1,10 @@
 #include "communication.h"
 
-uint8_t lastReceivedChannel = 128;
 uint32_t packetIndex = 0;
 
 void communication_init() {
     iwrap_callback_rxdata = communication_rx_callback;
-    lastReceivedChannel = 128;
+    //lastReceivedChannel = 128;
     packetIndex = 0;
 }
 
@@ -13,7 +12,7 @@ void communication_rx_callback(uint8_t packet_channel, uint16_t, const unsigned 
     serial_out(F("========\nReceived data: "));
     serial_out((const char *)data);
     serial_out(F("\n========\n"));
-    lastReceivedChannel = packet_channel;
+    surefire_connection_id = packet_channel;
 }
 
 void build_data_json(char *buffer, size_t len) {
@@ -50,14 +49,14 @@ void build_data_json(char *buffer, size_t len) {
 }
 
 void send_sensor_data() {
-    if (lastReceivedChannel == 128) {return;}
+    if (surefire_connection_id == 0xFF) {return;}
 
-    char output[128];
+    char output[256];
     build_data_json(output, sizeof(output));
     strncat(output, "\n", sizeof(output));
 
     //Serial.println(output);
-    iwrap_send_data(lastReceivedChannel, strlen(output), (uint8_t*)output, IWRAP_MODE_MUX);
+    iwrap_send_data(surefire_connection_id, strlen(output), (uint8_t*)output, IWRAP_MODE_MUX);
     //free(output);
     //iwrap_send_data(lastReceivedChannel, 2, (uint8_t*)"\n", IWRAP_MODE_MUX);
 }

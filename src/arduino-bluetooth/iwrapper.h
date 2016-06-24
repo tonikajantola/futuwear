@@ -2,7 +2,7 @@
 #define __IWRAPPER_H
 
 #define PLATFORM_ARDUINO_UNO    // also Pro Mini and other ATMega328-based boards
-#include <iWRAP.h>
+
 #include <AltSoftSerial.h>
 
 #define HOST_BAUD                   115200   // works with 8MHz CPU clock
@@ -26,6 +26,8 @@
 #define IWRAP_CONFIGURED
 #define IWRAP_INCLUDE_RXDATA
 // -------------------------------------------------
+
+#include <iWRAP.h>
 
 #define IWRAP_STATE_IDLE            0
 #define IWRAP_STATE_UNKNOWN         1
@@ -55,6 +57,25 @@ typedef struct {
     uint8_t link_spp;
     // other profile-specific link IDs may be added here
 } iwrap_connection_t;
+
+extern uint8_t iwrap_mode;
+extern uint8_t iwrap_state;
+extern uint8_t iwrap_initialized;
+extern uint32_t iwrap_time_ref;
+extern uint8_t iwrap_pairings;
+extern uint8_t iwrap_pending_calls;
+extern uint8_t iwrap_pending_call_link_id;
+extern uint8_t iwrap_connected_devices;
+extern uint8_t iwrap_active_connections;
+extern uint8_t iwrap_autocall_target;
+extern uint16_t iwrap_autocall_delay_ms;
+extern uint32_t iwrap_autocall_last_time;
+extern uint8_t iwrap_autocall_index;
+
+extern uint8_t surefire_connection_id;
+
+extern iwrap_connection_t *iwrap_connection_map[IWRAP_MAX_PAIRINGS];
+
 
 // iWRAP callbacks necessary for application
 void my_iwrap_rsp_call(uint8_t link_id);

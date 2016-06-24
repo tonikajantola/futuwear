@@ -30,7 +30,7 @@ THE SOFTWARE.
 #include "iwrapper.h"
 
 
-AltSoftSerial mySerial;
+//AltSoftSerial mySerial;
 // iwrap state tracking info
 uint8_t iwrap_mode = IWRAP_MODE_MUX;
 uint8_t iwrap_state = IWRAP_STATE_UNKNOWN;
@@ -45,6 +45,7 @@ uint8_t iwrap_autocall_target = 0;
 uint16_t iwrap_autocall_delay_ms = 10000;
 uint32_t iwrap_autocall_last_time = 0;
 uint8_t iwrap_autocall_index = 0;
+uint8_t surefire_connection_id = 0xFF;
 
 iwrap_connection_t *iwrap_connection_map[IWRAP_MAX_PAIRINGS];
 
@@ -212,6 +213,7 @@ void my_iwrap_rsp_list_count(uint8_t num_of_connections) {
 
 void my_iwrap_rsp_list_result(uint8_t link_id, const char *mode, uint16_t blocksize, uint32_t elapsed_time, uint16_t local_msc, uint16_t remote_msc, const iwrap_address_t *addr, uint16_t channel, uint8_t direction, uint8_t powermode, uint8_t role, uint8_t crypt, uint16_t buffer, uint8_t eretx) {
     add_mapped_connection(link_id, addr, mode, channel);
+    surefire_connection_id = link_id;
 }
 
 void my_iwrap_rsp_set(uint8_t category, const char *option, const char *value) {
@@ -266,6 +268,7 @@ void my_iwrap_evt_connect(uint8_t link_id, const char *type, uint16_t target, co
     }
     iwrap_active_connections++;
     add_mapped_connection(link_id, address, type, target);
+    surefire_connection_id = link_id;
     print_connection_map();
 }
 
@@ -281,6 +284,7 @@ void my_iwrap_evt_no_carrier(uint8_t link_id, uint16_t error_code, const char *m
         if (iwrap_active_connections) iwrap_active_connections--;
         print_connection_map();
     }
+    surefire_connection_id = 0xFF;
 }
 
 void my_iwrap_evt_pair(const iwrap_address_t *address, uint8_t key_type, const uint8_t *link_key) {
@@ -295,6 +299,7 @@ void my_iwrap_evt_ready() {
 
 void my_iwrap_evt_ring(uint8_t link_id, const iwrap_address_t *address, uint16_t channel, const char *profile) {
     add_mapped_connection(link_id, address, profile, channel);
+    surefire_connection_id = link_id;
     print_connection_map();
 }
 

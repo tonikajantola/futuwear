@@ -20,7 +20,7 @@ void build_data_json(char *buffer, size_t len) {
         StaticJsonBuffer<200> jsonBuffer;
         JsonObject& dump = jsonBuffer.createObject();
         dump["packetID"] = packetIndex++;
-        JsonArray& data = dump.createNestedArray("sensorData");
+        //JsonArray& data = dump.createNestedArray("sensorData");
     #else
         aJsonObject *dump = aJson.createObject();
     #endif
@@ -28,9 +28,10 @@ void build_data_json(char *buffer, size_t len) {
 
     for (int i=0; i < NUM_SENSORS; i++) {
         #ifdef USE_ARDUINOJSON
-            JsonObject& field = data.createNestedObject();
-            field["name"]   = sensorList[i].name;
-            field["value"]  = sensorList[i].outValue;
+            //JsonObject& field = data.createNestedObject();
+            //field["name"]   = sensorList[i].name;
+            //field["value"]  = sensorList[i].outValue;
+            dump[sensorList[i].name] = sensorList[i].outValue;
         #else
             aJsonObject *data = aJson.createObject();
             if (!data) {Serial.println(F("****ERROR*** couldn't create data object!"));}

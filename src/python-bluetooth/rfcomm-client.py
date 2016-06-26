@@ -15,8 +15,8 @@ if sys.version < '3':
 
 #stdscr = curses.initscr();
 
-addr = None
-
+addr = "00:07:80:36:A6:03"
+"""
 if len(sys.argv) < 2:
     print("no device specified.  Searching all nearby bluetooth devices for")
     print("the SampleServer service")
@@ -24,10 +24,9 @@ else:
     addr = sys.argv[1]
     print("Searching for SampleServer on %s" % addr)
 
-addr = "00:07:80:36:A6:03"
 # search for the SampleServer service
 uuid = None
-service_matches = find_service( uuid = uuid, address = addr )
+service_matches = find_service( address = addr, uuid = None )#uuid = uuid, address = addr )
 
 if len(service_matches) == 0:
     print("couldn't find the SampleServer service =(")
@@ -38,11 +37,12 @@ port = first_match["port"]
 name = first_match["name"]
 host = first_match["host"]
 
-print("connecting to \"%s\" on %s" % (name, host))
-
+print("connecting to \"%s\" on %s, port %s" % (name, host, port))
+"""
 # Create the client socket
 sock=BluetoothSocket( RFCOMM )
-sock.connect((host, port))
+#sock.connect((host, port))
+sock.connect((addr, 1))
 
 sock.send("READY\n");
 

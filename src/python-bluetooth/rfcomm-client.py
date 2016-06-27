@@ -49,6 +49,7 @@ sock.send("READY\n");
 print("connected.  type stuff")
 while True:
     data = sock.recv(128);
+    data = data.decode("utf-8")
     if len(data) == 0: break
     #sock.send(data)
     print(data, end="");

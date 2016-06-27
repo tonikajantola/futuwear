@@ -1,4 +1,4 @@
-import serial
+#import serial
 import math
 import bge
 from math import *
@@ -21,7 +21,7 @@ bMax = 0        #Real time calibrated max value for sensor readings
 #USB port defining. First variable is the used port and second is baud rate (Arduino baud rate).
 #Uncomment the one you use
 
-ser=serial.Serial('COM4',9600)              #For Windows
+#ser=serial.Serial('COM4',9600)              #For Windows
 #ser=serial.Serial('/dev/ttyACM0',9600)     #For Linux
 
 
@@ -29,6 +29,7 @@ ser=serial.Serial('COM4',9600)              #For Windows
 #Needs to be enabled for one of the objects in scene (at the Logic Editor tab).
 #This updates the read serial value in a global variable.
 
+"""
 def AnaLoop():
    if(ser.inWaiting() != 0):
      global a
@@ -56,14 +57,14 @@ def AnaLoop():
      except ValueError:
         k=9001
         print("OVER 9000")
-     
+"""   
         
-"""        
+      
 def AnaLoop():                
-     a=a+1    
+     a= a + 0.1    
      global a                    
      #print (a)
-     b = b + 1
+     b = b + 0.1
      aMin = 2
      aMax = 3
      bMin = 2
@@ -73,7 +74,7 @@ def AnaLoop():
      global aMax
      global bMax
      global b 
-"""
+
 """
 def AnaLoop():                
      a=a+0.01    

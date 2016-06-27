@@ -23,4 +23,4 @@ setInterval(function () {
 	  }
 	  else console.log("Could not complete the request.")
 	});
-}, 300)
+}, 100)

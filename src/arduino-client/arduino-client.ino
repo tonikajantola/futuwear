@@ -1,6 +1,7 @@
 #include <ESP8266WiFi.h>
 #include "cJSON.h"
 #include <string.h>
+#include <stdarg.h>
 
 int i=0;
 
@@ -25,6 +26,12 @@ void flush() {
   }
 }
 
+void s_printf(char *buf, char *fmt, ... ){
+        va_list args;
+        va_start (args, fmt );
+        vsnprintf(buf, 128, fmt, args);
+        va_end (args);
+}
 
 void setup() {
   Serial.begin(115200);
@@ -51,6 +58,7 @@ void setup() {
 }
 
 int value = 0;
+
 
 void loop() {
   delay(1000);
@@ -102,7 +110,16 @@ void loop() {
       Serial.println(">>> Client Timeout !");
       client.stop();
       return;
+
     }
+    Serial.println("Reading response");
+    timeout = millis();
+    // Read all the lines of the reply from server and print them to Serial
+    while(client.available() && (millis() - timeout < 100)){
+      String line = client.readString();
+      Serial.print(line);
+    }
+    Serial.println("Stopped reading");
   }
   
   // Read all the lines of the reply from server and print them to Serial

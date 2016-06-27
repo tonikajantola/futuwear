@@ -2,7 +2,6 @@
 #include "cJSON.h"
 #include <string.h>
 
-int i=0;
 
 const char* ssid     = "Eino-Huawei-Y6";
 const char* password = "jeejeejoojoo";
@@ -14,16 +13,7 @@ const char* password = "isitfriday";
 */
 
 const char* host = "futuwear.tunk.org";
-
-cJSON *jsonData;
-
-
-void flush() {
-  for(i;i<1000;i++) {
-    Serial.println();
-    i=0;
-  }
-}
+const char* jsonData = "data={\"timestamp\":1466076661337,\"input\":\"alex on nortti\"}";
 
 
 void setup() {
@@ -53,7 +43,7 @@ void setup() {
 int value = 0;
 
 void loop() {
-  delay(1000);
+  delay(5000);
   ++value;
 
   Serial.print("connecting to ");
@@ -61,41 +51,32 @@ void loop() {
   
   // Use WiFiClient class to create TCP connections
   WiFiClient client;
-  const int httpPort = 80;
+  const int httpPort = 8080;
   if (!client.connect(host, httpPort)) {
     Serial.println("connection failed");
     return;
   }
-
-
-  jsonData = cJSON_CreateObject();  
-  cJSON_AddStringToObject(jsonData, "input", "alex on kiva poika");
-  cJSON_AddNumberToObject(jsonData, "timestamp", 1466076661337);
-
-    
-  //Serial.println(String("### DEBUG: Content-Length:") + strlen(cJSON_Print(jsonData)));
-
-  //flush();
+  
+  Serial.println(String("### DEBUG: Content-Length:") + strlen(jsonData));
   
   // This will send the request to the server
   client.print(String("POST ") + "/" + " HTTP/1.1\r\n" +
                "Host: " + host + ":" + httpPort + "\r\n" + 
                "Content-Type: application/x-www-form-urlencoded; charset=UTF-8\r\n" +
-               "Content-Length: " + strlen(cJSON_Print(jsonData)) + "\r\n" +
-               "Connection: close\r\n\r\n" + cJSON_Print(jsonData));
+               "Content-Length: " + strlen(jsonData) + "\r\n" +
+               "Connection: close\r\n\r\n" + jsonData);
 
-  Serial.println();
   Serial.println("----------------------------------------------------");
   
-  Serial.print(String("POST ") + "/" + " HTTP/1.1\r\n" +
+  Serial.println(String("POST ") + "/" + " HTTP/1.1\r\n" +
                "Host: " + host + ":" + httpPort + "\r\n" + 
                "Content-Type: application/x-www-form-urlencoded; charset=UTF-8\r\n" +
-               "Content-Length: " + strlen(cJSON_Print(jsonData)) + "\r\n" +
-               "Connection: close\r\n\r\n" + cJSON_Print(jsonData));
+               "Content-Length: " + strlen(jsonData) + "\r\n" +
+               "Connection: close\r\n\r\n" + jsonData);
 
   Serial.println("----------------------------------------------------");
                
- 
+  
   unsigned long timeout = millis();
   while (client.available() == 0) {
     if (millis() - timeout > 5000) {
@@ -113,5 +94,5 @@ void loop() {
   
   Serial.println();
   Serial.println("closing connection");
-  
 }
+

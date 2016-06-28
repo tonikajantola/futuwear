@@ -79,9 +79,9 @@ c.connect(function(err){
 	console.log('Database connection established');
 });
 
-function getData(time0, timeT, responder) {'
-	var sql = 'SELECT sensorID, UNIX_TIMESTAMP(logged) AS logged, val FROM Data WHERE logged >= FROM_UNIXTIME('+time0+') AND logged <= FROM_UNIXTIME('+timeT+'
-	c.query(sql) LIMIT 100;', function(err, result) {
+function getData(time0, timeT, responder) {
+	var sql = 'SELECT sensorID, UNIX_TIMESTAMP(logged) AS logged, val FROM Data WHERE logged >= FROM_UNIXTIME('+time0+') AND logged <= FROM_UNIXTIME('+timeT+') LIMIT 100;'
+	c.query(sql, function(err, result) {
 		responder.setHeader('Content-Type', 'application/json');
 		if (!err) {
 			console.log("Found " + result.length + " matching entries.")

@@ -47,7 +47,7 @@
 		<div id="figure" class="frame frame-0" onclick="this.style.display='none'"></div>
 		<a href="#" onclick="document.getElementById('figure').style.display='block';this.style.display='none'"><small>Visualise data</small></a>
 		<br><br><hr><br>
-		<input type="number" id="time0"> -> <input type="number" id="timeT"> <button onclick="history(document.getElementById('time0').value, document.getElementById('timeT').value)">Fetch</button>
+		<input type="number" id="time0"> -> <input type="number" id="timeT"> <button onclick="history(parseInt(document.getElementById('time0').value), parseInt(document.getElementById('timeT').value))">Fetch</button>
 		
 		<br><a href="#" onclick="document.getElementById('epochconverter').style.display='block';this.style.display='none'"><small>Get EPOCH times</small></a>
 		
@@ -64,7 +64,7 @@
 		document.getElementById("status").value = "No live data available"
 		
 		function history(time0, timeT) {
-			$.get("/fetch", JSON.stringify({time0: time0, timeT: timeT}), function (resp) {
+			$.get("/fetch", "data=" + JSON.stringify({time0: time0, timeT: timeT}), function (resp) {
 				try {
 				
 					for (var i = 0; i < resp.length; i++) {
@@ -75,6 +75,9 @@
 						var val = parseInt(reading["val"])
 						
 						$("#list").append("<tr><td><b>" + sensorID + "</b></td><td>" + reading + "</td><td><small>" + timeSince(logged) + "</small></td></tr>")
+					}
+					if (i >= 100) {
+						$("#list").append("<tr><td colspan='3'>Some data may have been truncated</td></tr>")
 					}
 				} catch (e) {
 					console.log("JSON data problem: " + e.message)
@@ -121,6 +124,7 @@
 						var sensorPackage = sensors[i + 1]
 
 					}
+					
 				} catch (e) {
 					$("#status").val("JSON data problem: " + e.message)
 				}
@@ -129,7 +133,7 @@
 		// FROM http://stackoverflow.com/questions/3177836/how-to-format-time-since-xxx-e-g-4-minutes-ago-similar-to-stack-exchange-site
 		function timeSince(date) {
 
-			var seconds = Math.floor((new Date() - date) / 1000);
+			var seconds = Math.floor((new Date() - date*1000) / 1000);
 
 			var interval = Math.floor(seconds / 31536000);
 

@@ -32,11 +32,13 @@ function isJSON(str) {
 /* Method to get old data with */
 app.get('/fetch', function (req, res) {
 	
-	var content = req.body
+	var content = req.query.data // TODO: Safety
+		
+	console.log("Got fetched: " + content)
+	content = JSON.parse(content)
+	console.log("Accessing archives from TS " + content["time0"] + " to " + content["time0"])
 	
-	console.log("Got fetched: " + JSON.stringify(content))
-	
-	getData(parseInt(content["time0"]), parseInt(content["timeT"]), res)
+	getData(parseInt(content.time0), parseInt(content.timeT), res)
 });
 
 
@@ -77,11 +79,12 @@ c.connect(function(err){
 	console.log('Database connection established');
 });
 
-function getData(time0, timeT, responder) {
-	c.query('SELECT sensorID, UNIX_TIMESTAMP(logged) AS logged, val FROM Data WHERE logged >= FROM_UNIXTIME('+time0+') AND logged <= FROM_UNIXTIME('+timeT+') LIMIT 100;', function(err, result) {
+function getData(time0, timeT, responder) {'
+	var sql = 'SELECT sensorID, UNIX_TIMESTAMP(logged) AS logged, val FROM Data WHERE logged >= FROM_UNIXTIME('+time0+') AND logged <= FROM_UNIXTIME('+timeT+'
+	c.query(sql) LIMIT 100;', function(err, result) {
 		responder.setHeader('Content-Type', 'application/json');
 		if (!err) {
-			console.log(result)
+			console.log("Found " + result.length + " matching entries.")
 			responder.send(JSON.stringify(result, null, 3));	
 		}
 		else  {

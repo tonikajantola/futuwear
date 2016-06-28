@@ -2,9 +2,9 @@
 var target = "http://futuwear.tunk.org:13337/messages/"
 
 function payload() {
-	return {"sensors": [{"name": "flex1", "collection": 
-		[{"value": Math.floor(Math.random() * 900) + 100  , "timestamp": 0}, 
-		 {"value": Math.floor(Math.random() * 900) + 100  , "timestamp": 100}]}]} // Stub data
+	return {"sensors": {"name": "flex1", "collection": 
+		[{"value": Math.floor(Math.random() * 300) + 500  , "timestamp": 0}, 
+		 {"value": Math.floor(Math.random() * 300) + 500  , "timestamp": 100}]}} // Stub data
 }
 
 var request = require('request');

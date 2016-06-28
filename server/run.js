@@ -6,6 +6,7 @@ const http = require("http")
 const fs = require("fs")
 const express = require('express');
 const socketIO = require('socket.io-client');
+const mysql = require('mysql');
 
 var app = express();
 
@@ -28,35 +29,14 @@ function isJSON(str) {
     return true;
 }
 
-app.post('/', function (req, res) {
-	
-	console.log("Data received: " + req.body.data);
-	
-	var content = req.body.data
-	var d = new Date()
-	var datestr = d.getTime()
-	var filename = "sensordata/packet" + datestr + ".json"; 
-	
-	if (isJSON(content) && content != "") {
-		fs.writeFile(filename, content, function(err) {
-			if (err) {
-				return console.log("Data save error: " + err);
-			}
-			console.log("The data was saved.");
-		});
-		res.send('Thanks!');
-	}
-	else res.send('Error (JSON-related)')
-	
-});
+/* Method to get old data with */
 app.get('/fetch', function (req, res) {
 	
 	var content = req.body
 	
-	var feedback = lastMessage
+	console.log("Got fetched: " + JSON.stringify(content))
 	
-	res.setHeader('Content-Type', 'application/json');
-    res.send(JSON.stringify(feedback, null, 3));	
+	getData(parseInt(content["time0"]), parseInt(content["timeT"]), res)
 });
 
 
@@ -78,4 +58,87 @@ client.on('message', msg => {
 	lastMessage = msg
 	console.log(`Message from vör: ${JSON.stringify(lastMessage)}`)
 });
+
+/////////////////////////
+// Manage the database //
+/////////////////////////
+
+const c = mysql.createConnection({
+	host     : 'localhost',
+	user     : 'root',
+	password : 'jalla',
+	database : 'futuwear',
+});
+c.connect(function(err){
+	if(err){
+		console.log('Error connecting to Db: ' + err.message);
+		return;
+	}
+	console.log('Database connection established');
+});
+
+function getData(time0, timeT, responder) {
+	c.query('SELECT sensorID, UNIX_TIMESTAMP(logged) AS logged, val FROM Data WHERE logged >= FROM_UNIXTIME('+time0+') AND logged <= FROM_UNIXTIME('+timeT+') LIMIT 100;', function(err, result) {
+		responder.setHeader('Content-Type', 'application/json');
+		if (!err) {
+			console.log(result)
+			responder.send(JSON.stringify(result, null, 3));	
+		}
+		else  {
+			console.log("Mysql error: " + JSON.stringify(err))
+			responder.send(JSON.stringify({}, null, 3));
+		}
+	});	
+}
+
+/* Saves a given value as reported by #sensorID */
+function saveData(sensorID, val) {
+	c.query('SELECT Count(ID) AS results FROM Sensors WHERE ID="' + sensorID + '";', function(err, result) {
+		if (!err && result[0]["results"]) {
+			var found = !isNaN(result[0]["results"]) && parseInt(result[0]["results"]) > 0
+			
+			if (found) {
+				c.query('INSERT INTO Data(SensorID, val) VALUES ("'+sensorID+'", "'+val+'");', function(err, result) {
+					if (!err) {
+						console.log("Saved data!")
+					}
+					else  {
+						console.log("Mysql error: " + JSON.stringify(err))
+					}
+				});
+			}
+			else console.log("Sensor #" + sensorID + " is unknown; its data was ignored.")
+		}
+		else  {
+			console.log("Mysql error: " + JSON.stringify(err))
+		}
+	});
+}
+
+/* Registers a new sensor into the system */
+function registerSensor(ID, name) {
+	c.query('SELECT Count(ID) AS results FROM Sensors WHERE ID="' + ID + '";', function(err, result) {
+		if (!err) {
+			var found = !isNaN(result[0]["results"]) && parseInt(result[0]["results"]) > 0
+			
+			if (!found) {
+				c.query('INSERT INTO Sensors(ID, type, name) VALUES ("'+ID+'", "kinetic", "Test-sensor");', function(err, result) {
+					if (!err) {
+						console.log("Saved new sensor!")
+					}
+					else  {
+						console.log("Mysql sensor insertion error: " + JSON.stringify(err))
+					}
+				});
+			}
+			else console.log("Sensor #" + ID + " already exists, please give a fresh id.")
+		}
+		else  {
+			console.log("Mysql error: " + JSON.stringify(err))
+		}
+	});
+}
+
+
+
 

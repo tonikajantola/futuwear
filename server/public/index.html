@@ -3,6 +3,7 @@
 	<meta http-equiv="content-type" content="text/html; charset=UTF-8">
 	<meta content='width=device-width, height=device-height, initial-scale=1' name='viewport' />
 	<script type="text/javascript" src="js/jquery.min.js"></script>
+	<script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
 	<link rel="stylesheet" type="text/css" href="/css/bootstrap.css">
 	<title>Futuwear</title>
 	<style>
@@ -19,8 +20,9 @@
 			 background-image: url(sprite-posture28ef0e6bf505c22e983297120bedf6d4.jpg);
 			 background-repeat: no-repeat;
 			 width: 680px;  
-			 height: 700px;
+			 height: 500px;
 			 margin-left:-100px;
+			 display:none;
 		}
 		.frame-6 { background-position: 0 0; }
 		.frame-5 { background-position: -1360px 0; } 
@@ -30,27 +32,64 @@
 		.frame-1 { background-position: -4080px 0; } 
 		.frame-0 { background-position: -4760px 0; } 
 		.frame-7 { background-position: -5440px 0; } 
+		iframe {
+			width: 100%;
+			display:none;
+		}
 	</style>
 </head>
 <body>
 	<div class="app">
 		<h3>The Futuwear Portal</h3>
 		<br><br><br>
-		<input id="status" value="(loading)" style="width:100%;" readonly>
-		<br><br><br>
+		<input id="status" value="" style="width:100%;" readonly>
 		<div id="knobs"></div>
-		<div id="figure" class="frame frame-0" onclick="this.style.display='none';"></div>
-
-		<button onclick="fetch()" style="display:none;">Refresh</button>
+		<div id="figure" class="frame frame-0" onclick="this.style.display='none'"></div>
+		<a href="#" onclick="document.getElementById('figure').style.display='block';this.style.display='none'"><small>Visualise data</small></a>
+		<br><br><hr><br>
+		<input type="number" id="time0"> -> <input type="number" id="timeT"> <button onclick="history(document.getElementById('time0').value, document.getElementById('timeT').value)">Fetch</button>
+		
+		<br><a href="#" onclick="document.getElementById('epochconverter').style.display='block';this.style.display='none'"><small>Get EPOCH times</small></a>
+		
+		<iframe src="http://www.epochconverter.com/" id="epochconverter"></iframe>
+		<br><br>
+		<table id="list"></table>
+		
 	</div>
 	
 	<script>
-
-		var sensorBounds = [500, 800] //TODO: Make this dynamic
-
-		function fetch() {
-			$.get("/fetch", "", function (resp) {
+	
+		document.getElementById("time0").value = Math.floor(Date.now()/1000) - 10*60 // Ten minutes ago
+		document.getElementById("timeT").value = Math.floor(Date.now()/1000) + 10*60 // Ten minutes from now
+		document.getElementById("status").value = "No live data available"
+		
+		function history(time0, timeT) {
+			$.get("/fetch", JSON.stringify({time0: time0, timeT: timeT}), function (resp) {
 				try {
+				
+					for (var i = 0; i < resp.length; i++) {
+						var reading = resp[i]
+						
+						var sensorID = reading["sensorID"]
+						var logged = new Date(reading["logged"])
+						var val = parseInt(reading["val"])
+						
+						$("#list").append("<tr><td><b>" + sensorID + "</b></td><td>" + reading + "</td><td><small>" + timeSince(logged) + "</small></td></tr>")
+					}
+				} catch (e) {
+					console.log("JSON data problem: " + e.message)
+				}
+			})
+			
+			
+		} 
+		
+		var sensorBounds = [500, 800] //TODO: Make this dynamic
+		
+		var socket = io.connect("http://futuwear.tunk.org:13337");
+		
+		socket.on('message', function(resp){
+			try {
 					var sensors = resp["sensors"]
 					var devices = sensors.lengt8
 					var sensorPackage
@@ -68,15 +107,12 @@
 						
 						var average = parseInt(dataPoints[0].value)
 						if ($("#" + sensorName).length <= 0)
-							$("#knobs").append("<input type='range' id='" + sensorName + "' min='" + sensorBounds[0] + "' max='" + sensorBounds[1] + "' value='0'>\n")
-						else if ($("#" + sensorName).val() == average) {
-							$("#status").val("Received data is stagnant. Run simulate-sensor.js")
-						}
+							$("#knobs").append("<progress id='" + sensorName + "' max='" + (sensorBounds[1] - sensorBounds[0]) + "' value='0'>\n")
 						else {
-							$("#status").val("Received fresh data from server (avg " + average + ")")
+							$("#status").val("Received live figure: " + average)
 						}
 
-						$("#" + sensorName).val(average)
+						$("#" + sensorName).val(average - sensorBounds[0])
 
 						var picRange = 6 // Last frame of the css sprite
 						var picFrame = Math.min(Math.round(Math.max(average - sensorBounds[0], 0)/(sensorBounds[1] + 1) * picRange), picRange)
@@ -88,12 +124,39 @@
 				} catch (e) {
 					$("#status").val("JSON data problem: " + e.message)
 				}
-			})
-		}
+		});
 		
-		$(document).ready(function () {
-			setInterval(function () { fetch() }, 200)
-		})
+		// FROM http://stackoverflow.com/questions/3177836/how-to-format-time-since-xxx-e-g-4-minutes-ago-similar-to-stack-exchange-site
+		function timeSince(date) {
+
+			var seconds = Math.floor((new Date() - date) / 1000);
+
+			var interval = Math.floor(seconds / 31536000);
+
+			if (interval > 1) {
+				return interval + " years";
+			}
+			interval = Math.floor(seconds / 2592000);
+			if (interval > 1) {
+				return interval + " months";
+			}
+			interval = Math.floor(seconds / 86400);
+			if (interval > 1) {
+				return interval + " days";
+			}
+			interval = Math.floor(seconds / 3600);
+			if (interval > 1) {
+				return interval + " hours";
+			}
+			interval = Math.floor(seconds / 60);
+			if (interval > 1) {
+				return interval + " minutes";
+			}
+			return Math.floor(seconds) + " seconds";
+		}
+
+
+
 	</script>
 </body>
 </html>

@@ -36,7 +36,9 @@
 			width: 100%;
 			display:none;
 		}
-		padding: 0.5em;
+		td {
+			padding: 0.5em;
+		}
 	</style>
 </head>
 <body>
@@ -97,17 +99,14 @@
 		socket.on('message', function(resp){
 			try {
 					var sensors = resp["sensors"]
-					var devices = sensors.lengt8
-					var sensorPackage
 					
 					// Deal with single-sensor JSON data
-					if (devices == null) {
-						devices = 1
-						sensorPackage = sensors
+					if (!sensors[0]) {
+						sensors = [sensors]
 					}
-					else sensorPackage = sensors[0]
 				
-					for (var i = 0; i < devices; i++) {
+					for (var i = 0; i < sensors.length; i++) {
+						var sensorPackage = sensors[i]
 						var sensorName = sensorPackage["name"]
 						var dataPoints = sensorPackage["collection"]
 						

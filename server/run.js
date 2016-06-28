@@ -62,20 +62,24 @@ client.on('error', error => console.error(`Error - socket connection: ${error} :
 
 client.on('message', msg => {
 	
-	console.log(`Message from vör: ${JSON.stringify(lastMessage)}`)
+	console.log(`Message from vör: ${JSON.stringify(msg)}`)
 	
 	var sensors = msg["sensors"]
 	if (!sensors[0]) {
 		sensors = [sensors]
 	}
+	console.log("... which looks like " + sensors.length + " different sensors.")
 	for (var i = 0; i < sensors.length; i++) {
 		var sensor = sensors[i]
 		
-		if (!isAlphaNumeric(sensor["name"]) || isNaN(sensor["value"])) 
+		if (!isAlphaNumeric(sensor["name"])) {
+			console.log("Problematic sensor package " + JSON.stringify(sensor))
 			continue
-		
-		if (!saveData(sensor["name"], parseInt(sensor["value"])))
-			registerSensor(sensor["name"], "Auto-added Sensor") 
+		}
+		for (var j = 0; j < sensor["collection"].length; j++) {
+			if (!saveData(sensor["name"], parseInt(sensor["collection"][j]["value"])))
+				registerSensor(sensor["name"], "Auto-added Sensor") 
+		}
 	}
 });
 

@@ -36,7 +36,7 @@ app.get('/fetch', function (req, res) {
 		
 	console.log("Got fetched: " + content)
 	content = JSON.parse(content)
-	console.log("Accessing archives from TS " + content["time0"] + " to " + content["time0"])
+	console.log("Accessing archives from TS " + content["time0"] + " to " + content["timeT"])
 	
 	getData(parseInt(content.time0), parseInt(content.timeT), res)
 });
@@ -49,7 +49,11 @@ app.listen(UI_PORT, function () {
 var lastMessage = {}
 
 
-// connect to socket server
+///////////////////////////
+// Connect to Vör socket //
+///////////////////////////
+
+
 const client = socketIO.connect(SOCKET_SERVER);
 client.on('connect', () => console.log(`Connected to Vör socket ${SOCKET_SERVER}`));
 client.on('disconnect', () => console.log(`Client socket disconnected ${SOCKET_SERVER} :  ${new Date()}`));
@@ -57,13 +61,43 @@ client.on('reconnect_attempt', error => console.error(`Error - cannot connect to
 client.on('error', error => console.error(`Error - socket connection: ${error} : ${new Date()}`));
 
 client.on('message', msg => {
-	lastMessage = msg
+	
 	console.log(`Message from vör: ${JSON.stringify(lastMessage)}`)
+	
+	var sensors = msg["sensors"]
+	if (!sensors[0]) {
+		sensors = [sensors]
+	}
+	for (var i = 0; i < sensors.length; i++) {
+		var sensor = sensors[i]
+		
+		if (!isAlphaNumeric(sensor["name"]) || isNaN(sensor["value"])) 
+			continue
+		
+		if (!saveData(sensor["name"], parseInt(sensor["value"])))
+			registerSensor(sensor["name"], "Auto-added Sensor") 
+	}
 });
+
 
 /////////////////////////
 // Manage the database //
 /////////////////////////
+
+// from http://stackoverflow.com/questions/4434076/best-way-to-alphanumeric-check-in-javascript
+function isAlphaNumeric(str) {
+  var code, i, len;
+
+  for (i = 0, len = str.length; i < len; i++) {
+    code = str.charCodeAt(i);
+    if (!(code > 47 && code < 58) && // numeric (0-9)
+        !(code > 64 && code < 91) && // upper alpha (A-Z)
+        !(code > 96 && code < 123)) { // lower alpha (a-z)
+      return false;
+    }
+  }
+  return true;
+};
 
 const c = mysql.createConnection({
 	host     : 'localhost',
@@ -104,6 +138,7 @@ function saveData(sensorID, val) {
 				c.query('INSERT INTO Data(SensorID, val) VALUES ("'+sensorID+'", "'+val+'");', function(err, result) {
 					if (!err) {
 						console.log("Saved data!")
+						return true
 					}
 					else  {
 						console.log("Mysql error: " + JSON.stringify(err))
@@ -116,6 +151,7 @@ function saveData(sensorID, val) {
 			console.log("Mysql error: " + JSON.stringify(err))
 		}
 	});
+	return false
 }
 
 /* Registers a new sensor into the system */

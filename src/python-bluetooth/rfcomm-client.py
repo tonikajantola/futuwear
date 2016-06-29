@@ -6,14 +6,45 @@
 # $Id: rfcomm-client.py 424 2006-08-24 03:35:54Z albert $
 
 from __future__ import print_function
-#import curses
 from bluetooth import *
 import sys
+from socketIO_client import SocketIO, LoggingNamespace
+
+socketServer = "futuwear.tunk.org"
+socketPort = 13337
 
 if sys.version < '3':
     input = raw_input
 
 #stdscr = curses.initscr();
+
+connection = False
+
+def connected(*args):
+    global connection
+    print("Connected to web socket at", socketServer)
+    connection = True
+
+def disconnected(*args):
+    global connection
+    print("Connection to web socket was interrupted!")
+    connection = False
+	
+socket = SocketIO(socketServer, socketPort, LoggingNamespace)
+
+def forwardToServer(json):
+    global socketIO
+    global connection
+    if connection:
+        print("Emitting ", json)
+        socket.emit('message', json)
+    else:
+        print("Couldn't emit due to faulty socket connection.")
+	
+socket.on("connect", connected)
+socket.on("disonnect", disconnected)
+socket.wait(seconds=5)
+
 
 addr = "00:07:80:36:A6:03"
 """
@@ -41,41 +72,21 @@ print("connecting to \"%s\" on %s, port %s" % (name, host, port))
 """
 # Create the client socket
 sock=BluetoothSocket( RFCOMM )
-#sock.connect((host, port))
-sock.connect((addr, 1))
+
+bluetoothProblem = True
+while bluetoothProblem:
+	try:
+		sock.connect((addr, 1))
+		bluetoothProblem = False
+	except:
+		print("Device", addr, "could not be reached. Try resetting?")
 
 sock.send("READY\n");
 
 
-from socketIO_client import SocketIO, LoggingNamespace
-socket = SocketIO('futuwear.tunk.org', 13337, LoggingNamespace)
-connection = False
-
-def connected():
-    global connection
-    print("Connected to web socket")
-    connection = True
-
-def disconnected():
-    global connection
-    print("Disconnected from web socket")
-    connection = False
-	
-socket.on("connect", connected)
-socket.on("disonnect", disconnected)
-
-def forwardToServer(json):
-    global socketIO
-    global connection
-    if connection:
-        print("Emitting ", json)
-        socket.emit('message', json)
-    else:
-        print("Couldn't emit.")
-
 buf = "";
 line_buf = [];
-print("connected.  type stuff")
+print("Connected via bluetooth to device", addr)
 while True:
     data = sock.recv(128).decode("utf-8");
     buf += data;
@@ -85,8 +96,6 @@ while True:
     while (len(line_buf) > 1):
         #send line_buf[0] over socketIO		
         forwardToServer(line_buf[0])
-        print("Test")
-        print(line_buf[0]);
         line_buf = line_buf[1:];
 
 sock.close()

@@ -46,6 +46,33 @@ sock.connect((addr, 1))
 
 sock.send("READY\n");
 
+
+from socketIO_client import SocketIO, LoggingNamespace
+socket = SocketIO('futuwear.tunk.org', 13337, LoggingNamespace)
+connection = False
+
+def connected():
+    global connection
+    print("Connected to web socket")
+    connection = True
+
+def disconnected():
+    global connection
+    print("Disconnected from web socket")
+    connection = False
+	
+socket.on("connect", connected)
+socket.on("disonnect", disconnected)
+
+def forwardToServer(json):
+    global socketIO
+    global connection
+    if connection:
+        print("Emitting ", json)
+        socket.emit('message', json)
+    else:
+        print("Couldn't emit.")
+
 buf = "";
 line_buf = [];
 print("connected.  type stuff")
@@ -56,7 +83,9 @@ while True:
     buf = line_buf[-1];
     #if len(data) == 0: break
     while (len(line_buf) > 1):
-        #send line_buf[0] over socketIO
+        #send line_buf[0] over socketIO		
+        forwardToServer(line_buf[0])
+        print("Test")
         print(line_buf[0]);
         line_buf = line_buf[1:];
 

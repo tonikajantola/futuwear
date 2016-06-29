@@ -65,22 +65,28 @@ client.on('message', msg => {
 	console.log(`Message from vör: ${JSON.stringify(msg)}`)
 	
 	var sensors = msg["sensors"]
-	if (!sensors[0]) {
-		sensors = [sensors]
-	}
-	console.log("... which looks like " + sensors.length + " different sensors.")
-	for (var i = 0; i < sensors.length; i++) {
-		var sensor = sensors[i]
-		
-		if (!isAlphaNumeric(sensor["name"])) {
-			console.log("Problematic sensor package " + JSON.stringify(sensor))
-			continue
+	
+	try {
+		if (!sensors[0]) {
+			sensors = [sensors]
 		}
-		for (var j = 0; j < sensor["collection"].length; j++) {
-			if (!saveData(sensor["name"], parseInt(sensor["collection"][j]["value"])))
-				registerSensor(sensor["name"], "Auto-added Sensor") 
+		console.log("... which looks like " + sensors.length + " different sensors.")
+		for (var i = 0; i < sensors.length; i++) {
+			var sensor = sensors[i]
+			
+			if (!isAlphaNumeric(sensor["name"])) {
+				console.log("Problematic sensor package " + JSON.stringify(sensor))
+				continue
+			}
+			for (var j = 0; j < sensor["collection"].length; j++) {
+				if (!saveData(sensor["name"], parseInt(sensor["collection"][j]["value"])))
+					registerSensor(sensor["name"], "Auto-added Sensor") 
+			}
 		}
+	} catch (e) {
+		console.log("The message was not understood.")
 	}
+	
 });
 
 
@@ -118,11 +124,12 @@ c.connect(function(err){
 });
 
 function getData(time0, timeT, responder) {
+	var accuracy = 1 // Seconds, ie. what to average at (60 => 1 minute averages)
 	var sql = '	SELECT sensorID, UNIX_TIMESTAMP(ROUND(AVG(logged))) AS logged, ROUND(AVG(val)) AS val \
 				FROM Data WHERE logged >= FROM_UNIXTIME(?) AND logged <= FROM_UNIXTIME(?) \
-				GROUP BY logged \
-				LIMIT 100;'
-	c.query(sql, [time0, timeT], function(err, result) {
+				GROUP BY ROUND(logged/?) \
+				LIMIT 50;'
+	c.query(sql, [time0, timeT, accuracy], function(err, result) {
 		responder.setHeader('Content-Type', 'application/json');
 		if (!err) {
 			console.log("Found " + result.length + " matching entries.")

@@ -123,6 +123,8 @@
 		var socket = io.connect("http://futuwear.tunk.org:13337");
 		
 		socket.on('message', function(resp){
+			var now = Math.floor(new Date() / 1000)
+			history(now - 60, now + 10) // Affect the graph
 			try {
 					var sensors = resp["sensors"]
 					

@@ -47,7 +47,13 @@ function load_cb(data_id) {
     m_app.enable_camera_controls();
 
     // place your code here
+	m_logn.append_custom_callback("get_rotation", rotval);
+    load_scene();
+}
 
+function rotval(in_params, out_params) {
+	var radians = Math.random()
+	return radians
 }
 
 

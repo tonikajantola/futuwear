@@ -79,15 +79,16 @@
 						var reading = resp[i]
 						
 						var sensorID = reading["sensorID"]
-						var logged = new Date(reading["logged"])
+						var logged = new Date(reading["logged"] * 1000)
 						var val = parseInt(reading["val"])
 						
 						$("#list").append("<tr><td><b>" + sensorID + "</b></td><td>" + val + "</td><td><small>" + timeSince(logged) + " ago</small></td></tr>")
 						dataPoints.data.push(val)
-						dataPoints.labels.push(logged)
+						dataPoints.labels.push(logged.toLocaleTimeString().replace('.',':').replace('.',':'))
 						
 						
 					}
+					console.log(JSON.stringify(dataPoints))
 					
 					var graphData = {
 						labels: dataPoints.labels,

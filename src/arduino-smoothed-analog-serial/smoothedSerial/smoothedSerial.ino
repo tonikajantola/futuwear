@@ -11,11 +11,13 @@ int minV = 1023;
 int maxV = 0;
 float smoothedValue = 0.0;
 float smoothingWeight = 0.004;
+unsigned long lastOut = 0;
 
 // the setup routine runs once when you press reset:
 void setup() {
   // initialize serial communication at 9600 bits per second:
   Serial.begin(115200);
+  lastOut = millis();
 }
 
 // the loop routine runs over and over again forever:
@@ -29,6 +31,9 @@ void loop() {
   
   // print out the value you read:
   //Serial.println();
-  Serial.println(smoothedValue);
-  delay(1);        // delay in between reads for stability
+  if ((millis() - lastOut) > 200) {
+    Serial.println(smoothedValue);
+    lastOut = millis();
+  }
+  delay(10);        // delay in between reads for stability
 }

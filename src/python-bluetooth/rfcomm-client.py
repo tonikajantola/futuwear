@@ -46,12 +46,18 @@ sock.connect((addr, 1))
 
 sock.send("READY\n");
 
+buf = "";
+line_buf = [];
 print("connected.  type stuff")
 while True:
-    data = sock.recv(128);
-    data = data.decode("utf-8")
-    if len(data) == 0: break
-    #sock.send(data)
-    print(data, end="");
+    data = sock.recv(128).decode("utf-8");
+    buf += data;
+    line_buf = buf.split("\n");
+    buf = line_buf[-1];
+    #if len(data) == 0: break
+    while (len(line_buf) > 1):
+        #send line_buf[0] over socketIO
+        print(line_buf[0]);
+        line_buf = line_buf[1:];
 
 sock.close()

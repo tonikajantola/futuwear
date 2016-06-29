@@ -16,7 +16,7 @@ copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
 
 The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
+all copcies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -142,7 +142,7 @@ void iwrapper_loop() {
             }
         } else if (iwrap_initialized) {
             // idle
-            if (iwrap_pairings && iwrap_autocall_target > iwrap_connected_devices && !iwrap_pending_calls
+            /*if (iwrap_pairings && iwrap_autocall_target > iwrap_connected_devices && !iwrap_pending_calls
                                && (!iwrap_autocall_last_time || (millis() - iwrap_autocall_last_time) >= iwrap_autocall_delay_ms)) {
                 //char cmd[] = "CALL AA:BB:CC:DD:EE:FF 19 A2DP";      // A2DP
                 //char cmd[] = "CALL AA:BB:CC:DD:EE:FF 17 AVRCP";     // AVRCP
@@ -156,7 +156,7 @@ void iwrapper_loop() {
                 char *cptr = cmd + 5;
 
                 // find first unconnected device
-                for (; iwrap_connection_map[iwrap_autocall_index] -> active_links; iwrap_autocall_index++);
+                //for (; iwrap_connection_map[iwrap_autocall_index] -> active_links; iwrap_autocall_index++);
 
                 // write MAC string into call command buffer and send it
                 iwrap_bintohexstr((uint8_t *)(iwrap_connection_map[iwrap_autocall_index] -> mac.address), 6, &cptr, ':', 0);
@@ -165,7 +165,7 @@ void iwrapper_loop() {
                 serial_out(s);
                 iwrap_send_command(cmd, iwrap_mode);
                 iwrap_autocall_last_time = millis();
-            }
+            }*/
         }
     }
 
@@ -269,7 +269,7 @@ void my_iwrap_evt_connect(uint8_t link_id, const char *type, uint16_t target, co
     iwrap_active_connections++;
     add_mapped_connection(link_id, address, type, target);
     surefire_connection_id = link_id;
-    print_connection_map();
+    //print_connection_map();
 }
 
 void my_iwrap_evt_no_carrier(uint8_t link_id, uint16_t error_code, const char *message) {
@@ -298,9 +298,9 @@ void my_iwrap_evt_ready() {
 }
 
 void my_iwrap_evt_ring(uint8_t link_id, const iwrap_address_t *address, uint16_t channel, const char *profile) {
-    add_mapped_connection(link_id, address, profile, channel);
+    //add_mapped_connection(link_id, address, profile, channel);
     surefire_connection_id = link_id;
-    print_connection_map();
+    //print_connection_map();
 }
 
 /* ============================================================================
@@ -439,7 +439,7 @@ uint8_t remove_mapped_connection(uint8_t link_id) {
 #endif
 
 void print_connection_map() {
-    char s[100];
+    /*char s[100];
     serial_out(F("==============================================================================\n"));
     sprintf(s, "Connection map (%d pairings, %d connected devices, %d total connections)\n", iwrap_pairings, iwrap_connected_devices, iwrap_active_connections);
     serial_out(s);
@@ -465,7 +465,7 @@ void print_connection_map() {
         serial_out(s);
     }
     serial_out(F("--------+-------+-------+-----+-------+-------+-----+-------+-----+-----+-----\n"));
-}
+*/}
 
 void print_demo_menu() {
     serial_out(F("iWRAP generic demo menu\n"));

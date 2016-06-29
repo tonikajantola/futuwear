@@ -7,13 +7,13 @@
 #define SMOOTH_FACTOR 0.1f
 #define NUM_SENSORS 2
 #define SENSOR_MEASURE_INTERVAL 2
-#define SENSOR_UPDATE_INTERVAL 10 //milliseconds
+#define SENSOR_UPDATE_INTERVAL 10  //milliseconds
 
 typedef enum {
     FLEX,
     ECG,
     FORCE,
-    STRETCH
+    STRETCH,
 } sensor_class;
 
 typedef struct Sensor {

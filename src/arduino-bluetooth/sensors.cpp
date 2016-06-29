@@ -8,7 +8,11 @@ unsigned long lastDataDump = 0;
 //List of all sensors connected.
 Sensor sensorList[NUM_SENSORS] = {
     {FLEX, "ShoulderFlexZ_L", A0},
-    {FLEX, "ShoulderFlexZ_R", A1},
+    {FLEX, "ShoulderFlexZ_R", A1}//,
+    //{FLEX, "test1", A2},
+    //{FLEX, "test2", A3},
+    //{FLEX, "test3", A4},
+    //{FLEX, "test4", A5}
 };
 
 void sensors_init() {

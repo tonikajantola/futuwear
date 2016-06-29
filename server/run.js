@@ -118,8 +118,11 @@ c.connect(function(err){
 });
 
 function getData(time0, timeT, responder) {
-	var sql = 'SELECT sensorID, UNIX_TIMESTAMP(logged) AS logged, val FROM Data WHERE logged >= FROM_UNIXTIME('+time0+') AND logged <= FROM_UNIXTIME('+timeT+') LIMIT 100;'
-	c.query(sql, function(err, result) {
+	var sql = '	SELECT sensorID, UNIX_TIMESTAMP(ROUND(AVG(logged))) AS logged, ROUND(AVG(val)) AS val \
+				FROM Data WHERE logged >= FROM_UNIXTIME(?) AND logged <= FROM_UNIXTIME(?) \
+				GROUP BY logged \
+				LIMIT 100;'
+	c.query(sql, [time0, timeT], function(err, result) {
 		responder.setHeader('Content-Type', 'application/json');
 		if (!err) {
 			console.log("Found " + result.length + " matching entries.")
@@ -134,12 +137,13 @@ function getData(time0, timeT, responder) {
 
 /* Saves a given value as reported by #sensorID */
 function saveData(sensorID, val) {
-	c.query('SELECT Count(ID) AS results FROM Sensors WHERE ID="' + sensorID + '";', function(err, result) {
+	c.query('SELECT Count(ID) AS results FROM Sensors WHERE ID=?;', [sensorID], function(err, result) {
 		if (!err && result[0]["results"]) {
 			var found = !isNaN(result[0]["results"]) && parseInt(result[0]["results"]) > 0
 			
 			if (found) {
-				c.query('INSERT INTO Data(SensorID, val) VALUES ("'+sensorID+'", "'+val+'");', function(err, result) {
+				var insertion = {sensorID: sensorID, val: val}
+				c.query('INSERT INTO Data SET ?;', insertion, function(err, result) {
 					if (!err) {
 						console.log("Saved data!")
 						return true
@@ -160,12 +164,14 @@ function saveData(sensorID, val) {
 
 /* Registers a new sensor into the system */
 function registerSensor(ID, name) {
-	c.query('SELECT Count(ID) AS results FROM Sensors WHERE ID="' + ID + '";', function(err, result) {
+	c.query('SELECT Count(ID) AS results FROM Sensors WHERE ID=?;', [ID], function(err, result) {
 		if (!err) {
 			var found = !isNaN(result[0]["results"]) && parseInt(result[0]["results"]) > 0
 			
+			
 			if (!found) {
-				c.query('INSERT INTO Sensors(ID, type, name) VALUES ("'+ID+'", "kinetic", "Test-sensor");', function(err, result) {
+				var insertion = {ID: ID, type: "kinetic", name: "Test-sensor"}
+				c.query('INSERT INTO Sensors SET ?;', insertion, function(err, result) {
 					if (!err) {
 						console.log("Saved new sensor!")
 					}

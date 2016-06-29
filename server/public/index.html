@@ -93,12 +93,12 @@
 						labels: dataPoints.labels,
 						datasets: [
 							{
-								label: "Futuwear Sensors",
+								label: "Sensor Reading",
 								data: dataPoints.data,
 							}
 						]
 					};
-					Chart.Line(ctx, {
+					Chart.Line(plot, {
 						data: graphData
 					});
 					

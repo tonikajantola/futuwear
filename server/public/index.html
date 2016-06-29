@@ -55,12 +55,13 @@
 		<b>Archived data (SQL)</b><br>
 		<input type="number" id="time0"> -> <input type="number" id="timeT"> <button onclick="history(parseInt(document.getElementById('time0').value), parseInt(document.getElementById('timeT').value))">Fetch</button>
 		
-		<br><a href="#" onclick="document.getElementById('epochconverter').style.display='block';this.style.display='none'"><small>Get EPOCH times</small></a>
+		<br><a href="#" onclick="document.getElementById('epochconverter').style.display='block';document.getElementById('epochconverter').src='http://www.epochconverter.com/';this.style.display='none'"><small>EPOCH times lookup</small></a>
 		
-		<iframe src="http://www.epochconverter.com/" id="epochconverter"></iframe>
+		<iframe src="" id="epochconverter"></iframe>
 		<br><br>
-		<canvas id="plot" width="400" height="400"></canvas>
-		<table id="list"></table>
+		<canvas id="plot" width="400" height="400"></canvas><br><a href="#" onclick="document.getElementById('list').style.display='block';this.style.display='none'"><small>Show tabular data</small></a>
+		
+		<table id="list" style="display:none;"><tr><td>No data fetched yet</td></tr></table>
 		
 	</div>
 	
@@ -73,7 +74,7 @@
 		function history(time0, timeT) {
 			$.get("/fetch", "data=" + JSON.stringify({time0: time0, timeT: timeT}), function (resp) {
 				try {
-					$("#list").empty()
+					$("#list").html("<tr><td colspan='3'>Records from <b>"+(new Date(time0*1000).toLocaleString())+"</b> to <b>"+(new Date(timeT*1000).toLocaleString())+"</b></td></tr>")
 					var dataPoints = {data: [], labels: []}
 					for (var i = 0; i < resp.length; i++) {
 						var reading = resp[i]
@@ -105,6 +106,9 @@
 					
 					if (i >= 100) {
 						$("#list").append("<tr><td colspan='3'>Some data may have been truncated</td></tr>")
+					}
+					else if (i <= 0) {
+						$("#list").append("<tr><td colspan='3'>No records were found</td></tr>")
 					}
 				} catch (e) {
 					console.log("JSON data problem: " + e.message)
@@ -160,7 +164,7 @@
 		// FROM http://stackoverflow.com/questions/3177836/how-to-format-time-since-xxx-e-g-4-minutes-ago-similar-to-stack-exchange-site
 		function timeSince(date) {
 
-			var seconds = Math.floor((new Date() - date*1000) / 1000);
+			var seconds = Math.floor((new Date() - date) / 1000);
 
 			var interval = Math.floor(seconds / 31536000);
 

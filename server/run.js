@@ -121,7 +121,7 @@ function getData(time0, timeT, responder) {
 	c.query(sql, [time0, timeT, accuracy], function(err, result) {
 		responder.setHeader('Content-Type', 'application/json');
 		if (!err) {
-			console.log("Found " + result.length + " data points between " + (new Date(time0*1000)).toLocaleString + " and " + (new Date(timeT*1000)).toLocaleString)
+			console.log("Found " + result.length + " data points between " + (new Date(time0*1000)).toLocaleString() + " and " + (new Date(timeT*1000)).toLocaleString())
 			responder.send(JSON.stringify(result, null, 3));	
 		}
 		else  {

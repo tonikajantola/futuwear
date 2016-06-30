@@ -7,8 +7,10 @@ const fs = require("fs")
 const express = require('express');
 const socketIO = require('socket.io-client');
 const mysql = require('mysql');
+const crypto = require('crypto');
 
 var app = express();
+var md5 = crypto.createHash('md5')
 
 // Serve all static files
 app.use(express.static('public'));
@@ -67,6 +69,10 @@ client.on('message', msg => {
 	var sensors = msg["sensors"]
 	
 	try {
+		var hashPie = JSON.stringify(sensors)
+		md5.update(hashPie);
+		console.log(md5.digest('hex');)
+		
 		if (!sensors[0]) {
 			sensors = [sensors]
 		}
@@ -79,7 +85,11 @@ client.on('message', msg => {
 				continue
 			}
 			for (var j = 0; j < sensor["collection"].length; j++) {
-				if (!saveData(sensor["name"], parseInt(sensor["collection"][j]["value"])))
+				var sensorUnregistered = !saveData(sensor["name"], parseInt(sensor["collection"][j]["value"]))
+				
+				
+				
+				if (authOkay && sensorUnregistered)
 					registerSensor(sensor["name"], "Auto-added Sensor") 
 			}
 		}

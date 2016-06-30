@@ -1,5 +1,6 @@
 // Pretend to be a sensor sending data to Vör
 var target = "http://futuwear.tunk.org:13337/messages/"
+var interval = 1000 // Milliseconds
 
 function rand(min, max) {
 	return Math.floor(Math.random() * (max - min)) + min
@@ -37,4 +38,4 @@ setInterval(function () {
 	  }
 	  else console.log("Could not complete the request.")
 	});
-}, 100)
+}, interval)

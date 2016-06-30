@@ -9,9 +9,12 @@ from __future__ import print_function
 from bluetooth import *
 import sys
 from socketIO_client import SocketIO, LoggingNamespace
+import json
+import hashlib
 
 socketServer = "futuwear.tunk.org"
 socketPort = 13337
+deviceCode = "Rand0mSens0rSerialNumber" # This should be different for all devices
 
 if sys.version < '3':
     input = raw_input
@@ -32,12 +35,14 @@ def disconnected(*args):
 	
 socket = SocketIO(socketServer, socketPort, LoggingNamespace)
 
-def forwardToServer(json):
+def forwardToServer(jsonStuff):
     global socketIO
     global connection
     if connection:
-        print("Emitting ", json)
-        socket.emit('message', json)
+	    jsonData = json.loads(jsonStuff)
+		jsonData["token"] = hashlib.md5(deviceCode + jsonData["sensors"].dumps()).hexdigest() #TODO: Safety
+        print("Emitting ", json.dumps(jsonData))
+        socket.emit('message', json.dumps(jsonData))
     else:
         print("Couldn't emit due to faulty socket connection.")
 	

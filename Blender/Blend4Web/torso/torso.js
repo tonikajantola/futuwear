@@ -30,7 +30,7 @@ function init_cb(canvas_elem, success) {
         console.log("b4w init failure");
         return;
     }
-
+	m_logn.append_custom_callback("get_rotation", rotval);
     load();
 }
 
@@ -48,14 +48,12 @@ function load_cb(data_id) {
     m_app.enable_camera_controls();
 
     // place your code here
-	m_logn.append_custom_callback("get_rotation", rotval);
-    load_scene();
 }
 
 function rotval(in_params, out_params) {
 	var radians = Math.random()
-	//return radians
-	out_params = radians;
+	return radians
+	//out_params = radians;
 }
 
 

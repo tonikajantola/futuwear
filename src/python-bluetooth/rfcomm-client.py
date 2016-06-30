@@ -39,9 +39,10 @@ def forwardToServer(jsonStuff):
     global socketIO
     global connection
     if connection:
-	    jsonData = json.loads(jsonStuff)
-		jsonData["token"] = hashlib.md5(deviceCode + jsonData["sensors"].dumps()).hexdigest() #TODO: Safety
-        print("Emitting ", json.dumps(jsonData))
+        jsonData = json.loads(jsonStuff)
+        hashable = json.dumps(jsonData["sensors"]) + deviceCode
+        jsonData["token"] = hashlib.md5(hashable.encode('utf-8')).hexdigest() #TODO: List access safety
+        print("Hashing ", hashable)
         socket.emit('message', json.dumps(jsonData))
     else:
         print("Couldn't emit due to faulty socket connection.")

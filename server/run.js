@@ -65,15 +65,18 @@ client.on('message', msg => {
 	
 	console.log(`Message from vör: ${JSON.stringify(msg)}`)
 	
-	var sensors = msg["sensors"]
+	var sensors = json(msg)["sensors"]
 	
 	try {
 		var hashPie = JSON.stringify(sensors)
 		var md5 = crypto.createHash('md5')
 		var serial = "Rand0mSens0rSerialNumber" // TODO: Get from database
 		md5.update(hashPie + serial);
+		console.log("hashed " + hashPie + serial)
 		var computedHash = md5.digest('hex')
-		var receivedHash = msg["token"]
+		var receivedHash = json(msg)["token"]
+		
+		console.log("hash made from: " + hashPie + serial)
 		
 		if (computedHash != receivedHash)
 			throw new Error("Received hash " + receivedHash + " didn't match the computed hash " + computedHash)
@@ -211,5 +214,18 @@ function registerSensor(ID, name) {
 }
 
 
+
+function json(data) {
+			try {
+				if (typeof data == "string")
+					return JSON.parse(data)
+				else if (typeof JSON.parse(JSON.stringify(data)) == "object")
+					return data
+				else throw new Error("")
+			} catch (e) {
+				console.log("JSON data is faulty, calling it {}")
+				return {}
+			}
+		}
 
 

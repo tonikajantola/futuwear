@@ -27,8 +27,8 @@ function payload() {
 			}]
 		}
 	var md5 = crypto.createHash('md5')
-	var hashPie = JSON.stringify(sensordata["sensors"] + serial)
-	md5.update(hashPie);
+	var hashPie = JSON.stringify(sensordata["sensors"])
+	md5.update(hashPie + serial);
 	sensordata["token"] = md5.digest('hex')
 	return sensordata;
 }

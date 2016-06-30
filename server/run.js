@@ -35,9 +35,8 @@ app.get('/fetch', function (req, res) {
 	
 	var content = req.query.data // TODO: Safety
 		
-	console.log("Got fetched: " + content)
+	//console.log("Got fetched: " + content)
 	content = JSON.parse(content)
-	console.log("Accessing archives from TS " + content["time0"] + " to " + content["timeT"])
 	
 	getData(parseInt(content.time0), parseInt(content.timeT), res)
 });
@@ -103,7 +102,7 @@ client.on('message', msg => {
 // Manage the database //
 /////////////////////////
 
-const db = require("connection-strings")
+const db = require("./connection-strings")
 const c = mysql.createConnection(db);
 c.connect(function(err){
 	if(err){
@@ -122,11 +121,11 @@ function getData(time0, timeT, responder) {
 	c.query(sql, [time0, timeT, accuracy], function(err, result) {
 		responder.setHeader('Content-Type', 'application/json');
 		if (!err) {
-			console.log("Found " + result.length + " matching entries.")
+			console.log("Found " + result.length + " data points between " + (new Date(time0*1000)).toLocaleString + " and "" + (new Date(timeT*1000)).toLocaleString)
 			responder.send(JSON.stringify(result, null, 3));	
 		}
 		else  {
-			console.log("Mysql error: " + JSON.stringify(err))
+			console.log("Mysql error while fetching from archive: " + JSON.stringify(err))
 			responder.send(JSON.stringify({}, null, 3));
 		}
 	});	

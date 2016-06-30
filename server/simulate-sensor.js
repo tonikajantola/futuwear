@@ -2,12 +2,16 @@
 var target = "http://futuwear.tunk.org:13337/messages/"
 var interval = 1000 // Milliseconds
 
+const crypto = require('crypto');
+
+
+
 function rand(min, max) {
 	return Math.floor(Math.random() * (max - min)) + min
 }
 
 function payload() {
-	return {"sensors": 
+	var sensordata = {"sensors": 
 			[{
 				"name": "flex1", 
 				"collection": [{
@@ -20,6 +24,11 @@ function payload() {
 				}]
 			}]
 		}
+	var md5 = crypto.createHash('md5')
+	var hashPie = JSON.stringify(sensordata["sensors"])
+	md5.update(hashPie);
+	sensordata["token"] = md5.digest('hex')
+	return sensordata;
 }
 
 var request = require('request');

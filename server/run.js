@@ -10,7 +10,6 @@ const mysql = require('mysql');
 const crypto = require('crypto');
 
 var app = express();
-var md5 = crypto.createHash('md5')
 
 // Serve all static files
 app.use(express.static('public'));
@@ -70,8 +69,9 @@ client.on('message', msg => {
 	
 	try {
 		var hashPie = JSON.stringify(sensors)
+		var md5 = crypto.createHash('md5')
 		md5.update(hashPie);
-		console.log(md5.digest('hex');)
+		console.log(md5.digest('hex'))
 		
 		if (!sensors[0]) {
 			sensors = [sensors]
@@ -86,7 +86,7 @@ client.on('message', msg => {
 			}
 			for (var j = 0; j < sensor["collection"].length; j++) {
 				var sensorUnregistered = !saveData(sensor["name"], parseInt(sensor["collection"][j]["value"]))
-				
+				var authOkay = true
 				
 				
 				if (authOkay && sensorUnregistered)

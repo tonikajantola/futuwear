@@ -70,8 +70,13 @@ client.on('message', msg => {
 	try {
 		var hashPie = JSON.stringify(sensors)
 		var md5 = crypto.createHash('md5')
-		md5.update(hashPie);
-		console.log(md5.digest('hex'))
+		var serial = "Rand0mSens0rSerialNumber" // TODO: Get from database
+		md5.update(hashPie + serial);
+		var computedHash = md5.digest('hex')
+		var receivedHash = msg["token"]
+		
+		if (computedHash != receivedHash)
+			throw new Error("Received hash " + receivedHash + " didn't match the computed hash " + computedHash)
 		
 		if (!sensors[0]) {
 			sensors = [sensors]
@@ -94,7 +99,7 @@ client.on('message', msg => {
 			}
 		}
 	} catch (e) {
-		console.log("The message was not understood.")
+		console.log("Data save problem: " + e.message)
 	}
 	
 });

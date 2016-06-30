@@ -72,11 +72,9 @@ client.on('message', msg => {
 		var md5 = crypto.createHash('md5')
 		var serial = "Rand0mSens0rSerialNumber" // TODO: Get from database
 		md5.update(hashPie + serial);
-		console.log("hashed " + hashPie + serial)
 		var computedHash = md5.digest('hex')
 		var receivedHash = json(msg)["token"]
 		
-		console.log("hash made from: " + hashPie + serial)
 		
 		if (computedHash != receivedHash)
 			throw new Error("Received hash " + receivedHash + " didn't match the computed hash " + computedHash)
@@ -84,21 +82,14 @@ client.on('message', msg => {
 		if (!sensors[0]) {
 			sensors = [sensors]
 		}
-		console.log("... which looks like " + sensors.length + " different sensors.")
+		console.log("Got a vör message with readings from " + sensors.length + " sensor(s).")
 		for (var i = 0; i < sensors.length; i++) {
 			var sensor = sensors[i]
 			
-			if (!isAlphaNumeric(sensor["name"])) {
-				console.log("Problematic sensor package " + JSON.stringify(sensor))
-				continue
-			}
 			for (var j = 0; j < sensor["collection"].length; j++) {
-				var sensorUnregistered = !saveData(sensor["name"], parseInt(sensor["collection"][j]["value"]))
-				var authOkay = true
-				
-				
-				if (authOkay && sensorUnregistered)
-					registerSensor(sensor["name"], "Auto-added Sensor") 
+				var value = parseInt(sensor["collection"][j]["value"])
+				if (!saveData(sensor["name"], value))
+					registerSensor(sensor["name"], "Auto-added Sensor")  // TODO: require a separate registration
 			}
 		}
 	} catch (e) {
@@ -112,27 +103,8 @@ client.on('message', msg => {
 // Manage the database //
 /////////////////////////
 
-// from http://stackoverflow.com/questions/4434076/best-way-to-alphanumeric-check-in-javascript
-function isAlphaNumeric(str) {
-  var code, i, len;
-
-  for (i = 0, len = str.length; i < len; i++) {
-    code = str.charCodeAt(i);
-    if (!(code > 47 && code < 58) && // numeric (0-9)
-        !(code > 64 && code < 91) && // upper alpha (A-Z)
-        !(code > 96 && code < 123)) { // lower alpha (a-z)
-      return false;
-    }
-  }
-  return true;
-};
-
-const c = mysql.createConnection({
-	host     : 'localhost',
-	user     : 'root',
-	password : 'jalla',
-	database : 'futuwear',
-});
+const db = require("connection-strings")
+const c = mysql.createConnection(db);
 c.connect(function(err){
 	if(err){
 		console.log('Error connecting to Db: ' + err.message);
@@ -170,7 +142,7 @@ function saveData(sensorID, val) {
 				var insertion = {sensorID: sensorID, val: val}
 				c.query('INSERT INTO Data SET ?;', insertion, function(err, result) {
 					if (!err) {
-						console.log("Saved data!")
+						//console.log("Saved data!")
 						return true
 					}
 					else  {
@@ -183,8 +155,8 @@ function saveData(sensorID, val) {
 		else  {
 			console.log("Mysql error: " + JSON.stringify(err))
 		}
+		return false;
 	});
-	return false
 }
 
 /* Registers a new sensor into the system */
@@ -198,7 +170,7 @@ function registerSensor(ID, name) {
 				var insertion = {ID: ID, type: "kinetic", name: "Test-sensor"}
 				c.query('INSERT INTO Sensors SET ?;', insertion, function(err, result) {
 					if (!err) {
-						console.log("Saved new sensor!")
+						console.log("Registered new sensor " + ID)
 					}
 					else  {
 						console.log("Mysql sensor insertion error: " + JSON.stringify(err))

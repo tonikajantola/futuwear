@@ -118,20 +118,37 @@
 			
 		} 
 		
+		/* A function to validate any object into a JSON object, defaulting to {}*/
+		function json(data) {
+			try {
+				if (typeof data == "string")
+					return JSON.parse(data)
+				else if (typeof JSON.parse(JSON.stringify(data)) == "object")
+					return data
+				else throw new Error("")
+			} catch (e) {
+				console.log("JSON data is faulty, calling it {}")
+				return {}
+			}
+		}
+		
 		var sensorBounds = [500, 800] //TODO: Make this dynamic
 		
 		var socket = io.connect("http://futuwear.tunk.org:13337");
 		
+		
 		socket.on('message', function(resp){
 			var now = Math.floor(new Date() / 1000)
-			history(now - 60, now + 10) // Affect the graph
+				
 			try {
-					var sensors = resp["sensors"]
-					
-					// Deal with single-sensor JSON data
-					if (!sensors[0]) {
-						sensors = [sensors]
+					var sensors = json(resp)["sensors"]
+					if (sensors == undefined) {
+						throw new Error("Key 'sensors' is absent.")
 					}
+					else if (!sensors[0]) {
+						sensors = [sensors] // Deal with single-sensor JSON data
+					}
+					console.log("Received readings from " + sensors.length + " sensors.")
 				
 					for (var i = 0; i < sensors.length; i++) {
 						var sensorPackage = sensors[i]
@@ -140,12 +157,13 @@
 						
 						var average = parseInt(dataPoints[0].value)
 						if ($("#" + sensorName).length <= 0)
-							$("#knobs").append("<progress id='" + sensorName + "' max='" + (sensorBounds[1] - sensorBounds[0]) + "' value='0'>\n")
+							$("#knobs").append("<progress id='" + sensorName + "' max='" + (sensorBounds[1] - sensorBounds[0]) + "' value='0'></progress> <span id='label" + sensorName + "'></span><br>\n")
 						else {
-							$("#status").val("Received live figure: " + average)
+							$("#status").val("Received live figure(s)")
 						}
 
 						$("#" + sensorName).val(average - sensorBounds[0])
+						$("#label" + sensorName).html(average - sensorBounds[0])
 
 						var picRange = 6 // Last frame of the css sprite
 						var picFrame = Math.min(Math.round(Math.max(average - sensorBounds[0], 0)/(sensorBounds[1] + 1) * picRange), picRange)

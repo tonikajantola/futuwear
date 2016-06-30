@@ -43,7 +43,7 @@ def forwardToServer(json):
 	
 socket.on("connect", connected)
 socket.on("disonnect", disconnected)
-socket.wait(seconds=5)
+socket.wait(seconds=1)
 
 
 addr = "00:07:80:36:A6:03"

@@ -1,10 +1,24 @@
 // Pretend to be a sensor sending data to Vör
 var target = "http://futuwear.tunk.org:13337/messages/"
 
+function rand(min, max) {
+	return Math.floor(Math.random() * (max - min)) + min
+}
+
 function payload() {
-	return {"sensors": {"name": "flex1", "collection": 
-		[{"value": Math.floor(Math.random() * 300) + 500  , "timestamp": 0}, 
-		 {"value": Math.floor(Math.random() * 300) + 500  , "timestamp": 100}]}} // Stub data
+	return {"sensors": 
+			[{
+				"name": "flex1", 
+				"collection": [{
+					"value": rand(500, 800)
+				}]
+			}, {
+				"name": "flex2", 
+				"collection": [{
+					"value": rand(500, 800)
+				}]
+			}]
+		}
 }
 
 var request = require('request');

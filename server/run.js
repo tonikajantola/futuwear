@@ -166,7 +166,6 @@ function saveData(sensorID, val, failCallback) {
 			c.query('INSERT INTO Data SET ?;', insertion, function(err, result) {
 				if (err)
 					nodeLog("Mysql error: " + JSON.stringify(err));
-				else nodeLog("Saved value " + val)
 			});
 		} catch (e) {
 			nodeLog("Data save error: " + e.message)

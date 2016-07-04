@@ -85,7 +85,7 @@ client.on('message', msg => {
 			
 			for (var j = 0; j < sensor["collection"].length; j++) {
 				var value = parseInt(sensor["collection"][j]["value"])
-				saveData(sensor["name"], function () {
+				saveData(sensor["name"], value, function () {
 					// Fail callback
 					registerSensor(sensor["name"], "Auto-added Sensor")  // TODO: require a separate registration
 				})
@@ -166,6 +166,7 @@ function saveData(sensorID, val, failCallback) {
 			c.query('INSERT INTO Data SET ?;', insertion, function(err, result) {
 				if (err)
 					nodeLog("Mysql error: " + JSON.stringify(err));
+				else nodeLog("Saved value " + val)
 			});
 		} catch (e) {
 			nodeLog("Data save error: " + e.message)

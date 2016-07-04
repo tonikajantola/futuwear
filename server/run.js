@@ -35,7 +35,7 @@ app.get('/fetch', function (req, res) {
 	
 	var content = req.query.data // TODO: Safety
 		
-	//console.log("Got fetched: " + content)
+	//nodeLog("Got fetched: " + content)
 	content = JSON.parse(content)
 	
 	getData(parseInt(content.time0), parseInt(content.timeT), res)
@@ -43,7 +43,7 @@ app.get('/fetch', function (req, res) {
 
 
 app.listen(UI_PORT, function () {
-	console.log('Serving on port ' + UI_PORT.toString());
+	nodeLog('Serving on port ' + UI_PORT.toString());
 });
 
 var lastMessage = {}
@@ -55,14 +55,14 @@ var lastMessage = {}
 
 
 const client = socketIO.connect(SOCKET_SERVER);
-client.on('connect', () => console.log(`Connected to Vör socket ${SOCKET_SERVER}`));
-client.on('disconnect', () => console.log(`Client socket disconnected ${SOCKET_SERVER} :  ${new Date()}`));
+client.on('connect', () => nodeLog(`Connected to Vör socket ${SOCKET_SERVER}`));
+client.on('disconnect', () => nodeLog(`Client socket disconnected ${SOCKET_SERVER} :  ${new Date()}`));
 client.on('reconnect_attempt', error => console.error(`Error - cannot connect to ${SOCKET_SERVER} : ${error} : ${new Date()}`));
 client.on('error', error => console.error(`Error - socket connection: ${error} : ${new Date()}`));
 
 client.on('message', msg => {
 	
-	console.log(`Message from vör: ${JSON.stringify(msg)}`)
+	nodeLog(`Message from vör: ${JSON.stringify(msg)}`)
 	
 	var sensors = json(msg)["sensors"]
 	
@@ -81,18 +81,21 @@ client.on('message', msg => {
 		if (!sensors[0]) {
 			sensors = [sensors]
 		}
-		console.log("Got a vör message with readings from " + sensors.length + " sensor(s).")
+		nodeLog("Got a vör message with readings from " + sensors.length + " sensor(s).")
 		for (var i = 0; i < sensors.length; i++) {
 			var sensor = sensors[i]
 			
 			for (var j = 0; j < sensor["collection"].length; j++) {
 				var value = parseInt(sensor["collection"][j]["value"])
-				if (!saveData(sensor["name"], value))
+				saveData(sensor["name"], function () {
+					// Fail callback
 					registerSensor(sensor["name"], "Auto-added Sensor")  // TODO: require a separate registration
+				})
+					
 			}
 		}
 	} catch (e) {
-		console.log("Data save problem: " + e.message)
+		nodeLog("Data save problem: " + e.message)
 	}
 	
 });
@@ -103,14 +106,24 @@ client.on('message', msg => {
 /////////////////////////
 
 const db = require("./connection-strings")
-const c = mysql.createConnection(db);
-c.connect(function(err){
-	if(err){
-		console.log('Error connecting to Db: ' + err.message);
-		return;
-	}
-	console.log('Database connection established');
-});
+
+var c
+
+function maintainConnection() {
+	c = mysql.createConnection(db);
+	
+	c.connect(function(err){
+		if(err){
+			nodeLog('Error connecting to Db: ' + err.message);
+			setTimeout(maintainConnection(), 1000)
+			return;
+		}
+		nodeLog('Database connection established');
+	});
+	
+}
+
+
 
 function getData(time0, timeT, responder) {
 	var accuracy = 1 // Seconds, ie. what to average at (60 => 1 minute averages)
@@ -118,43 +131,39 @@ function getData(time0, timeT, responder) {
 				FROM Data WHERE logged >= FROM_UNIXTIME(?) AND logged <= FROM_UNIXTIME(?) \
 				GROUP BY ROUND(logged/?) \
 				LIMIT 50;'
+				
 	c.query(sql, [time0, timeT, accuracy], function(err, result) {
 		responder.setHeader('Content-Type', 'application/json');
+		
 		if (!err) {
-			console.log("Found " + result.length + " data points between " + (new Date(time0*1000)).toLocaleString() + " and " + (new Date(timeT*1000)).toLocaleString())
+			nodeLog("Found " + result.length + " data points between " + (new Date(time0*1000)).toLocaleString() + " and " + (new Date(timeT*1000)).toLocaleString())
 			responder.send(JSON.stringify(result, null, 3));	
 		}
 		else  {
-			console.log("Mysql error while fetching from archive: " + JSON.stringify(err))
+			nodeLog("Mysql error while fetching from archive: " + JSON.stringify(err))
 			responder.send(JSON.stringify({}, null, 3));
 		}
 	});	
 }
 
 /* Saves a given value as reported by #sensorID */
-function saveData(sensorID, val) {
-	c.query('SELECT Count(ID) AS results FROM Sensors WHERE ID=?;', [sensorID], function(err, result) {
-		if (!err && result[0]["results"]) {
-			var found = !isNaN(result[0]["results"]) && parseInt(result[0]["results"]) > 0
+function saveData(sensorID, val, failCallback) {
+	c.query('SELECT Count(ID) AS matchedSensors FROM Sensors WHERE ID=?;', [sensorID], function(err, result) {
+		try {
+			var sensorExists = parseInt(result[0]['matchedSensors']) > 0
+			if (!sensorExists)
+				throw new Error("Sensor #" + sensorID + " has not been registered.");
+			var insertion = {sensorID: sensorID, val: val} // Information to INSERT INTO the "Data" table
 			
-			if (found) {
-				var insertion = {sensorID: sensorID, val: val}
-				c.query('INSERT INTO Data SET ?;', insertion, function(err, result) {
-					if (!err) {
-						//console.log("Saved data!")
-						return true
-					}
-					else  {
-						console.log("Mysql error: " + JSON.stringify(err))
-					}
-				});
-			}
-			else console.log("Sensor #" + sensorID + " is unknown; its data was ignored.")
+			c.query('INSERT INTO Data SET ?;', insertion, function(err, result) {
+				if (err)
+					nodeLog("Mysql error: " + JSON.stringify(err));
+			});
+		} catch (e) {
+			if (typeof failCallback == "function")
+				return failCallback()
+			nodeLog("Data save error: " + e.message)
 		}
-		else  {
-			console.log("Mysql error: " + JSON.stringify(err))
-		}
-		return false;
 	});
 }
 
@@ -169,17 +178,17 @@ function registerSensor(ID, name) {
 				var insertion = {ID: ID, type: "kinetic", name: "Test-sensor"}
 				c.query('INSERT INTO Sensors SET ?;', insertion, function(err, result) {
 					if (!err) {
-						console.log("Registered new sensor " + ID)
+						nodeLog("Registered new sensor " + ID)
 					}
 					else  {
-						console.log("Mysql sensor insertion error: " + JSON.stringify(err))
+						nodeLog("Mysql sensor insertion error: " + JSON.stringify(err))
 					}
 				});
 			}
-			else console.log("Sensor #" + ID + " already exists, please give a fresh id.")
+			else nodeLog("Sensor #" + ID + " already exists, please give a fresh id.")
 		}
 		else  {
-			console.log("Mysql error: " + JSON.stringify(err))
+			nodeLog("Mysql error: " + JSON.stringify(err))
 		}
 	});
 }
@@ -187,16 +196,28 @@ function registerSensor(ID, name) {
 
 
 function json(data) {
-			try {
-				if (typeof data == "string")
-					return JSON.parse(data)
-				else if (typeof JSON.parse(JSON.stringify(data)) == "object")
-					return data
-				else throw new Error("")
-			} catch (e) {
-				console.log("JSON data is faulty, calling it {}")
-				return {}
-			}
-		}
+	try {
+		if (typeof data == "string")
+			return JSON.parse(data)
+		else if (typeof JSON.parse(JSON.stringify(data)) == "object")
+			return data
+		else throw new Error("")
+	} catch (e) {
+		nodeLog("JSON data is faulty, calling it {}")
+		return {}
+	}
+}
+
+function nodeLog(str) {
+	var currentTime = new Date()
+	var clock = [currentTime.getHours(), currentTime.getMinutes(), currentTime.getSeconds()]
+	clock = clock.map(function (digit) {
+        if (digit.toString().length == 1)
+            return "0" + digit;
+		else return digit
+	})
+	console.log(clock.join(':') + ' ' + str)
+}
+
 
 

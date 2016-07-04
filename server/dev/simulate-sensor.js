@@ -17,12 +17,12 @@ function payload() {
 			[{
 				"name": "flex1", 
 				"collection": [{
-					"value": rand(500, 800)
+					"value": rand(0, 1000)
 				}]
 			}, {
 				"name": "flex2", 
 				"collection": [{
-					"value": rand(500, 800)
+					"value": rand(0, 1000)
 				}]
 			}]
 		}

@@ -62,8 +62,6 @@ client.on('error', error => console.error(`Error - socket connection: ${error} :
 
 client.on('message', msg => {
 	
-	nodeLog(`Message from vör: ${JSON.stringify(msg)}`)
-	
 	var sensors = json(msg)["sensors"]
 	
 	try {
@@ -95,7 +93,7 @@ client.on('message', msg => {
 			}
 		}
 	} catch (e) {
-		nodeLog("Data save problem: " + e.message)
+		nodeLog("Could not save vör data (" + e.message + "): " + JSON.stringify(msg))
 	}
 	
 });
@@ -107,7 +105,7 @@ client.on('message', msg => {
 
 const db = require("./connection-strings")
 
-var c
+var c;
 
 function maintainConnection() {
 	c = mysql.createConnection(db);
@@ -121,8 +119,17 @@ function maintainConnection() {
 		nodeLog('Database connection established');
 	});
 	
+	c.on('error', function (err) {
+		nodeLog("Database error: " + err);
+		if(err.code === 'PROTOCOL_CONNECTION_LOST') {
+			handleDisconnect();
+		} else {         
+			throw err;
+		}
+	})
+	
 }
-
+maintainConnection();
 
 
 function getData(time0, timeT, responder) {
@@ -130,6 +137,7 @@ function getData(time0, timeT, responder) {
 	var sql = '	SELECT sensorID, UNIX_TIMESTAMP(ROUND(AVG(logged))) AS logged, ROUND(AVG(val)) AS val \
 				FROM Data WHERE logged >= FROM_UNIXTIME(?) AND logged <= FROM_UNIXTIME(?) \
 				GROUP BY ROUND(logged/?) \
+				ORDER BY logged DESC \
 				LIMIT 50;'
 				
 	c.query(sql, [time0, timeT, accuracy], function(err, result) {
@@ -160,9 +168,9 @@ function saveData(sensorID, val, failCallback) {
 					nodeLog("Mysql error: " + JSON.stringify(err));
 			});
 		} catch (e) {
+			nodeLog("Data save error: " + e.message)
 			if (typeof failCallback == "function")
 				return failCallback()
-			nodeLog("Data save error: " + e.message)
 		}
 	});
 }

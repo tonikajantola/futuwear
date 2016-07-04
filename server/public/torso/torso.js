@@ -52,8 +52,8 @@ b4w.register("torso", function(exports, require) {
 	}
 
 	function rotval(in_params, out_params) {
-		var radians = customRotation || Math.random();
-		out_params[0] = radians;
+		var scale = customRotation || Math.random();
+		out_params[0] = scale * 1000;
 	}
 
 

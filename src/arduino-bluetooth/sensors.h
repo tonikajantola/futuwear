@@ -4,7 +4,7 @@
 #include <Arduino.h>
 
 //Global measurement smoothing factor
-#define SMOOTH_FACTOR 0.1f
+#define SMOOTH_FACTOR 0.03f
 #define NUM_SENSORS 2
 #define SENSOR_MEASURE_INTERVAL 2
 #define SENSOR_UPDATE_INTERVAL 10  //milliseconds

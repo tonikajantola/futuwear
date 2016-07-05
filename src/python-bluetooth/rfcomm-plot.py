@@ -55,11 +55,13 @@ while True:
     changed = False
     while (len(line_buf) > 1):
         js = json.loads(line_buf[0]);
-        for sensor in js["sensorData"]:
-            if not sensor in ydata:
-                ydata[sensor] = [0]*hist_len
-                lines[sensor], = plt.plot(ydata[sensor])
-            update_line(sensor, js["sensorData"][sensor])
+        for sensor in js["sensors"]:
+            s_name  = sensor["name"]
+            s_value = sensor["collection"][0]["value"]
+            if not s_name in ydata:
+                ydata[s_name] = [0]*hist_len
+                lines[s_name], = plt.plot(ydata[s_name])
+            update_line(s_name, s_value)
         line_buf = line_buf[1:];
         changed = True
     if len(data) == 0: break

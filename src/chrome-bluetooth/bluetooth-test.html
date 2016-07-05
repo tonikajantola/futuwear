@@ -1,0 +1,19 @@
+<html>
+
+<div id="debug">
+</div>
+
+<div id="output">
+</div>
+<script>
+    chrome.bluetooth.getAdapterState( function dumpInfo(AdapterState adapterInfo){
+        console.log(adapterInfo);
+    });
+    chrome.bluetooth.getDevices(function dumpPairs(Device deviceList) {
+        for (var i = 0; i < deviceList.length; i++) {
+            console.log(deviceList[i]);
+        }
+    });
+</script>
+
+</html>

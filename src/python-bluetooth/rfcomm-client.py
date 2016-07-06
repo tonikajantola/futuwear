@@ -1,5 +1,5 @@
 from __future__ import print_function
-from bluetooth import *
+import bluetooth_handler as bt
 import sys
 from socketIO_client import SocketIO, LoggingNamespace
 import json
@@ -7,10 +7,7 @@ import hashlib
 
 socketServer = "futuwear.tunk.org"
 socketPort = 13337
-addr = "00:07:80:36:A6:03" # The MAC address of the device in question
 deviceCode = "Rand0mSens0rSerialNumber" # This should be different for all devices
-
-
 
 if sys.version < '3':
     input = raw_input
@@ -49,34 +46,19 @@ socket.on("connect", connected)
 socket.on("disonnect", disconnected)
 socket.wait(seconds=1)
 
-
-
-# Create the client socket
-sock=BluetoothSocket( RFCOMM )
-
-bluetoothProblem = True
-while bluetoothProblem:
-	try:
-		sock.connect((addr, 1))
-		bluetoothProblem = False
-	except Exception as e:
-		print("Device", addr, "error:", str(e))
-
-sock.send("READY\n");
-
+bt.init()
 
 buf = "";
 line_buf = [];
-print("Connected via bluetooth to device", addr)
-while True:
-    data = sock.recv(128).decode("utf-8", errors="ignore");
-    buf += data;
-    line_buf = buf.split("\n");
-    buf = line_buf[-1];
-    #if len(data) == 0: break
-    while (len(line_buf) > 1):
-        #send line_buf[0] over socketIO		
-        forwardToServer(line_buf[0])
-        line_buf = line_buf[1:];
 
-sock.close()
+running = True
+while running:
+    try:
+        bt.readData()
+        while bt.dataAvailable():
+            #send line_buf[0] over socketIO		
+            forwardToServer(bt.nextLine())
+    except KeyboardInterrupt:
+        running = False
+print("Shutting down")
+bt.finish()

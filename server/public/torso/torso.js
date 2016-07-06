@@ -48,10 +48,15 @@ b4w.register("torso", function(exports, require) {
 
 		// place your code here
 		m_logn.append_custom_callback("get_rotation", rotval);
-		//m_logn.append_custom_callback("get_rotation", rotval);
+		m_logn.append_custom_callback("shoulder_Z", rot_R_Shoulder_Z);
 	}
 
 	function rotval(in_params, out_params) {
+		var scale = customRotation || Math.random();
+		out_params[0] = scale * 1000;
+	}
+	
+	function rot_R_Shoulder_Z(in_params, out_params) {
 		var scale = customRotation || Math.random();
 		out_params[0] = scale * 1000;
 	}

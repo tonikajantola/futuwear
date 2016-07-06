@@ -122,7 +122,7 @@ function maintainConnection() {
 	c.on('error', function (err) {
 		nodeLog("Database error: " + err);
 		if(err.code === 'PROTOCOL_CONNECTION_LOST') {
-			handleDisconnect();
+			maintainConnection();
 		} else {         
 			throw err;
 		}

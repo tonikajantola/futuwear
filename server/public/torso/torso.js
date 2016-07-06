@@ -1,6 +1,12 @@
 "use strict"
 
 // register the application module
+
+var callbacks = {
+	"get_rotation": false,
+	"shoulder_Z": false,
+} 
+
 b4w.register("torso", function(exports, require) {
 
 	// import modules used by the app
@@ -16,7 +22,7 @@ b4w.register("torso", function(exports, require) {
 			canvas_container_id: "canvas_cont",
 			callback: init_cb,
 			show_fps: true,
-			console_verbose: true,
+			console_verbose: false,
 			autoresize: true
 		});
 	}
@@ -45,26 +51,29 @@ b4w.register("torso", function(exports, require) {
 	 */
 	function load_cb(data_id) {
 		m_app.enable_camera_controls();
-
-		// place your code here
-		m_logn.append_custom_callback("get_rotation", rotval);
-		m_logn.append_custom_callback("shoulder_Z", rot_R_Shoulder_Z);
-	}
-
-	function rotval(in_params, out_params) {
-		var scale = customRotation || Math.random();
-		out_params[0] = scale * 1000;
+		
+		// Register the callbacks
+		
+		function prepareCallback(callbackID) {
+			// Create a new function (why is this here? http://stackoverflow.com/q/750486)
+			return function (in_params, out_params) {
+				var value = callbacks[callbackID];
+				
+				if (value === false && self == top)
+					 value = (Math.random() * 1000) // Get random data if not in iframe
+				
+				out_params[0] = parseInt(value);
+			}
+		}
+		
+		for (var callbackID in callbacks) {
+			m_logn.append_custom_callback(callbackID, prepareCallback(callbackID));
+			console.log("Registered callback " + callbackID);
+		}
 	}
 	
-	function rot_R_Shoulder_Z(in_params, out_params) {
-		var scale = customRotation || Math.random();
-		out_params[0] = scale * 1000;
-	}
-
-
+	
 });
-
-var customRotation = false;
 
 // import the app module and start the app by calling the init method
 b4w.require("torso").init();

@@ -1,7 +1,8 @@
 #ifndef __IWRAPPER_H
 #define __IWRAPPER_H
 
-#define PLATFORM_ARDUINO_UNO    // also Pro Mini and other ATMega328-based boards
+//#define PLATFORM_ARDUINO_UNO    // also Pro Mini and other ATMega328-based boards
+#define PLATFORM_TEENSY2
 
 #include <AltSoftSerial.h>
 

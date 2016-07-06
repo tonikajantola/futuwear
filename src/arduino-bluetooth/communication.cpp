@@ -55,7 +55,7 @@ void build_data_json(char *buffer, int len) {
         dump.printTo(buffer, len);
         //BluetoothStream b;
         //dump.printTo(b);
-        //b.println();
+        //b.println();;
         //b.println("lolwhat");
         //iwrap_send_data(surefire_connection_id, 4, (const uint8_t*)"wtf\n", IWRAP_MODE_MUX);
     #else
@@ -65,9 +65,15 @@ void build_data_json(char *buffer, int len) {
 }
 
 size_t BluetoothStream::write(uint8_t data) {
+    if (packet_buffer_size == 0) {
+      //Serial1.flush();  
+    }
     packetBuffer[packet_buffer_size++] = data;
-    if (packet_buffer_size == PACKET_BUF_SIZE) {
-        iwrap_send_data(surefire_connection_id, PACKET_BUF_SIZE, packetBuffer, IWRAP_MODE_MUX);
+    if (data == '\n' || packet_buffer_size == PACKET_BUF_SIZE) {
+        iwrap_send_data(surefire_connection_id,packet_buffer_size, packetBuffer, IWRAP_MODE_MUX);
+        Serial1.flush();
+        //memset(packetBuffer, 0, PACKET_BUF_SIZE);
+        packet_buffer_size = 0;
     }
     return 1;
 }
@@ -81,13 +87,14 @@ size_t BluetoothStream::write(const uint8_t *data) {
 void send_sensor_data() {
     if (surefire_connection_id == 0xFF) {return;}
 
-    char output[256];
+    char output[512];
     build_data_json(output, sizeof(output));
     //build_data_json();
     strncat(output, "\n", sizeof(output));
 
     //Serial.println(output);
     iwrap_send_data(surefire_connection_id, strlen(output), (uint8_t*)output, IWRAP_MODE_MUX);
+    Serial1.flush();
     //free(output);
     //iwrap_send_data(lastReceivedChannel, 2, (uint8_t*)"\n", IWRAP_MODE_MUX);
 }

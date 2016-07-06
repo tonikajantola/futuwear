@@ -3,7 +3,8 @@
 // register the application module
 
 var callbacks = {
-	"get_rotation": false
+	"get_rotation": false,
+	"shoulder_Z": false,
 } 
 
 b4w.register("torso", function(exports, require) {
@@ -52,19 +53,26 @@ b4w.register("torso", function(exports, require) {
 		m_app.enable_camera_controls();
 		
 		// Register the callbacks
-		for (var callbackID in callbacks) {
-			m_logn.append_custom_callback(callbackID, function (in_params, out_params) {
+		
+		function prepareCallback(callbackID) {
+			// Create a new function (why is this here? http://stackoverflow.com/q/750486)
+			return function (in_params, out_params) {
 				var value = callbacks[callbackID];
 				
-				// Get random data if not in iframe
 				if (value === false && self == top)
-					 value = (Math.random() * 1000)
+					 value = (Math.random() * 1000) // Get random data if not in iframe
 				
-				out_params[0] = value;
-			});
+				out_params[0] = parseInt(value);
+			}
+		}
+		
+		for (var callbackID in callbacks) {
+			m_logn.append_custom_callback(callbackID, prepareCallback(callbackID));
 			console.log("Registered callback " + callbackID);
 		}
 	}
+	
+	
 });
 
 // import the app module and start the app by calling the init method

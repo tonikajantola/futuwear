@@ -34,11 +34,14 @@ def forwardToServer(jsonStuff):
     global socketIO
     global connection
     if connection:
-        jsonData = json.loads(jsonStuff)
-        hashable = json.dumps(jsonData["sensors"], separators=(',',':')) + deviceCode
-        jsonData["token"] = hashlib.md5(hashable.encode('utf-8')).hexdigest() #TODO: List access safety
-        print("Hashing ", hashable)
-        socket.emit('message', json.dumps(jsonData, separators=(',',':')))
+        try:
+            jsonData = json.loads(jsonStuff)
+            hashable = json.dumps(jsonData["sensors"], separators=(',',':')) + deviceCode
+            jsonData["token"] = hashlib.md5(hashable.encode('utf-8')).hexdigest() #TODO: List access safety
+            print("Hashing ", hashable)
+            socket.emit('message', json.dumps(jsonData, separators=(',',':')))
+        except Exception as e:
+            print("ERROR", str(e))
     else:
         print("Couldn't emit due to faulty socket connection.")
 	
@@ -56,8 +59,8 @@ while bluetoothProblem:
 	try:
 		sock.connect((addr, 1))
 		bluetoothProblem = False
-	except:
-		print("Device", addr, "could not be reached. Try resetting?")
+	except Exception as e:
+		print("Device", addr, "error:", str(e))
 
 sock.send("READY\n");
 
@@ -66,7 +69,7 @@ buf = "";
 line_buf = [];
 print("Connected via bluetooth to device", addr)
 while True:
-    data = sock.recv(128).decode("utf-8");
+    data = sock.recv(128).decode("utf-8", errors="ignore");
     buf += data;
     line_buf = buf.split("\n");
     buf = line_buf[-1];

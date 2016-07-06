@@ -47,21 +47,27 @@ line_buf = [];
 print("connected.")
 lastDraw = time.time()
 while True:
-    data = sock.recv(128).decode("utf-8");
+    data = sock.recv(128).decode("utf-8", errors="ignore");
     buf += data;
     print(data, end="");
     line_buf = buf.split("\n");
     buf = line_buf[-1];
     changed = False
     while (len(line_buf) > 1):
-        js = json.loads(line_buf[0]);
-        for sensor in js["sensorData"]:
-            if not sensor in ydata:
-                ydata[sensor] = [0]*hist_len
-                lines[sensor], = plt.plot(ydata[sensor])
-            update_line(sensor, js["sensorData"][sensor])
+        try:
+            js = json.loads(line_buf[0]);
+            for sensor in js["sensors"]:
+                s_name  = sensor["name"]
+                s_value = sensor["collection"][0]["value"]
+                if not s_name in ydata:
+                    ydata[s_name] = [0]*hist_len
+                    lines[s_name], = plt.plot(ydata[s_name], label=s_name)
+                    plt.legend(lines, list(lines.keys()))
+                update_line(s_name, s_value)
+            changed = True
+        except Exception as e:
+            print("ERROR: " + str(e));
         line_buf = line_buf[1:];
-        changed = True
     if len(data) == 0: break
     if changed:
         for sensor in ydata:

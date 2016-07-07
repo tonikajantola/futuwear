@@ -156,7 +156,7 @@ function maintainConnection() {
 maintainConnection();
 
 
-function getData(time0, timeT, responder) {
+function getData(time0, timeT, res) {
 	var accuracy = 1 // Seconds, ie. what to average at (60 => 1 minute averages)
 	
 	
@@ -168,15 +168,15 @@ function getData(time0, timeT, responder) {
 				LIMIT 50;'
 				
 	c.query(sql, [time0, timeT, accuracy], function(err, result) {
-		responder.setHeader('Content-Type', 'application/json');
+		res.setHeader('Content-Type', 'application/json');
 		
 		if (!err) {
 			nodeLog("Found " + result.length + " data points between " + (new Date(time0*1000)).toLocaleString() + " and " + (new Date(timeT*1000)).toLocaleString())
-			responder.send(JSON.stringify(result, null, 3));	
+			res.send(JSON.stringify(result, null, 3));	
 		}
 		else  {
 			nodeLog("Mysql error while fetching from archive: " + JSON.stringify(err))
-			responder.send(JSON.stringify({}, null, 3));
+			res.send(JSON.stringify({}, null, 3));
 		}
 	});	
 }
@@ -233,7 +233,7 @@ function getSensors(req, res) {
 	var devices = getUserDevices(req)
 	
 	if (!devices)
-		return responder.send(JSON.stringify({error: "No devices were found."}, null, 3));
+		return res.send(JSON.stringify({error: "No devices were found."}, null, 3));
 		
 	var sql = '	SELECT ID, name \
 				FROM Sensors WHERE ownerKey IN (?) \

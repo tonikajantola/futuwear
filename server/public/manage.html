@@ -40,8 +40,12 @@
 	<script>
 	
 		function fetch() {
-			$.get("/sensors", function (resp) {
+			$.get("/sensors", "", function (resp) {
 				try {
+				
+					if (typeof resp["error"] != "undefined")
+						throw new Error(resp["error"])
+					
 					$("#list").html("  ")
 					for (var i = 0; i < resp.length; i++) {
 						var reading = resp[i]
@@ -53,13 +57,14 @@
 					}
 					
 					if (i >= 100) {
-						$("#list").append("<tr><td colspan='2'>Some data may have been truncated</td></tr>")
+						$("#list").append("<tr><td colspan='3'>Some data may have been truncated</td></tr>")
 					}
 					else if (i <= 0) {
-						$("#list").append("<tr><td colspan='2'>No sensors were found</td></tr>")
+						throw new Error("No sensors could be found");
 					}
 				} catch (e) {
-					console.log("JSON data problem: " + e.message)
+					console.log("Problem loading sensors: " + e.message)
+					$("#list").append("<tr><td colspan='3'>" + e.message + "</td></tr>")
 				}
 			})
 		}
@@ -69,7 +74,7 @@
 		})
 		
 		function login() {
-			var uname = prompt("Username?","proto")
+			var uname = prompt("Device name?","proto")
 			createCookie("devices", uname, 1)
 			location.reload(); 
 		}
@@ -80,5 +85,6 @@
 		}
 
 	</script>
+	<button onclick="login()">Display a sensor</button>
 </body>
 </html>

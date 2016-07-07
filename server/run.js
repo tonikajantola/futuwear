@@ -235,7 +235,7 @@ function getSensors(req, res) {
 	if (!devices)
 		return res.send(JSON.stringify({error: "No devices were found."}, null, 3));
 		
-	var sql = '	SELECT ID, name \
+	var sql = '	SELECT ID, name, ownerKey \
 				FROM Sensors WHERE ownerKey IN (?) \
 				ORDER BY ownerKey \
 				LIMIT 100;'

@@ -1,0 +1,84 @@
+<html>
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+	<meta content='width=device-width, height=device-height, initial-scale=1' name='viewport' />
+	<script type="text/javascript" src="js/jquery.min.js"></script>
+	<script type="text/javascript" src="js/futuwear-front.js"></script>
+	<script type="text/javascript" src="js/bootstrap.min.js"></script>
+	<script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.1.6/Chart.bundle.js"></script>
+
+	<link rel="stylesheet" type="text/css" href="/css/bootstrap.css">
+	
+	<title>Futuwear</title>
+	<style>
+		.app {
+			max-width:500px;
+			padding:2em;
+			margin: 0 auto;
+		}
+	</style>
+</head>
+<body onkeypress="login()">
+	<div class="app">
+		<h3>The Futuwear Portal</h3>
+		<br><br><br>
+		
+		
+		<b>Your sensors</b>
+		<table id="list"><tr><td>You don't have any sensors.</td></tr></table>
+		<button type="button" class="btn btn-primary">New Sensor</button>
+		<br><br><hr><br>
+		
+		
+		
+		
+		
+	</div>
+	
+	
+	<script>
+	
+		function fetch() {
+			$.get("/sensors", function (resp) {
+				try {
+					$("#list").html("  ")
+					for (var i = 0; i < resp.length; i++) {
+						var reading = resp[i]
+						
+						var sensorID = reading["ID"]
+						var deviceKey = reading["ownerKey"]
+						
+						$("#list").append("<tr><td><b>" + sensorID + "</b></td><td><small>" + deviceKey + " </small></td></tr>")
+					}
+					
+					if (i >= 100) {
+						$("#list").append("<tr><td colspan='2'>Some data may have been truncated</td></tr>")
+					}
+					else if (i <= 0) {
+						$("#list").append("<tr><td colspan='2'>No sensors were found</td></tr>")
+					}
+				} catch (e) {
+					console.log("JSON data problem: " + e.message)
+				}
+			})
+		}
+	
+		$(document).ready(function () {
+			fetch()
+		})
+		
+		function login() {
+			var uname = prompt("Username?","proto")
+			createCookie("devices", uname, 1)
+			location.reload(); 
+		}
+		
+		function logout() {
+			removeCookie("devices")
+			location.reload(); 
+		}
+
+	</script>
+</body>
+</html>

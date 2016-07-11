@@ -28,7 +28,7 @@ public class Aloitussivu extends AppCompatActivity {
         status.setTextColor(Color.BLACK);
 
         if (DEBUG) {
-            status.setText("Initialized (onResume)");
+            status.setText("Initialized (onResume)"); // reformat test
         }
 
         BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();

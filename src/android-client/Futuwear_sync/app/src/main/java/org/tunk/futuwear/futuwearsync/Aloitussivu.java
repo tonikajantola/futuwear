@@ -9,7 +9,7 @@ import android.widget.TextView;
 
 public class Aloitussivu extends AppCompatActivity {
 
-    boolean DEBUG = false;
+    boolean DEBUG = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,7 +28,7 @@ public class Aloitussivu extends AppCompatActivity {
         status.setTextColor(Color.BLACK);
 
         if (DEBUG) {
-            status.setText("Initialized (onResume)"); // reformat test
+            status.setText("Initialized (onResume)");
         }
 
         BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();

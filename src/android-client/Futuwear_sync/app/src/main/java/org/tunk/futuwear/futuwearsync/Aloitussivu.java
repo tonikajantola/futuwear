@@ -7,6 +7,7 @@ import android.graphics.Color;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.ArrayAdapter;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Spinner;
 
@@ -17,61 +18,56 @@ import java.util.Set;
 
 public class Aloitussivu extends AppCompatActivity {
 
-    boolean DEBUG = true;
+    private boolean DEBUG = true;
+    private TextView console;
+    private TextView macAddress;
+    private BluetoothAdapter mBluetoothAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
-        //setContentView(R.layout.activity_aloitussivu);
-    }
-
-
-    protected void onResume() {
-        super.onResume();
         setContentView(R.layout.activity_aloitussivu);
 
-        TextView console = (TextView) findViewById(R.id.statusText);
+        console = (TextView)findViewById(R.id.statusText);
+        macAddress = (EditText)findViewById(R.id.macAddress);
+        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
-        BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        macAddress.setText("00:00:00:00:00:00");
 
+    }
+    @Override
+    protected void onResume() {
+
+        super.onResume();
+        checkBluetoothState();
+        getPairedDevices();
+
+
+    }
+    void getPairedDevices() {
+
+        Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
+        if (pairedDevices.size() > 0) {
+            console.append("\nPaired devices:");
+            for (BluetoothDevice device : pairedDevices) {
+                console.append("\n   " + device.getName() + " (" + device.getAddress() + ")");
+            }
+        }
+        else {
+            console.append("\nERROR: No paired devices found! Please pair your shirt with this device.");
+        }
+    }
+    void checkBluetoothState() {
         if (!mBluetoothAdapter.isEnabled()) {
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableBtIntent, 3);
         }
 
         if (mBluetoothAdapter == null) {
-            console.append("ERROR: device does not support Bluetooth!");
+            console.setText("ERROR: device does not support Bluetooth!");
         }
 
-        console.append("\nOur Bluetooth address: " + mBluetoothAdapter.getAddress());
-
-        Spinner dropDownMenu = (Spinner) findViewById(R.id.spinneri);
-
-        //Create an ArrayAdapter using the string array and a default spinner layout
-        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
-                R.array.testi_array, android.R.layout.simple_spinner_item);
-        // Specify the layout to use when the list of choices appears
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        // Apply the adapter to the spinner
-        dropDownMenu.setAdapter(adapter);
-
-        Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
-
-        for (BluetoothDevice device : pairedDevices) {
-            // Add the name and address to an array adapter to show in a ListView
-            console.append("\nPaired device: " + device.getName() + " (" + device.getAddress() + ")");
-        }
-/*
-        if (pairedDevices.size() > 0) {
-            // Loop through paired devices
-            for (BluetoothDevice device : pairedDevices) {
-                // Add the name and address to an array adapter to show in a ListView
-                adapter.add(device.getName() + "\n" + device.getAddress());
-            }
-        } else {
-            log("\nERROR: no paired devices!");
-        }
-*/
+        console.setText("\nOur Bluetooth address: " + mBluetoothAdapter.getAddress());
     }
-
 }

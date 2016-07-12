@@ -1,11 +1,14 @@
 package org.tunk.futuwear.futuwearsync;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothServerSocket;
 import android.content.Intent;
 import android.graphics.Color;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Spinner;
@@ -18,15 +21,23 @@ public class Aloitussivu extends AppCompatActivity {
     private boolean DEBUG = true;
     private TextView console;
     private TextView macAddress;
+    private Button connectButton;
     private BluetoothAdapter mBluetoothAdapter;
+    //private BluetoothServerSocket mmServerSocket;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_aloitussivu);
         console = (TextView) findViewById(R.id.statusText);
-        macAddress = (EditText) findViewById(R.id.macAddress);
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        macAddress = (EditText) findViewById(R.id.macAddress);
         macAddress.setText("90:A4:DE:6A:66:2E"); // Einos laptop
+        connectButton = (Button) findViewById(R.id.connectButton);
+        connectButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                console.append("\nConnecting to: " + macAddress.getText().toString());
+            }
+        });
     }
     @Override
     protected void onResume() {

@@ -2,6 +2,7 @@ package org.tunk.futuwear.futuwearsync;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothServerSocket;
+import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
 import android.graphics.Color;
 import android.support.v7.app.AppCompatActivity;
@@ -13,17 +14,22 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Spinner;
 
+import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Set;
+import java.util.UUID;
 public class Aloitussivu extends AppCompatActivity {
-    private boolean DEBUG = true;
+    private Integer timeout = 30; // in seconds
+    private UUID SPDuuid = new UUID(1337L, 1337L); // mostSigBits and leastSigBits
+    private String SPDname = "FutuWearSync";
     private TextView console;
     private TextView macAddress;
     private Button connectButton;
     private BluetoothAdapter mBluetoothAdapter;
-    //private BluetoothServerSocket mmServerSocket;
+    private BluetoothServerSocket mmServerSocket;
+    private BluetoothSocket bluetoothSocket;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -36,6 +42,7 @@ public class Aloitussivu extends AppCompatActivity {
         connectButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 console.append("\nConnecting to: " + macAddress.getText().toString());
+                connect();
             }
         });
     }
@@ -65,5 +72,19 @@ public class Aloitussivu extends AppCompatActivity {
             console.setText("ERROR: Bluetooth disabled!");
         }
         console.setText("Our Bluetooth address: " + mBluetoothAdapter.getAddress());
+    }
+    void connect() {
+        try {
+            mmServerSocket = mBluetoothAdapter.listenUsingRfcommWithServiceRecord(SPDname, SPDuuid);
+            console.append("\nServer socket created succesfully");
+        } catch (IOException e) {
+            console.append("\nERROR: IOException with mBluetoothAdapter.listenUsingRfcommWithServiceRecord(SPDname, SPDuuid)!");
+        }
+        console.append("\nWaiting for connection (" + timeout + "s timeout)");
+        try {
+            bluetoothSocket = mmServerSocket.accept(timeout);
+        } catch (IOException e) {
+            console.append("\nERROR: IOException with mmServerSocket.accept()!");
+        }
     }
 }

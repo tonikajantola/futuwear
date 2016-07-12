@@ -3,21 +3,19 @@
     package="org.tunk.futuwear.futuwearsync">
 
     <uses-permission android:name="android.permission.BLUETOOTH" />
-
     <application
         android:allowBackup="true"
         android:icon="@drawable/futuwear_sync_logo"
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".Aloitussivu"
+        <activity
+            android:name=".Aloitussivu"
             android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
     </application>
-
 </manifest>

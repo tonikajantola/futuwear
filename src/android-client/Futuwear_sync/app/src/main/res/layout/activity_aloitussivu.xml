@@ -4,15 +4,11 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
-
-
-
     <EditText
         android:id="@+id/macAddress"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center" />
-
     <Button
         android:id="@+id/connectButton"
         style="?android:attr/buttonStyleSmall"
@@ -20,8 +16,6 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:text="Connect" />
-
-
     <TextView
         android:id="@+id/statusText"
         android:layout_width="fill_parent"
@@ -32,7 +26,5 @@
         android:padding="5dp"
         android:textAppearance="?android:attr/textAppearanceSmall"
         android:textColor="@color/green"
-        android:textSize="10dp"/>
-
-
+        android:textSize="10dp" />
 </LinearLayout>

@@ -26,7 +26,7 @@ public class Aloitussivu extends AppCompatActivity {
         console = (TextView) findViewById(R.id.statusText);
         macAddress = (EditText) findViewById(R.id.macAddress);
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        macAddress.setText("90:A4:DE:6A:66:2E"); // Eino's laptop
+        macAddress.setText("90:A4:DE:6A:66:2E"); // Einos laptop
     }
     @Override
     protected void onResume() {

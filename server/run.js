@@ -49,8 +49,9 @@ function getUserDevices(req) {
 	var cookies = parseCookies(req);
 	if (typeof cookies.devices == "undefined")
 		return false
-	
+	nodeLog(cookies)
 	var devices = cookies.devices.split(",")
+	nodeLog(JSON.stringify(devices))
 	return devices
 }
 

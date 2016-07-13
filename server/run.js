@@ -236,7 +236,7 @@ function getSensors(req, res) {
 				ORDER BY ownerKey \
 				LIMIT 100;'
 				
-	c.query(sql, devices.join(), function(err, result) {
+	c.query(sql, devices.join("','"), function(err, result) {
 		res.setHeader('Content-Type', 'application/json');
 		
 		if (!err) {			

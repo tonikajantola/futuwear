@@ -4,7 +4,7 @@
 #include "sensors.h"
 
 #define USE_ARDUINOJSON
-#define PACKET_BUF_SIZE 32
+#define PACKET_BUF_SIZE 1
 
 #ifdef USE_ARDUINOJSON
     #include <ArduinoJson.h>

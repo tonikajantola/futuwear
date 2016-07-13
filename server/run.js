@@ -30,7 +30,7 @@ function isJSON(str) {
     return true;
 }
 
-/* Method to get old data with */
+/* Method to get archived data with */
 app.get('/fetch', function (req, res) {
 	
 	var content = req.query.data // TODO: Safety
@@ -39,6 +39,30 @@ app.get('/fetch', function (req, res) {
 	content = JSON.parse(content)
 	
 	getData(parseInt(content.time0), parseInt(content.timeT), res)
+});
+
+/* Method to get registered sensors with */
+app.get('/sensors', getSensors);
+
+function getUserDevices(req) {
+	
+	var cookies = parseCookies(req);
+	if (typeof cookies.devices == "undefined")
+		return false
+	
+	var devices = cookies.devices.split(",")
+	return devices
+}
+
+
+app.get('/manage', function (req, res) {
+	
+	
+	if (!getUserDevices(req))
+		res.redirect("/login.html");
+	else
+		res.redirect("/manage.html");
+	
 });
 
 
@@ -123,7 +147,7 @@ function maintainConnection() {
 	c.on('error', function (err) {
 		nodeLog("Database error: " + err);
 		if(err.code === 'PROTOCOL_CONNECTION_LOST') {
-			handleDisconnect();
+			maintainConnection();
 		} else {         
 			throw err;
 		}
@@ -133,8 +157,11 @@ function maintainConnection() {
 maintainConnection();
 
 
-function getData(time0, timeT, responder) {
+function getData(time0, timeT, res) {
 	var accuracy = 1 // Seconds, ie. what to average at (60 => 1 minute averages)
+	
+	
+	
 	var sql = '	SELECT sensorID, UNIX_TIMESTAMP(ROUND(AVG(logged))) AS logged, ROUND(AVG(val)) AS val \
 				FROM Data WHERE logged >= FROM_UNIXTIME(?) AND logged <= FROM_UNIXTIME(?) \
 				GROUP BY ROUND(logged/?) \
@@ -142,15 +169,15 @@ function getData(time0, timeT, responder) {
 				LIMIT 50;'
 				
 	c.query(sql, [time0, timeT, accuracy], function(err, result) {
-		responder.setHeader('Content-Type', 'application/json');
+		res.setHeader('Content-Type', 'application/json');
 		
 		if (!err) {
 			nodeLog("Found " + result.length + " data points between " + (new Date(time0*1000)).toLocaleString() + " and " + (new Date(timeT*1000)).toLocaleString())
-			responder.send(JSON.stringify(result, null, 3));	
+			res.send(JSON.stringify(result, null, 3));	
 		}
 		else  {
 			nodeLog("Mysql error while fetching from archive: " + JSON.stringify(err))
-			responder.send(JSON.stringify({}, null, 3));
+			res.send(JSON.stringify({}, null, 3));
 		}
 	});	
 }
@@ -196,13 +223,36 @@ function registerSensor(ID, name) {
 			}
 			else nodeLog("Sensor #" + ID + " already exists, please give a fresh id.")
 		}
-		else  {
+		else {
 			nodeLog("Mysql error: " + JSON.stringify(err))
 		}
 	});
 }
 
 
+function getSensors(req, res) {
+	var devices = getUserDevices(req)
+	
+	if (!devices)
+		return res.send(JSON.stringify({error: "No devices were found."}, null, 3));
+		
+	var sql = '	SELECT ID, name, ownerKey \
+				FROM Sensors WHERE ownerKey IN (?) \
+				ORDER BY ownerKey \
+				LIMIT 100;'
+				
+	c.query(sql, devices, function(err, result) {
+		res.setHeader('Content-Type', 'application/json');
+		
+		if (!err) {			
+			res.send(JSON.stringify(result, null, 3));	
+		}
+		else  {
+			nodeLog("Mysql error while getting sensors: " + JSON.stringify(err))
+			res.send(JSON.stringify({error: JSON.stringify(err)}, null, 3));
+		}
+	});	
+}
 
 function json(data) {
 	try {
@@ -228,5 +278,17 @@ function nodeLog(str) {
 	console.log(clock.join(':') + ' ' + str)
 }
 
+/* From http://stackoverflow.com/a/3409200 */
+function parseCookies (request) {
+    var list = {},
+        rc = request.headers.cookie;
+
+    rc && rc.split(';').forEach(function( cookie ) {
+        var parts = cookie.split('=');
+        list[parts.shift().trim()] = decodeURI(parts.join('='));
+    });
+
+    return list;
+}
 
 

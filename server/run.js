@@ -228,9 +228,6 @@ function getSensors(req, res) {
 	if (!devices)
 		return res.send(JSON.stringify({error: "No devices were found."}, null, 3));
 	
-	var whereClauses = ""
-	for (var i; i)
-	
 	var sql = '	SELECT ID, name, ownerKey, COUNT(ID) - 1 AS collection \
 				FROM Sensors \
 				LEFT JOIN Data ON Sensors.ID=Data.sensorID \

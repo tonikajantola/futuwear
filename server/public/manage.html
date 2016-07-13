@@ -17,6 +17,10 @@
 			padding:2em;
 			margin: 0 auto;
 		}
+		
+		td {
+			padding: 0.5em;
+		}
 	</style>
 </head>
 <body>
@@ -27,7 +31,7 @@
 		
 		<h4>Your sensors</h4>
 		<table id="list"><tr><td>No sensors (try adding a device)</td></tr></table>
-		<form action="/" method="post">
+		<form action="/manage.html" method="post">
 			<input name="name" placeholder="Sensor Name">
 			<input name="device" placeholder="Device ID">
 			<input type="submit" class="btn btn-primary" value="New Sensor">
@@ -83,6 +87,8 @@
 		
 		function login() {
 			var uname = prompt("Device name?","proto")
+			if (readCookie("devices"))
+				uname = uname + "," + readCookie("devices")
 			createCookie("devices", uname, 1)
 			location.reload(); 
 		}

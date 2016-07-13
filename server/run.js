@@ -207,7 +207,7 @@ function registerSensor(ID, name, device) {
 				var insertion = {ID: ID, type: "kinetic", name: name, ownerKey: device}
 				c.query('INSERT INTO Sensors SET ?;', insertion, function(err, result) {
 					if (!err) {
-						nodeLog("Registered new sensor " + ID)
+						nodeLog("Registered new sensor " + ID + " with device " + device)
 					}
 					else  {
 						nodeLog("Mysql sensor insertion error: " + JSON.stringify(err))
@@ -229,9 +229,9 @@ function getSensors(req, res) {
 	if (!devices)
 		return res.send(JSON.stringify({error: "No devices were found."}, null, 3));
 		
-	var sql = '	SELECT ID, name, ownerKey, COUNT(ID) AS collection \
+	var sql = '	SELECT ID, name, ownerKey, COUNT(ID) - 1 AS collection \
 				FROM Sensors \
-				INNER JOIN Data ON Sensors.ID=Data.sensorID \
+				LEFT JOIN Data ON Sensors.ID=Data.sensorID \
 				WHERE ownerKey IN (?) \
 				GROUP BY Sensors.ID \
 				ORDER BY ownerKey \

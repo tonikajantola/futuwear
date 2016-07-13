@@ -111,7 +111,6 @@ client.on('message', msg => {
 			for (var j = 0; j < sensor["collection"].length; j++) {
 				var value = parseInt(sensor["collection"][j]["value"])
 				saveData(sensor["name"], value, callbackCreate(sensor["name"], "Auto-added Sensor"))  // TODO: require a separate registration
-				})
 					
 			}
 		}

@@ -21,7 +21,7 @@ import java.util.Date;
 import java.util.Set;
 import java.util.UUID;
 public class Aloitussivu extends AppCompatActivity {
-    private Integer timeout = 30; // in seconds
+    private Integer timeout = 30000; // in milliseconds
     private UUID SPDuuid = new UUID(1337L, 1337L); // mostSigBits and leastSigBits
     private String SPDname = "FutuWearSync";
     private TextView console;
@@ -80,7 +80,7 @@ public class Aloitussivu extends AppCompatActivity {
         } catch (IOException e) {
             console.append("\nERROR: IOException with mBluetoothAdapter.listenUsingRfcommWithServiceRecord(SPDname, SPDuuid)!");
         }
-        console.append("\nWaiting for connection (" + timeout + "s timeout)");
+        console.append("\nWaiting for connection (" + timeout/1000 + "s timeout)");
         try {
             bluetoothSocket = mmServerSocket.accept(timeout);
         } catch (IOException e) {

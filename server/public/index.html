@@ -73,7 +73,6 @@
 		document.getElementById("status").value = "No live data available"
 		
 		function history(time0, timeT) {
-			console.log("Getting history from " + time0 + " to " + timeT)
 			$.get("/fetch", "data=" + JSON.stringify({time0: time0, timeT: timeT}), function (resp) {
 				try {
 					$("#list").html("<tr><td colspan='3'>Records from <b>"+(new Date(time0*1000).toLocaleString())+"</b> to <b>"+(new Date(timeT*1000).toLocaleString())+"</b></td></tr>")
@@ -88,6 +87,8 @@
 						$("#list").append("<tr><td><b>" + sensorID + "</b></td><td>" + val + "</td><td><small>" + timeSince(logged) + " ago</small></td></tr>")
 						dataPoints.data.push(val)
 						dataPoints.labels.push(logged.toLocaleTimeString().replace('.',':').replace('.',':'))
+						
+						
 					}
 					console.log(JSON.stringify(dataPoints))
 					
@@ -114,72 +115,69 @@
 					console.log("JSON data problem: " + e.message)
 				}
 			})
+			
+			
+		} 
+		
+		/* A function to validate any object into a JSON object, defaulting to {}*/
+		function json(data) {
+			try {
+				if (typeof data == "string")
+					return JSON.parse(data)
+				else if (typeof JSON.parse(JSON.stringify(data)) == "object")
+					return data
+				else throw new Error("")
+			} catch (e) {
+				console.log("JSON data is faulty, calling it {}")
+				return {}
+			}
 		}
 		
-		function postToFrame(callbackID, sensorValue) {
-			var context = document.getElementById("torso").contentWindow
-			if (!!callbackID && typeof sensorValue != "undefined")
-				context.callbacks[callbackID] = sensorValue // Post the value to the iframe
-			else
-				return context.callbacks
-				
-		}
-		
-		var bounds = {min: 0, max: 1000} //TODO: Make this dynamic
+		var sensorBounds = [0, 1000] //TODO: Make this dynamic
 		
 		var socket = io.connect("http://futuwear.tunk.org:13337");
 		
-		var views = {} // List of callback functions
 		
 		socket.on('message', function(resp){
 			var now = Math.floor(new Date() / 1000)
+				
 			try {
-				var sensors = json(resp)["sensors"]
+					var sensors = json(resp)["sensors"]
+					if (sensors == undefined) {
+						throw new Error("Key 'sensors' is absent.")
+					}
+					else if (!sensors[0]) {
+						sensors = [sensors] // Deal with single-sensor JSON data
+					}
+					console.log("Received readings from " + sensors.length + " sensors.")
 				
-				if (sensors == undefined)
-					throw new Error("Key 'sensors' is absent.")
-				else if (!sensors[0])
-					sensors = [sensors] // Deal with single-sensor JSON data
-				
-				console.log("Received readings from " + sensors.length + " sensors.")
-			
-				// Iterate through all the received sensors
-				for (var i = 0; i < sensors.length; i++) {
-					var sensor = sensors[i]
-					var value = parseInt(sensor.collection[0].value)
-					if (typeof views[sensor.name] != "function") {
+					for (var i = 0; i < sensors.length; i++) {
+						var sensorPackage = sensors[i]
+						var sensorName = sensorPackage["name"]
+						var dataPoints = sensorPackage["collection"]
 						
-						$("#knobs").append("<progress id='" + sensor.name + "' max='" + (bounds.max - bounds.min) + "' value='0'></progress> <span id='label" + sensor.name + "'></span><br>\n")
-						
-						var domify = function (newVal) {
-							$("#" + sensor.name).val(newVal)
-							$("#label" + sensor.name).html(newVal)
-						}
-						
-						// FIXME: Dont force iframe update
-						if (false && typeof postToFrame()[sensor.name] == "undefined") {
-							views[sensor.name] = domify
-						}
+						var average = parseInt(dataPoints[0].value)
+						if ($("#" + sensorName).length <= 0)
+							$("#knobs").append("<progress id='" + sensorName + "' max='" + (sensorBounds[1] - sensorBounds[0]) + "' value='0'></progress> <span id='label" + sensorName + "'></span><br>\n")
 						else {
-							views[sensor.name] = function(newVal) {
-								postToFrame("get_rotation", newVal) // FIXME
-								domify(newVal)
-							}
+							$("#status").val("Received live figure(s)")
 						}
+						
+						document.getElementById("torso").contentWindow.customRotation = (average - sensorBounds[0]) / (sensorBounds[1] - sensorBounds[0]) // For blender
+
+						$("#" + sensorName).val(average - sensorBounds[0])
+						$("#label" + sensorName).html(average - sensorBounds[0])
+
+						var picRange = 6 // Last frame of the css sprite
+						var picFrame = Math.min(Math.round(Math.max(average - sensorBounds[0], 0)/(sensorBounds[1] + 1) * picRange), picRange)
+						
+						var sensorPackage = sensors[i + 1]
+
 					}
 					
-					var callback = views[sensor.name]
-					callback(value - bounds.min)
+				} catch (e) {
+					$("#status").val("JSON data problem: " + e.message)
 				}
-				
-				$("#status").val("Got data")
-			} catch (e) {
-				$("#status").val("JSON data problem: " + e.message)
-			}
-		});
-		
-		$(window).on('beforeunload', function(){
-			socket.close();
 		});
 		
 		var plot = document.getElementById("plot");
@@ -214,19 +212,6 @@
 			return Math.floor(seconds) + " seconds";
 		}
 		
-		/* A function to validate any object into a JSON object, defaulting to {}*/
-		function json(data) {
-			try {
-				if (typeof data == "string")
-					return JSON.parse(data)
-				else if (typeof JSON.parse(JSON.stringify(data)) == "object")
-					return data
-				else throw new Error("")
-			} catch (e) {
-				console.log("JSON data is faulty, calling it {}")
-				return {}
-			}
-		}
 
 
 	</script>

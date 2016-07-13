@@ -434,8 +434,7 @@ uint8_t remove_mapped_connection(uint8_t link_id) {
     }
     int iwrap_out(int len, unsigned char *data) {
         // iWRAP output to module goes through Serial1 (hardware UART)
-        int ret = Serial1.write(data, len);
-        return ret;
+        return Serial1.write(data, len);
     }
 #endif
 

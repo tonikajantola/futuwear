@@ -236,8 +236,11 @@ function getSensors(req, res) {
 	if (!devices)
 		return res.send(JSON.stringify({error: "No devices were found."}, null, 3));
 		
-	var sql = '	SELECT ID, name, ownerKey \
-				FROM Sensors WHERE ownerKey IN (?) \
+	var sql = '	SELECT ID, name, ownerKey, COUNT(ID) AS collection \
+				FROM Sensors \
+				INNER JOIN Data ON Sensors.ID=Data.sensorID \
+				WHERE ownerKey IN (?) \
+				GROUP BY Sensors.ID \
 				ORDER BY ownerKey \
 				LIMIT 100;'
 				

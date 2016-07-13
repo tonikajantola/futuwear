@@ -8,7 +8,7 @@
 	<script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.1.6/Chart.bundle.js"></script>
 
-	<link rel="stylesheet" type="text/css" href="/css/bootstrap.css">
+	<link rel="stylesheet" type="text/css" href="css/bootstrap.css">
 	
 	<title>Futuwear</title>
 	<style>
@@ -19,20 +19,21 @@
 		}
 	</style>
 </head>
-<body onkeypress="login()">
+<body>
 	<div class="app">
 		<h3>The Futuwear Portal</h3>
 		<br><br><br>
 		
 		
-		<b>Your sensors</b>
-		<table id="list"><tr><td>You don't have any sensors.</td></tr></table>
-		<button type="button" class="btn btn-primary">New Sensor</button>
+		<h4>Your sensors</h4>
+		<table id="list"><tr><td>No sensors (try adding a device)</td></tr></table>
+		<!--<button type="button" class="btn btn-primary">New Sensor</button>-->
 		<br><br><hr><br>
 		
 		
 		
 		
+		<button onclick="login()" class="btn btn-primary">View a device</button>
 		
 	</div>
 	
@@ -40,11 +41,14 @@
 	<script>
 	
 		function fetch() {
-			$.get("/sensors", "", function (resp) {
+			$.get("/sensors", "", function (res) {
 				try {
-				
+					var resp = json(res)
+					
 					if (typeof resp["error"] != "undefined")
 						throw new Error(resp["error"])
+						
+					console.log(JSON.stringify(resp))
 					
 					$("#list").html("  ")
 					for (var i = 0; i < resp.length; i++) {
@@ -53,7 +57,7 @@
 						var sensorID = reading["ID"]
 						var deviceKey = reading["ownerKey"]
 						
-						$("#list").append("<tr><td><b>" + sensorID + "</b></td><td><small>" + deviceKey + " </small></td></tr>")
+						$("#list").append("<tr><td><b>" + sensorID + "</b> ("+reading.collection+" values) </td><td><small>" + deviceKey + " </small></td></tr>")
 					}
 					
 					if (i >= 100) {
@@ -70,7 +74,7 @@
 		}
 	
 		$(document).ready(function () {
-			fetch()
+			setInterval(function () { fetch() }, 1000)
 		})
 		
 		function login() {
@@ -85,6 +89,5 @@
 		}
 
 	</script>
-	<button onclick="login()">Display a sensor</button>
 </body>
 </html>

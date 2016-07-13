@@ -6,6 +6,8 @@
 	<script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.1.6/Chart.bundle.js"></script>
 
+	<script type="text/javascript" src="js/futuwear-front.js"></script>
+	
 	<link rel="stylesheet" type="text/css" href="/css/bootstrap.css">
 	<title>Futuwear</title>
 	<style>
@@ -36,8 +38,11 @@
 <body>
 	<div class="app">
 		<h3>The Futuwear Portal</h3>
-		<br><br><br>
+		<br><br>
 		
+		<a href="manage.html">Configure devices/sensors</a>
+		
+		<br><br>
 		
 		<b>Real-time data (websocket)</b>
 		<input id="status" value="" style="width:100%;" readonly>
@@ -119,13 +124,9 @@
 		function postToFrame(callbackID, sensorValue) {
 			var context = document.getElementById("torso").contentWindow.animator
 			if (!!callbackID && typeof sensorValue != "undefined") {
-				context.sensor_update_degree("R_Shoulder_Y_Rot", 0, 1000, sensorValue)
-				context.sensor_update_degree("L_Shoulder_Y_Rot", 0, 1000, sensorValue)
+				context.sensor_update_degree(callbackID, 0, 1000, sensorValue)
 				context.rotate_all()
-			}
-			else
-				return context.callbacks
-				
+			}				
 		}
 		
 		var bounds = {min: 0, max: 1000} //TODO: Make this dynamic
@@ -188,48 +189,7 @@
 		var plot = document.getElementById("plot");
 		
 		
-		// FROM http://stackoverflow.com/questions/3177836/how-to-format-time-since-xxx-e-g-4-minutes-ago-similar-to-stack-exchange-site
-		function timeSince(date) {
-
-			var seconds = Math.floor((new Date() - date) / 1000);
-
-			var interval = Math.floor(seconds / 31536000);
-
-			if (interval > 1) {
-				return interval + " years";
-			}
-			interval = Math.floor(seconds / 2592000);
-			if (interval > 1) {
-				return interval + " months";
-			}
-			interval = Math.floor(seconds / 86400);
-			if (interval > 1) {
-				return interval + " days";
-			}
-			interval = Math.floor(seconds / 3600);
-			if (interval > 1) {
-				return interval + " hours";
-			}
-			interval = Math.floor(seconds / 60);
-			if (interval > 1) {
-				return interval + " minutes";
-			}
-			return Math.floor(seconds) + " seconds";
-		}
 		
-		/* A function to validate any object into a JSON object, defaulting to {}*/
-		function json(data) {
-			try {
-				if (typeof data == "string")
-					return JSON.parse(data)
-				else if (typeof JSON.parse(JSON.stringify(data)) == "object")
-					return data
-				else throw new Error("")
-			} catch (e) {
-				console.log("JSON data is faulty, calling it {}")
-				return {}
-			}
-		}
 
 
 	</script>

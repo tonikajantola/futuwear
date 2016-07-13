@@ -15,7 +15,7 @@ function rand(min, max) {
 function payload() {
 	var sensordata = {"sensors": 
 			[{
-				"name": "flex1", 
+				"name": "testisensori", 
 				"collection": [{
 					"value": rand(0, 1000)
 				}]

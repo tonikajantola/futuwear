@@ -49,20 +49,16 @@ function getUserDevices(req) {
 	var cookies = parseCookies(req);
 	if (typeof cookies.devices == "undefined")
 		return false
-	
 	var devices = cookies.devices.split(",")
 	return devices
 }
 
 
-app.get('/manage', function (req, res) {
-	
-	
-	if (!getUserDevices(req))
-		res.redirect("/login.html");
-	else
-		res.redirect("/manage.html");
-	
+app.post('/manage.html', function (req, res) {
+	var content = req.body
+	var id = content.name + "_" + Math.round(Math.random()*1000000)
+	registerSensor(id, content.name, content.device)
+	res.redirect("/manage.html");	
 });
 
 
@@ -110,10 +106,7 @@ client.on('message', msg => {
 			
 			for (var j = 0; j < sensor["collection"].length; j++) {
 				var value = parseInt(sensor["collection"][j]["value"])
-				saveData(sensor["name"], value, function () {
-					// Fail callback
-					registerSensor(sensor["name"], "Auto-added Sensor")  // TODO: require a separate registration
-				})
+				saveData(sensor["name"], value)
 					
 			}
 		}
@@ -122,7 +115,6 @@ client.on('message', msg => {
 	}
 	
 });
-
 
 /////////////////////////
 // Manage the database //
@@ -204,17 +196,17 @@ function saveData(sensorID, val, failCallback) {
 }
 
 /* Registers a new sensor into the system */
-function registerSensor(ID, name) {
+function registerSensor(ID, name, device) {
 	c.query('SELECT Count(ID) AS results FROM Sensors WHERE ID=?;', [ID], function(err, result) {
 		if (!err) {
 			var found = !isNaN(result[0]["results"]) && parseInt(result[0]["results"]) > 0
 			
 			
 			if (!found) {
-				var insertion = {ID: ID, type: "kinetic", name: "Test-sensor"}
+				var insertion = {ID: ID, type: "kinetic", name: name, ownerKey: device}
 				c.query('INSERT INTO Sensors SET ?;', insertion, function(err, result) {
 					if (!err) {
-						nodeLog("Registered new sensor " + ID)
+						nodeLog("Registered new sensor " + ID + " with device " + device)
 					}
 					else  {
 						nodeLog("Mysql sensor insertion error: " + JSON.stringify(err))
@@ -236,12 +228,15 @@ function getSensors(req, res) {
 	if (!devices)
 		return res.send(JSON.stringify({error: "No devices were found."}, null, 3));
 		
-	var sql = '	SELECT ID, name, ownerKey \
-				FROM Sensors WHERE ownerKey IN (?) \
+	var sql = '	SELECT ID, name, ownerKey, COUNT(ID) - 1 AS collection \
+				FROM Sensors \
+				LEFT JOIN Data ON Sensors.ID=Data.sensorID \
+				WHERE ownerKey IN (?) \
+				GROUP BY Sensors.ID \
 				ORDER BY ownerKey \
 				LIMIT 100;'
 				
-	c.query(sql, devices, function(err, result) {
+	c.query(sql, devices.join("','"), function(err, result) {
 		res.setHeader('Content-Type', 'application/json');
 		
 		if (!err) {			

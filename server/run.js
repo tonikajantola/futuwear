@@ -92,10 +92,11 @@ client.on('message', msg => {
 		var hashPie = JSON.stringify(sensors)
 		var md5 = crypto.createHash('md5')
 		var serial = "Rand0mSens0rSerialNumber" // TODO: Get from database
-		md5.update(hashPie + serial);
+		md5.update(hashPie + serial); // TODO: SHA256
 		var computedHash = md5.digest('hex')
 		var receivedHash = json(msg)["token"]
 		
+		/* AES-CBC-MAC salaus+autentikointi*/
 		
 		if (computedHash != receivedHash)
 			throw new Error("Received hash " + receivedHash + " didn't match the computed hash " + computedHash)

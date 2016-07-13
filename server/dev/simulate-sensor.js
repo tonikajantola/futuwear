@@ -15,12 +15,8 @@ function rand(min, max) {
 function payload() {
 	var sensordata = {"sensors": 
 			[{
-				"name": "testisensori", 
-				"collection": [{
-					"value": rand(0, 1000)
-				}]
-			}, {
-				"name": "flex2", 
+				"id": "elmon-sensori_787167", 
+				"name": "L_Arm_Outer",
 				"collection": [{
 					"value": rand(0, 1000)
 				}]

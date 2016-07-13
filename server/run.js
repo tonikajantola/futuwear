@@ -106,7 +106,7 @@ client.on('message', msg => {
 			
 			for (var j = 0; j < sensor["collection"].length; j++) {
 				var value = parseInt(sensor["collection"][j]["value"])
-				saveData(sensor["name"], value)
+				saveData(sensor["id"], value)
 					
 			}
 		}
@@ -227,7 +227,10 @@ function getSensors(req, res) {
 	
 	if (!devices)
 		return res.send(JSON.stringify({error: "No devices were found."}, null, 3));
-		
+	
+	var whereClauses = ""
+	for (var i; i)
+	
 	var sql = '	SELECT ID, name, ownerKey, COUNT(ID) - 1 AS collection \
 				FROM Sensors \
 				LEFT JOIN Data ON Sensors.ID=Data.sensorID \
@@ -236,7 +239,7 @@ function getSensors(req, res) {
 				ORDER BY ownerKey \
 				LIMIT 100;'
 				
-	c.query(sql, devices.join("','"), function(err, result) {
+	c.query(sql, [devices], function(err, result) {
 		res.setHeader('Content-Type', 'application/json');
 		
 		if (!err) {			

@@ -49,9 +49,7 @@ function getUserDevices(req) {
 	var cookies = parseCookies(req);
 	if (typeof cookies.devices == "undefined")
 		return false
-	nodeLog(cookies)
 	var devices = cookies.devices.split(",")
-	nodeLog(JSON.stringify(devices))
 	return devices
 }
 
@@ -238,7 +236,7 @@ function getSensors(req, res) {
 				ORDER BY ownerKey \
 				LIMIT 100;'
 				
-	c.query(sql, devices, function(err, result) {
+	c.query(sql, devices.join(), function(err, result) {
 		res.setHeader('Content-Type', 'application/json');
 		
 		if (!err) {			

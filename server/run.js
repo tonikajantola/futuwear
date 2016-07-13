@@ -55,14 +55,11 @@ function getUserDevices(req) {
 }
 
 
-app.get('/manage', function (req, res) {
-	
-	
-	if (!getUserDevices(req))
-		res.redirect("/login.html");
-	else
-		res.redirect("/manage.html");
-	
+app.post('/manage.html', function (req, res) {
+	var content = req.body
+	var id = content.name + "_" + Math.round(Math.random()*1000000)
+	registerSensor(id, content.name, content.device)
+	res.redirect("/manage.html");	
 });
 
 
@@ -110,7 +107,7 @@ client.on('message', msg => {
 			
 			for (var j = 0; j < sensor["collection"].length; j++) {
 				var value = parseInt(sensor["collection"][j]["value"])
-				saveData(sensor["name"], value, callbackCreate(sensor["name"], "Auto-added Sensor"))  // TODO: require a separate registration
+				saveData(sensor["name"], value)
 					
 			}
 		}
@@ -119,13 +116,6 @@ client.on('message', msg => {
 	}
 	
 });
-
-function callbackCreate(id, name) {
-	return function () {
-		registerSensor(id, name)
-	}
-}
-
 
 /////////////////////////
 // Manage the database //
@@ -207,14 +197,14 @@ function saveData(sensorID, val, failCallback) {
 }
 
 /* Registers a new sensor into the system */
-function registerSensor(ID, name) {
+function registerSensor(ID, name, device) {
 	c.query('SELECT Count(ID) AS results FROM Sensors WHERE ID=?;', [ID], function(err, result) {
 		if (!err) {
 			var found = !isNaN(result[0]["results"]) && parseInt(result[0]["results"]) > 0
 			
 			
 			if (!found) {
-				var insertion = {ID: ID, type: "kinetic", name: "Test-sensor"}
+				var insertion = {ID: ID, type: "kinetic", name: name, ownerKey: device}
 				c.query('INSERT INTO Sensors SET ?;', insertion, function(err, result) {
 					if (!err) {
 						nodeLog("Registered new sensor " + ID)

@@ -117,9 +117,12 @@
 		}
 		
 		function postToFrame(callbackID, sensorValue) {
-			var context = document.getElementById("torso").contentWindow
-			if (!!callbackID && typeof sensorValue != "undefined")
-				context.callbacks[callbackID] = sensorValue // Post the value to the iframe
+			var context = document.getElementById("torso").contentWindow.animator
+			if (!!callbackID && typeof sensorValue != "undefined") {
+				context.sensor_update_degree("R_Shoulder_Y_Rot", 0, 1000, sensorValue)
+				context.sensor_update_degree("L_Shoulder_Y_Rot", 0, 1000, sensorValue)
+				context.rotate_all()
+			}
 			else
 				return context.callbacks
 				

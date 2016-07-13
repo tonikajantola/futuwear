@@ -110,9 +110,7 @@ client.on('message', msg => {
 			
 			for (var j = 0; j < sensor["collection"].length; j++) {
 				var value = parseInt(sensor["collection"][j]["value"])
-				saveData(sensor["name"], value, function () {
-					// Fail callback
-					registerSensor(sensor["name"], "Auto-added Sensor")  // TODO: require a separate registration
+				saveData(sensor["name"], value, callbackCreate(sensor["name"], "Auto-added Sensor"))  // TODO: require a separate registration
 				})
 					
 			}
@@ -122,6 +120,12 @@ client.on('message', msg => {
 	}
 	
 });
+
+function callbackCreate(id, name) {
+	return function () {
+		registerSensor(id, name)
+	}
+}
 
 
 /////////////////////////

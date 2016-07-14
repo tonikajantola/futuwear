@@ -55,8 +55,8 @@
 		
 		<br><br>
 		
-		<b>Real-time data</b>
-		<div id="no-data"><small>Nothing received. Have you <a href="manage.html">logged in</a>?</small></div>
+		<b>Real-time data</b><br><br>
+		<div id="no-data"><small>Nothing is coming in. Have you <a href="manage.html">added your device</a>?</small></div>
 		<div id="knobs" class="row"></div>
 		<div id="torso_wrapper">
 			<iframe style="border:0px;" id="torso">Your browser doesn't support iframes, so we can't visualise real-time posture data.</iframe>
@@ -169,7 +169,8 @@
 					var sensor = sensors[i]
 					var value = parseInt(sensor.collection[0].value)
 					if (typeof views[sensor.id] != "function") {
-						$("#knobs").append('<div class="col-sm-4"><input type="text" id="'+sensor.name+'" value="0" class="dial" data-fgColor="#66CC66" data-angleOffset=-125 data-angleArc=250 data-width="80%"></span><span id="label"' + sensor.name + '"></div>')
+						$("#knobs").append('<div class="col-sm-4" data-toggle="tooltip" title="'+sensor.name+'" style="text-align:center;"><input type="text" id="'+sensor.name+'" value="0" class="dial" data-fgColor="#66CC66" data-angleOffset=-125 data-angleArc=250 data-width="80%"></div>')
+						$('[data-toggle="tooltip"]').tooltip();
 						
 						$("#" + sensor.name).knob({
 							'min': bounds.min,
@@ -179,11 +180,9 @@
 						});
 						
 						var domify = function (newVal) {
-							//$("#" + sensor.name).val(newVal)
 							$("#" + sensor.name)
 								.val(newVal)
 								.trigger('change');
-							$("#label" + sensor.name).html(newVal)
 						}						
 						
 						views[sensor.id] = function(newVal) {

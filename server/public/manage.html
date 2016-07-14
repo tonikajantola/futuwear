@@ -39,11 +39,11 @@
 		<h4>Your sensors</h4>
 		<table id="list"><tr><td>loading...</td></tr></table>
 		<form action="/manage.html" method="post" id="new-sensor">
-			<input name="name" placeholder="Sensor Name">
+			<input name="name" placeholder="New Sensor Name">
 			<select name="device" id="device">
 			<option disabled>Select device</option>
 			</select> 
-			<input type="submit" class="btn btn-primary" value="New Sensor">
+			<input type="submit" class="btn btn-primary" value="Add Sensor">
 		</form>
 		<br><br><hr><br>
 		
@@ -76,8 +76,8 @@
 						var sensorID = reading["ID"]
 						var deviceKey = reading["ownerKey"]
 						
-						if (!$("#option-" + sensorID).length) {
-							$("#devices").append("<option value='"+deviceKey+"' id='option-"+sensorID+"'>"+deviceKey+"</option>")
+						if (!$("#option-" + deviceKey).length) {
+							$("#device").append("<option value='"+deviceKey+"' id='option-"+deviceKey+"'>"+deviceKey+"</option>")
 						}
 						$("#new-sensor").show()
 						

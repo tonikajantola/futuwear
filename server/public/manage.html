@@ -109,6 +109,7 @@
 		}
 	
 		$(document).ready(function () {
+			fetch();
 			setInterval(function () { fetch(); }, 1000)
 		})
 		
@@ -121,7 +122,7 @@
 		
 		function login() {
 			var uname = prompt("Device name?","proto")
-			if (devices().indexOf(uname))
+			if (devices().indexOf(uname) >= 0)
 				return
 			if (readCookie("devices"))
 				uname = uname + "," + readCookie("devices")

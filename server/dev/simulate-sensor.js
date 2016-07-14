@@ -1,15 +1,26 @@
 // Pretend to be a sensor sending data to Vör
 var target = "http://futuwear.tunk.org:13337/messages/"
-var interval = 100 // Milliseconds
+var interval = 60 // Milliseconds
 var serial = "Rand0mSens0rSerialNumber"
 const crypto = require('crypto');
 
+var variation = 40
 
 
 function rand(min, max) {
-	return Math.floor(Math.random() * (max - min)) + min
+	var random = Math.random()
+	var addition = (random - 0.5) * 2 * variation
+	current = Math.floor(current + addition)
+	if (current > max)
+		current = max
+	else if (current < min) {
+		current = min
+	}
+	return current//Math.floor(Math.random() * (max - min)) + min
 }
 
+
+var current = 500
 
 
 function payload() {
@@ -17,12 +28,6 @@ function payload() {
 			[{
 				"id": "elmon-sensori_787167", 
 				"name": "Back_Y",
-				"collection": [{
-					"value": rand(0, 1000)
-				}]
-			},{
-				"id": "nonexistent", 
-				"name": "Back_X",
 				"collection": [{
 					"value": rand(0, 1000)
 				}]

@@ -8,12 +8,13 @@
 	<script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.1.6/Chart.bundle.js"></script>
 
+	<link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css">
 	<link rel="stylesheet" type="text/css" href="css/bootstrap.css">
 	
 	<title>Futuwear</title>
 	<style>
 		.app {
-			max-width:500px;
+			max-width:800px;
 			padding:2em;
 			margin: 0 auto;
 		}
@@ -28,9 +29,16 @@
 </head>
 <body>
 	<div class="app">
+		<div class="alert alert-danger" style="display:none;" id="warn">This is a local instance - features requiring the server will not work</div>
 		
-		
-		<h3>The Futuwear Portal</h3>
+		<div class="row">
+			<div class="col-xs-9">
+				<h3>The Futuwear Portal</h3>
+			</div>
+			<div class="col-xs-3" style="text-align:right;">
+				<h3><a href="javascript:history.back(0)" data-toggle="tooltip" title="Back" data-placement="bottom"><i class="fa fa-arrow-left" aria-hidden="true"></i></a></h3>
+			</div>
+		</div>
 		<br>
 	
 		<button onclick="login()" class="btn btn-primary">Add your device</button>
@@ -56,6 +64,9 @@
 	
 	<script>
 	
+		if (window.location.host.indexOf("tunk") < 0)
+			$("#warn").show()
+			
 		function fetch() {
 			$.get("/sensors", "", function (res) {
 			
@@ -101,8 +112,17 @@
 			setInterval(function () { fetch(); }, 1000)
 		})
 		
+		function devices() {
+			var devices = readCookie("devices")
+			if (!devices) return false
+			
+			return devices.split(',')
+		}
+		
 		function login() {
 			var uname = prompt("Device name?","proto")
+			if (devices().indexOf(uname))
+				return
 			if (readCookie("devices"))
 				uname = uname + "," + readCookie("devices")
 			createCookie("devices", uname, 1)
@@ -113,7 +133,7 @@
 			removeCookie("devices")
 			location.reload(); 
 		}
-
+		console.log("Watched device(s): " + devices().join(" "))
 	</script>
 </body>
 </html>

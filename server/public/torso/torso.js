@@ -120,9 +120,9 @@ b4w.register("torso", function(exports, require) {
 		m_app.init({
 			canvas_container_id: "canvas_cont",
 			callback: init_cb,
-			show_fps: true,
+			show_fps: false,
 			autoresize: true,
-			console_verbose: true
+			console_verbose: false
 		});
 	}
 
@@ -354,8 +354,10 @@ b4w.register("torso", function(exports, require) {
 				R_Arm_Outer_Y_Rot = y;
 				break;
 			default:
+				return false;
 				break;
 		}
+		return true
 	}
 
 	function map_value_to_degree(angle_min, angle_max, sensor_min, sensor_max, sensor_value) {

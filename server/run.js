@@ -21,21 +21,10 @@ app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
   extended: true
 })); 
 
-function isJSON(str) {
-    try {
-        JSON.parse(str);
-    } catch (e) {
-        return false;
-    }
-    return true;
-}
-
 /* Method to get archived data with */
 app.get('/fetch', function (req, res) {
 	
 	var content = req.query.data // TODO: Safety
-		
-	//nodeLog("Got fetched: " + content)
 	content = JSON.parse(content)
 	
 	getData(parseInt(content.time0), parseInt(content.timeT), res)
@@ -44,52 +33,42 @@ app.get('/fetch', function (req, res) {
 /* Method to get registered sensors with */
 app.get('/sensors', getSensors);
 
-function getUserDevices(req) {
-	
-	var cookies = parseCookies(req);
-	if (typeof cookies.devices == "undefined")
-		return false
-	var devices = cookies.devices.split(",")
-	return devices
-}
-
-
+/* Method to save new sensors to a device */
 app.post('/manage.html', function (req, res) {
 	var content = req.body
 	var id = content.name + "_" + Math.round(Math.random()*1000000)
-	registerSensor(id, content.name, content.device)
+	saveSensor(id, content.name, content.device)
 	res.redirect("/manage.html");	
 });
-
 
 app.listen(UI_PORT, function () {
 	nodeLog('Serving on port ' + UI_PORT.toString());
 });
 
-var lastMessage = {}
-
 
 ///////////////////////////
-// Connect to Vör socket //
+// Vör socket management //
 ///////////////////////////
-
 
 const client = socketIO.connect(SOCKET_SERVER);
+
 client.on('connect', () => nodeLog(`Connected to Vör socket ${SOCKET_SERVER}`));
 client.on('disconnect', () => nodeLog(`Client socket disconnected ${SOCKET_SERVER} :  ${new Date()}`));
 client.on('reconnect_attempt', error => console.error(`Error - cannot connect to ${SOCKET_SERVER} : ${error} : ${new Date()}`));
 client.on('error', error => console.error(`Error - socket connection: ${error} : ${new Date()}`));
 
+// Listen to vör messages
 client.on('message', msg => {
 	
-	var sensors = json(msg)["sensors"]
-	
 	try {
-		var hashPie = JSON.stringify(sensors)
 		var md5 = crypto.createHash('md5')
+		
+		var sensors = json(msg)["sensors"]
 		var serial = "Rand0mSens0rSerialNumber" // TODO: Get from database
-		md5.update(hashPie + serial); // TODO: SHA256
+		
+		md5.update(JSON.stringify(sensors) + serial); // TODO: SHA256
 		var computedHash = md5.digest('hex')
+		
 		var receivedHash = json(msg)["token"]
 		
 		/* AES-CBC-MAC salaus+autentikointi*/
@@ -97,17 +76,22 @@ client.on('message', msg => {
 		if (computedHash != receivedHash)
 			throw new Error("Received hash " + receivedHash + " didn't match the computed hash " + computedHash)
 		
-		if (!sensors[0]) {
+		// Allow a single sensor to not be inside of list
+		if (!sensors[0])
 			sensors = [sensors]
-		}
-		nodeLog("Got a vör message with readings from " + sensors.length + " sensor(s).")
+			
+		nodeLog("Got vör message [" + sensors.length + " sensor(s)].")
+		
+		// Iterate through every sensor
 		for (var i = 0; i < sensors.length; i++) {
 			var sensor = sensors[i]
 			
+			// Iterate through every value
 			for (var j = 0; j < sensor["collection"].length; j++) {
 				var value = parseInt(sensor["collection"][j]["value"])
+				if (isNaN(value))
+					throw new Error("Sensor value was not an integer.")
 				saveData(sensor["id"], value)
-					
 			}
 		}
 	} catch (e) {
@@ -121,16 +105,16 @@ client.on('message', msg => {
 /////////////////////////
 
 const db = require("./connection-strings")
-
 var c;
 
+// Wrap the database connection inside a function, so that it can be re-established on disconnect
 function maintainConnection() {
 	c = mysql.createConnection(db);
 	
 	c.connect(function(err){
 		if(err){
 			nodeLog('Error connecting to Db: ' + err.message);
-			setTimeout(maintainConnection(), 1000)
+			setTimeout(maintainConnection(), 1000) // Retry soon
 			return;
 		}
 		nodeLog('Database connection established');
@@ -139,8 +123,9 @@ function maintainConnection() {
 	c.on('error', function (err) {
 		nodeLog("Database error: " + err);
 		if(err.code === 'PROTOCOL_CONNECTION_LOST') {
-			maintainConnection();
-		} else {         
+			maintainConnection(); // Reconnect
+		} 
+		else {         
 			throw err;
 		}
 	})
@@ -148,19 +133,23 @@ function maintainConnection() {
 }
 maintainConnection();
 
-
+/* Method to extract archived sensor data (JSON) */
 function getData(time0, timeT, res) {
-	var accuracy = 1 // Seconds, ie. what to average at (60 => 1 minute averages)
+	var accuracy = 5 // Seconds, ie. what to average at (60 => 1 minute averages)
 	
+	var devices = getUserDevices(req)
 	
+	if (!devices)
+		return res.send(JSON.stringify({error: "No devices stored with user"}, null, 3));
 	
 	var sql = '	SELECT sensorID, UNIX_TIMESTAMP(ROUND(AVG(logged))) AS logged, ROUND(AVG(val)) AS val \
-				FROM Data WHERE logged >= FROM_UNIXTIME(?) AND logged <= FROM_UNIXTIME(?) \
+				FROM Data INNER JOIN Sensors \
+				WHERE logged >= FROM_UNIXTIME(?) AND logged <= FROM_UNIXTIME(?) AND ownerKey IN (?) \
 				GROUP BY ROUND(logged/?) \
 				ORDER BY logged DESC \
 				LIMIT 50;'
 				
-	c.query(sql, [time0, timeT, accuracy], function(err, result) {
+	c.query(sql, [time0, timeT, devices, accuracy], function(err, result) {
 		res.setHeader('Content-Type', 'application/json');
 		
 		if (!err) {
@@ -196,7 +185,7 @@ function saveData(sensorID, val, failCallback) {
 }
 
 /* Registers a new sensor into the system */
-function registerSensor(ID, name, device) {
+function saveSensor(ID, name, device) {
 	c.query('SELECT Count(ID) AS results FROM Sensors WHERE ID=?;', [ID], function(err, result) {
 		if (!err) {
 			var found = !isNaN(result[0]["results"]) && parseInt(result[0]["results"]) > 0
@@ -221,7 +210,7 @@ function registerSensor(ID, name, device) {
 	});
 }
 
-
+/* Method to get a list of owned/viewed sensors*/
 function getSensors(req, res) {
 	var devices = getUserDevices(req)
 	
@@ -249,6 +238,13 @@ function getSensors(req, res) {
 	});	
 }
 
+
+/////////////////////////////
+// Server helper functions //
+/////////////////////////////
+
+
+/* Method to force data into JSON object */
 function json(data) {
 	try {
 		if (typeof data == "string")
@@ -262,6 +258,7 @@ function json(data) {
 	}
 }
 
+/* Server logging*/
 function nodeLog(str) {
 	var currentTime = new Date()
 	var clock = [currentTime.getHours(), currentTime.getMinutes(), currentTime.getSeconds()]
@@ -286,4 +283,12 @@ function parseCookies (request) {
     return list;
 }
 
+/* Method to parse user's devices from cookie */
+function getUserDevices(req) {
+	var cookies = parseCookies(req);
+	if (typeof cookies.devices == "undefined")
+		return false
+	var devices = cookies.devices.split(",")
+	return devices
+}
 

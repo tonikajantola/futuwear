@@ -21,19 +21,28 @@
 		td {
 			padding: 0.5em;
 		}
+		#new-sensor {
+			display:none;
+		}
 	</style>
 </head>
 <body>
 	<div class="app">
+		
+		
 		<h3>The Futuwear Portal</h3>
+		<br>
+	
+		<button onclick="login()" class="btn btn-primary">Add your device</button>
 		<br><br><br>
 		
-		
 		<h4>Your sensors</h4>
-		<table id="list"><tr><td>Loading sensors...</td></tr></table>
-		<form action="/manage.html" method="post">
+		<table id="list"><tr><td>loading...</td></tr></table>
+		<form action="/manage.html" method="post" id="new-sensor">
 			<input name="name" placeholder="Sensor Name">
-			<input name="device" placeholder="Device ID">
+			<select name="device" id="device">
+			<option disabled>Select device</option>
+			</select> 
 			<input type="submit" class="btn btn-primary" value="New Sensor">
 		</form>
 		<br><br><hr><br>
@@ -41,7 +50,6 @@
 		
 		
 		
-		<button onclick="login()" class="btn btn-primary">View a device</button>
 		
 	</div>
 	
@@ -50,20 +58,28 @@
 	
 		function fetch() {
 			$.get("/sensors", "", function (res) {
+			
+				$("#list").html("  ")
+				
 				try {
 					var resp = json(res)
 					
 					if (typeof resp["error"] != "undefined")
 						throw new Error(resp["error"])
-						
+					
 					console.log(JSON.stringify(resp))
 					
-					$("#list").html("  ")
+					// Iterate through all sensors
 					for (var i = 0; i < resp.length; i++) {
 						var reading = resp[i]
 						
 						var sensorID = reading["ID"]
 						var deviceKey = reading["ownerKey"]
+						
+						if (!$("#option-" + sensorID).length) {
+							$("#devices").append("<option value='"+deviceKey+"' id='option-"+sensorID+"'>"+deviceKey+"</option>")
+						}
+						$("#new-sensor").show()
 						
 						$("#list").append("<tr><td><b>" + sensorID + "</b></td><td>"+reading.collection+" values</td><td><small>" + deviceKey + " </small></td></tr>")
 					}
@@ -82,7 +98,7 @@
 		}
 	
 		$(document).ready(function () {
-			setInterval(function () { fetch() }, 1000)
+			setInterval(function () { fetch(); }, 1000)
 		})
 		
 		function login() {

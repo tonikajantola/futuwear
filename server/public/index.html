@@ -7,8 +7,12 @@
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.1.6/Chart.bundle.js"></script>
 
 	<script type="text/javascript" src="js/futuwear-front.js"></script>
+	<script type="text/javascript" src="js/jquery.knob.js"></script>
+	<script type="text/javascript" src="js/bootstrap.js"></script>
 	
-	<link rel="stylesheet" type="text/css" href="/css/bootstrap.css">
+	<link rel="stylesheet" type="text/css" href="css/bootstrap.css">
+	<link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css">
+	
 	<title>Futuwear</title>
 	<style>
 		.app {
@@ -27,7 +31,7 @@
 			overflow: auto;
 			resize:vertical;
 			width:100%;
-			height:10em;
+			height:20em;
 			min-height:80px;
 		}
 		td {
@@ -37,16 +41,23 @@
 </head>
 <body>
 	<div class="app">
-		<h3>The Futuwear Portal</h3>
+		<div class="row">
+			<div class="col-sm-9">
+				<h3>The Futuwear Portal</h3>
+			</div>
+			<div class="col-sm-3" style="text-align:right;">
+				<h3><a href="manage.html" data-toggle="tooltip" title="Configure your devices" data-placement="bottom"><i class="fa fa-tachometer" aria-hidden="true"></i></a></h3>
+			</div>
+		</div>
+		
+
+		
+		
 		<br><br>
 		
-		<a href="manage.html">Configure devices/sensors</a>
-		
-		<br><br>
-		
-		<b>Real-time data (websocket)</b>
-		<input id="status" value="" style="width:100%;" readonly>
-		<div id="knobs"></div>
+		<b>Real-time data</b>
+		<div id="no-data"><small>Nothing received. Have you <a href="manage.html">logged in</a>?</small></div>
+		<div id="knobs" class="row"></div>
 		<div id="torso_wrapper">
 			<iframe style="border:0px;" id="torso">Your browser doesn't support iframes, so we can't visualise real-time posture data.</iframe>
 		</div>
@@ -55,7 +66,7 @@
 		
 		
 		
-		<b>Archived data (SQL)</b><br>
+		<b>Get archived data</b><br>
 		<input type="number" id="time0"> -> <input type="number" id="timeT"> <button onclick="history(parseInt(document.getElementById('time0').value), parseInt(document.getElementById('timeT').value))">Fetch</button>
 		
 		<br><a href="#" onclick="document.getElementById('epochconverter').style.display='block';document.getElementById('epochconverter').src='http://www.epochconverter.com/';this.style.display='none'"><small>EPOCH times lookup</small></a>
@@ -71,11 +82,12 @@
 	
 	<script>
 	
-		document.getElementById('torso').src='torso/index.html'
+		
+		var torso = document.getElementById("torso")
+		torso.src='torso/index.html'
 	
 		document.getElementById("time0").value = Math.floor(Date.now()/1000) - 10*60 // Ten minutes ago
 		document.getElementById("timeT").value = Math.floor(Date.now()/1000) + 10*60 // Ten minutes from now
-		document.getElementById("status").value = "No live data available"
 		
 		function history(time0, timeT) {
 			console.log("Getting history from " + time0 + " to " + timeT)
@@ -123,10 +135,12 @@
 		
 		function postToFrame(callbackID, sensorValue) {
 			var context = document.getElementById("torso").contentWindow.animator
+			var success = false
 			if (!!callbackID && typeof sensorValue != "undefined") {
-				context.sensor_update_degree(callbackID, 0, 1000, sensorValue)
+				success = context.sensor_update_degree(callbackID, 0, 1000, sensorValue)
 				context.rotate_all()
-			}				
+			}
+			return success;
 		}
 		
 		var bounds = {min: 0, max: 1000} //TODO: Make this dynamic
@@ -149,36 +163,42 @@
 			
 				// Iterate through all the received sensors
 				for (var i = 0; i < sensors.length; i++) {
+				
+					$("#no-data").hide()
+					
 					var sensor = sensors[i]
 					var value = parseInt(sensor.collection[0].value)
-					if (typeof views[sensor.name] != "function") {
+					if (typeof views[sensor.id] != "function") {
+						$("#knobs").append('<div class="col-sm-4"><input type="text" id="'+sensor.name+'" value="0" class="dial" data-fgColor="#66CC66" data-angleOffset=-125 data-angleArc=250 data-width="80%"></span><span id="label"' + sensor.name + '"></div>')
 						
-						$("#knobs").append("<progress id='" + sensor.name + "' max='" + (bounds.max - bounds.min) + "' value='0'></progress> <span id='label" + sensor.name + "'></span><br>\n")
+						$("#" + sensor.name).knob({
+							'min': bounds.min,
+							'max': bounds.max,
+							'readOnly': true,
+							'displayPrevious': true
+						});
 						
 						var domify = function (newVal) {
-							$("#" + sensor.name).val(newVal)
+							//$("#" + sensor.name).val(newVal)
+							$("#" + sensor.name)
+								.val(newVal)
+								.trigger('change');
 							$("#label" + sensor.name).html(newVal)
-						}
+						}						
 						
-						// FIXME: Dont force iframe update
-						if (false && typeof postToFrame()[sensor.name] == "undefined") {
-							views[sensor.name] = domify
-						}
-						else {
-							views[sensor.name] = function(newVal) {
-								postToFrame("get_rotation", newVal) // FIXME
-								domify(newVal)
-							}
+						views[sensor.id] = function(newVal) {
+							if (postToFrame(sensor.name, newVal))
+								document.getElementById('torso_wrapper').style.opacity="1"
+							domify(newVal)
+							
 						}
 					}
 					
-					var callback = views[sensor.name]
+					var callback = views[sensor.id]
 					callback(value - bounds.min)
 				}
-				
-				$("#status").val("Got data")
 			} catch (e) {
-				$("#status").val("JSON data problem: " + e.message)
+				console.log("JSON data problem: " + e.message)
 			}
 		});
 		
@@ -188,7 +208,9 @@
 		
 		var plot = document.getElementById("plot");
 		
-		
+		$(document).ready(function(){
+			$('[data-toggle="tooltip"]').tooltip();
+		});
 		
 
 

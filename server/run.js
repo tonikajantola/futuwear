@@ -27,7 +27,7 @@ app.get('/fetch', function (req, res) {
 	var content = req.query.data // TODO: Safety
 	content = JSON.parse(content)
 	
-	getData(parseInt(content.time0), parseInt(content.timeT), res)
+	getData(parseInt(content.time0), parseInt(content.timeT), req, res)
 });
 
 /* Method to get registered sensors with */
@@ -134,7 +134,7 @@ function maintainConnection() {
 maintainConnection();
 
 /* Method to extract archived sensor data (JSON) */
-function getData(time0, timeT, res) {
+function getData(time0, timeT, req, res) {
 	var accuracy = 5 // Seconds, ie. what to average at (60 => 1 minute averages)
 	
 	var devices = getUserDevices(req)

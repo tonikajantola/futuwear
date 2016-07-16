@@ -115,7 +115,7 @@
 		
 		function devices() {
 			var devices = readCookie("devices")
-			if (!devices) return false
+			if (!devices) return []
 			
 			return devices.split(',')
 		}

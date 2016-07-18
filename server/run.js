@@ -159,7 +159,7 @@ function getData(time1, timeT, req, res) {
 				WHERE logged >= FROM_UNIXTIME(?) AND logged <= FROM_UNIXTIME(?) AND ownerKey IN (?) \
 				GROUP BY ID, ROUND(logged/?) \
 				ORDER BY logged DESC \
-				LIMIT 150;'
+				LIMIT 5000;'
 				
 	c.query(sql, [time0, timeT, devices, accuracy], function(err, result) {
 		res.setHeader('Content-Type', 'application/json');

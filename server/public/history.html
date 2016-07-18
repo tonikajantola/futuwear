@@ -60,7 +60,11 @@
 		<div id="torso_wrapper">
 			<iframe style="border:0px;" id="torso">Your browser doesn't support iframes, so we can't visualise real-time posture data.</iframe>
 		</div>
-		<input type="range" min="0" max="1000" id="time" onchange="timeMachine(this)">
+		<input type="range" min="0" max="1000" id="time" onchange="timeMachine(this)"><br>
+		<button onclick="animate(document.getElementById('time'), document.getElementById('time').value)">Animate</button><br>
+		<input type="text" id="sensor"><br>
+		<input type="text" id="sensorName"><br>
+		<input type="text" id="datetime"><br>
 		<br><br><hr><br>
 		<a href="https://github.com/EinoVirtanen/futuwear">Git</a> | <a href="https://github.com/futurice/vor">Vör</a>
 		
@@ -79,9 +83,20 @@
 		function timeMachine(selector) {
 			var val = selector.value
 			if (selector.value >= archive.length)
-				return
+				return false
+				
 			var tuple = archive[val]
+			document.getElementById('datetime').value = tuple.logged
+			document.getElementById('sensor').value = tuple.sensorID
+			document.getElementById('sensorName').value = tuple.sensorName
 			postToFrame(tuple.sensorName, tuple.val)
+			return true
+		}
+		function animate(selector, prevIndex) {
+			if (selector.value == prevIndex && timeMachine(selector)) {
+				selector.value = prevIndex + 1
+				setTimeout(function () {animate(selector, prevIndex + 1)}, 60)
+			}
 		}
 		
 		function history(time0, timeT) {

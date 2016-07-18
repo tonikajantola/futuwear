@@ -53,25 +53,17 @@
 			</div>
 		</div>
 		
-
-		
 		
 		<br><br>
 		
 		<b>Your posture</b><br><br>
-		<div id="no-data"><small>Nothing is coming in. Have you <a href="manage.html">added your device</a>?</small></div>
-		<div id="knobs" class="row"></div>
 		<div id="torso_wrapper">
 			<iframe style="border:0px;" id="torso">Your browser doesn't support iframes, so we can't visualise real-time posture data.</iframe>
 		</div>
+		<input type="range" min="0" max="1000" id="time" onchange="timeMachine(this)">
 		<br><br><hr><br>
-		
-		
-		
-		
-		
-		
 		<a href="https://github.com/EinoVirtanen/futuwear">Git</a> | <a href="https://github.com/futurice/vor">Vör</a>
+		
 	</div>
 	
 	
@@ -81,9 +73,49 @@
 		
 		var torso = document.getElementById("torso")
 		var torsoVisible = false
-	
 		
 		var archive = []
+		
+		function timeMachine(selector) {
+			var val = selector.value
+			if (selector.value >= archive.length)
+				return
+			var tuple = archive[val]
+			postToFrame(tuple.sensorName, tuple.val)
+		}
+		
+		function history(time0, timeT) {
+			console.log("Getting history from " + time0 + " to " + timeT)
+			$.get("/fetch", "data=" + JSON.stringify({time0: time0, timeT: timeT}), function (resp) {
+				try {
+					console.log(JSON.stringify(resp))
+					
+					archive = []
+					
+					$("#list").html("<tr><td colspan='3'>Records from <b>"+(new Date(time0*1000).toLocaleString())+"</b> to <b>"+(new Date(timeT*1000).toLocaleString())+"</b></td></tr>")
+										
+					for (var i = 0; i < resp.length; i++) {
+						var reading = resp[i]
+						archive.push(reading)
+						
+						var sensorID = reading["sensorID"]
+						var logged = new Date(reading["logged"] * 1000)
+						var val = parseInt(reading["val"])
+						
+						$("#list").append("<tr><td><b>" + sensorID + "</b></td><td>" + val + "</td><td><small>" + timeSince(logged) + " ago</small></td></tr>")
+					}
+					
+					if (i >= 100) {
+						$("#list").append("<tr><td colspan='3'>Some data may have been truncated</td></tr>")
+					}
+					else if (i <= 0) {
+						$("#list").append("<tr><td colspan='3'>No records were found</td></tr>")
+					}
+				} catch (e) {
+					console.log("JSON data problem: " + e.message)
+				}
+			})
+		}
 		
 		function postToFrame(callbackID, sensorValue) {
 			if (!torsoVisible) {
@@ -102,72 +134,14 @@
 		
 		var bounds = {min: 0, max: 1000} //TODO: Make this dynamic
 		
-		var socket = io.connect("http://futuwear.tunk.org:13337");
-		
 		var views = {} // List of callback functions
 		
-		socket.on('message', function(resp){
-			var now = Math.floor(new Date() / 1000)
-			try {
-				var sensors = json(resp)["sensors"]
-				
-				if (sensors == undefined)
-					throw new Error("Key 'sensors' is absent.")
-				else if (!sensors[0])
-					sensors = [sensors] // Deal with single-sensor JSON data
-				
-				console.log("Received readings from " + sensors.length + " sensors.")
-			
-				// Iterate through all the received sensors
-				for (var i = 0; i < sensors.length; i++) {
-					
-					
-					$("#no-data").hide()
-					
-					var sensor = sensors[i]
-					var value = parseInt(sensor.collection[0].value)
-					if (typeof views[sensor.id] != "function") {
-						$("#knobs").append('<div class="col-xs-4" data-toggle="tooltip" title="'+sensor.name+'" style="text-align:center;"><input type="text" id="'+sensor.name+'" value="0" class="dial" data-fgColor="#66CC66" data-angleOffset=-125 data-angleArc=250 data-width="80%"></div>')
-						$('[data-toggle="tooltip"]').tooltip();
-						
-						$("#" + sensor.name).knob({
-							'min': bounds.min,
-							'max': bounds.max,
-							'readOnly': true,
-							'displayPrevious': true
-						});
-						
-						var domify = function (newVal) {
-							$("#" + sensor.name)
-								.val(newVal)
-								.trigger('change');
-						}						
-						
-						views[sensor.id] = function(newVal) {
-						
-							if (sensor.name.indexOf("_") > -1) // Assuming Torso-related names always have an underscore
-								postToFrame(sensor.name, newVal)
-							
-							domify(newVal)
-							
-						}
-					}
-					
-					var callback = views[sensor.id]
-					callback(value - bounds.min)
-				}
-			} catch (e) {
-				console.log("JSON data problem: " + e.message)
-			}
-		});
-		
-		$(window).on('beforeunload', function(){
-			socket.close();
-		});
-		
-		
 		$(document).ready(function(){
-			$('[data-toggle="tooltip"]').tooltip();
+			$('[data-toggle="tooltip"]').tooltip();	
+			
+			var time0 = Math.floor(Date.now()/1000) - 10*60 // Ten minutes ago
+			var timeT = Math.floor(Date.now()/1000) + 10*60 // Ten minutes from now	
+			history(time0, timeT)
 		});
 		
 

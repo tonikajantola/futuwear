@@ -30,6 +30,15 @@ app.get('/fetch', function (req, res) {
 	getData(parseInt(content.time0), parseInt(content.timeT), req, res)
 });
 
+/* Method to get archived data with */
+app.get('/fetch', function (req, res) {
+	
+	var content = req.query.data // TODO: Safety
+	content = JSON.parse(content)
+	
+	getData(parseInt(content.time0), parseInt(content.timeT), req, res)
+});
+
 /* Method to get registered sensors with */
 app.get('/sensors', getSensors);
 
@@ -134,26 +143,42 @@ function maintainConnection() {
 maintainConnection();
 
 /* Method to extract archived sensor data (JSON) */
-function getData(time0, timeT, req, res) {
-	var accuracy = 5 // Seconds, ie. what to average at (60 => 1 minute averages)
+function getData(time1, timeT, req, res) {
+	var accuracy = 5 			// Seconds, ie. what to average at (60 => 1 minute averages)
+	var changePeriod = 1 * 60 	// Seconds
 	
 	var devices = getUserDevices(req)
+	var time0 = Math.max(time1 - changePeriod, 0)
 	
 	if (!devices)
 		return res.send(JSON.stringify({error: "No devices stored with user"}, null, 3));
 	
-	var sql = '	SELECT sensorID, UNIX_TIMESTAMP(ROUND(AVG(logged))) AS logged, ROUND(AVG(val)) AS val \
+	
+	var sql = '	SELECT sensorID, name AS sensorName, UNIX_TIMESTAMP(ROUND(AVG(logged))) AS logged, ROUND(AVG(val)) AS val \
 				FROM Data INNER JOIN Sensors \
 				WHERE logged >= FROM_UNIXTIME(?) AND logged <= FROM_UNIXTIME(?) AND ownerKey IN (?) \
-				GROUP BY ROUND(logged/?) \
+				GROUP BY ID, ROUND(logged/?) \
 				ORDER BY logged DESC \
-				LIMIT 50;'
+				LIMIT 150;'
 				
 	c.query(sql, [time0, timeT, devices, accuracy], function(err, result) {
 		res.setHeader('Content-Type', 'application/json');
 		
 		if (!err) {
 			nodeLog("Found " + result.length + " data points between " + (new Date(time0*1000)).toLocaleString() + " and " + (new Date(timeT*1000)).toLocaleString())
+			/*
+			var interestPoints = result.filter(function (tuple, i, arr) {
+				return tuple.logged >= time1
+			})
+			var r = interestPoints.map(function (tuple, i, arr) {
+				var previousOnes = result.filter(function (elem, index, array) {
+					var isPrevious = elem.logged < tuple.logged
+					var isInPeriod = elem.logged >= tuple.logged - changePeriod
+					elem.logged >= tuple.logged
+				})
+				return tuple
+			})
+			*/
 			res.send(JSON.stringify(result, null, 3));	
 		}
 		else  {

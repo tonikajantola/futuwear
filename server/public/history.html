@@ -72,6 +72,7 @@
 	
 	
 	<script>
+		var animationInterval = 500
 		if (window.location.host.indexOf("tunk") < 0)
 			$("#warn").show()
 		
@@ -81,7 +82,7 @@
 		var archive = []
 		
 		function timeMachine(selector) {
-			var val = selector.value
+			var val = parseInt(selector.value)
 			if (selector.value >= archive.length)
 				return false
 				
@@ -95,7 +96,7 @@
 		function animate(selector, prevIndex) {
 			if (selector.value == prevIndex && timeMachine(selector)) {
 				selector.value = prevIndex + 1
-				setTimeout(function () {animate(selector, prevIndex + 1)}, 60)
+				setTimeout(function () {animate(selector, prevIndex + 1)}, animationInterval)
 			}
 		}
 		

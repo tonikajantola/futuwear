@@ -32,7 +32,14 @@ def forwardToServer(jsonStuff):
     global connection
     if connection:
         try:
-            jsonData = json.loads(jsonStuff)
+            inData = json.loads(jsonStuff)
+            s_name = inData.keys()[0]
+            s_id = ""
+            if s_name == "L_Shoulder_Y_Rot":
+                s_id = "L_Shoulder_Y_Rot_725627"
+            elif s_name == "R_Shoulder_Y_Rot":
+                s_id = "L_Shoulder_Y_Rot_985566"
+            jsonData = {'sensors': [{"id":s_id, "name": s_name, "description": "None", "collection" : [{"value": inData[s_name], "timestamp": 0}]}]}
             hashable = json.dumps(jsonData["sensors"], separators=(',',':')) + deviceCode
             jsonData["token"] = hashlib.md5(hashable.encode('utf-8')).hexdigest() #TODO: List access safety
             print("Hashing ", hashable)

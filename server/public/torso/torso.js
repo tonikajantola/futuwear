@@ -6,7 +6,6 @@
 <3jossa sensor_name on ko. käskyn caseista löytyvä nimi. esim. "L_Shoulder_X_Rot" (Vasemman olkapän x-suunnan kääntymistä mittaava sensori).				<3
 <3Tämä päivittää globaalin kulma-arvon (eli missä kulmassa käden pitäisi olla), mutta ei vielä liikuta torsoa.												<3
 <3Kun olet päivittänyt haluamasi arvot, kutsu komentoa rotate_all(), jolloin torson luut kääntyvät vastaamaan globaaleihin muuttujiin talletettuja arvojaan.<3
-<3Toiseksialimmalla rivillä antamasi setinterval on vielä olemassa, mutta vaatii luonnollisesti jonkinlaista rukkaamista tähän hieman muuttuneeseen tyyliin.<3
 <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
 */
 b4w.register("torso", function(exports, require) {
@@ -22,6 +21,7 @@ b4w.register("torso", function(exports, require) {
 
 	var bones = ["Back_Lower", "Back_Middle", "Back_Upper", "Neck", "R_Shoulder", "R_Arm_Inner", "R_Arm_Outer", "L_Shoulder", "L_Arm_Inner", "L_Arm_Outer"];
 	var start_time = new Date()/1000;//seconds
+	var compare_time;//declared in acquire_fat
 	var fat_value = 0;
 	var index = 0;
 	var back_values_old = [];
@@ -337,15 +337,15 @@ b4w.register("torso", function(exports, require) {
 		
 	}
 	
-	function aquire_fat(new_angle) {
+	function acquire_fat(new_angle) {
 		/*
 		Compares the means of last 100 angle changes in a sensor and compares them to the 100 values before them.
 		If the mean hasn't canged enough, fat will be acquired.
 		*/
 		var obj = m_scs.get_object_by_name("Arnold");
-		var min_interval_for_change = 10;//in seconds
+		var min_interval_for_change = 1;//in seconds
 		var required_change = 15;//% change from last mean. Used as a threshold to see if change is necessary.
-		var fat_change = 0.1;//0 for athlete, 1 for maximum mass. Going over 1 isn't necessarily a crime. (Ie. works but looks ridiculous)
+		var fat_change = 0.05;//0 for athlete, 1 for maximum mass. This variable determines the amount each step increments the transformation.
 		
 		if (old_values_is_full == false) {
 			back_values_old[index] = new_angle;
@@ -355,27 +355,32 @@ b4w.register("torso", function(exports, require) {
 				old_values_is_full = true;
 			}
 		}
-		else if(index < 100 && old_values_is_full == true) {
+		else if (index < 100 && old_values_is_full == true) {
 			back_values_new[index] = new_angle;
 			index = index + 1;
 		}
-		else {
-			//This starts if index is 100. Here the global mean values are compared and mesh updated accordingly.
+		else if (index == 100){
+			//Here the global mean values are compared and mesh updated accordingly.
 			calculate_mean();
 			index = 0;
 			
-			var compare_time = new Date()/1000 - min_interval_for_change; //seconds
-			var change = back_mean_new / back_mean_old;//% change from the old position
-			if (change > required_change && compare_time > start_time) {
-				start_time = new Date();
+			var compare_time = new Date()/1000 - start_time;
+			console.log(compare_time);
+			
+			var change = (Math.abs((back_mean_new - back_mean_old)) / back_mean_old) * 100;//% change from the old position
+			if (change < required_change && compare_time > min_interval_for_change) {
 				back_mean_old = back_mean_new;
 				fat_value = fat_value + fat_change;
+				if (fat_value > 1) {fat_value = 1;}
 				m_geom.set_shape_key_value(obj, "Engineer_Stomach", fat_value);
+				start_time = new Date()/1000;
 			}
-			else {
+			else if (change >= required_change && compare_time > min_interval_for_change){
+				back_mean_old = back_mean_new;
 				fat_value = fat_value - fat_change;
 				if (fat_value < 0) {fat_value = 0;}
 				m_geom.set_shape_key_value(obj, "Engineer_Stomach", fat_value);
+				start_time = new Date()/1000;
 			}
 			
 			
@@ -455,6 +460,7 @@ b4w.register("torso", function(exports, require) {
 		return degrees;
 	}
 	
+	//setInterval(function () { acquire_fat(30) }, 10);
 });
 
 var animator = b4w.require("torso"); 

@@ -131,6 +131,7 @@ void iwrapper_loop() {
                 if (!iwrap_initialized) {
                     iwrap_initialized = 1;
                     serial_out(F("iWRAP initialization complete\n"));
+                    digitalWrite(11, HIGH);
                 }
                 print_connection_map();
                 print_demo_menu();

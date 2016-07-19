@@ -20,7 +20,7 @@ void communication_rx_callback(uint8_t packet_channel, uint16_t, const unsigned 
 #define USE_ARDUINOJSON
 void build_data_json(char *buffer, int len) {
     #ifdef USE_ARDUINOJSON
-        StaticJsonBuffer<400> jsonBuffer;
+        StaticJsonBuffer<200> jsonBuffer;
         JsonObject& dump = jsonBuffer.createObject();
         //dump["packetID"] = packetIndex++;
         //JsonObject& data = dump.createNestedObject("sensorData");
@@ -37,7 +37,7 @@ void build_data_json(char *buffer, int len) {
             sensor["description"]   = "None";
             JsonArray& collection  = sensor.createNestedArray("collection");
             JsonObject& value       = collection.createNestedObject();
-            value["value"]          = sensorList[i].outValue;
+            value["value"]          = sensorList[i].value.out;
             value["timestamp"]      = packetIndex;
             //field["value"]  = sensorList[i].outValue;
             //data[sensorList[i].name] = sensorList[i].outValue;
@@ -64,9 +64,17 @@ void build_data_json(char *buffer, int len) {
     #endif
 }
 
+void build_single_data_json(int sensor_index, char *buffer, int len) {
+    StaticJsonBuffer<200> jsonBuffer;
+    JsonObject& dump = jsonBuffer.createObject();
+
+    dump[sensorList[sensor_index].name] = sensorList[sensor_index].value.out;
+    dump.printTo(buffer, len);
+}
+
 size_t BluetoothStream::write(uint8_t data) {
     if (packet_buffer_size == 0) {
-      //Serial1.flush();  
+      //Serial1.flush();
     }
     packetBuffer[packet_buffer_size++] = data;
     if (data == '\n' || packet_buffer_size == PACKET_BUF_SIZE) {
@@ -87,7 +95,7 @@ size_t BluetoothStream::write(const uint8_t *data) {
 void send_sensor_data() {
     if (surefire_connection_id == 0xFF) {return;}
 
-    char output[512];
+    /*char output[512];
     build_data_json(output, sizeof(output));
     //build_data_json();
     strncat(output, "\n", sizeof(output));
@@ -95,6 +103,16 @@ void send_sensor_data() {
     //Serial.println(output);
     iwrap_send_data(surefire_connection_id, strlen(output), (uint8_t*)output, IWRAP_MODE_MUX);
     Serial1.flush();
-    //free(output);
-    //iwrap_send_data(lastReceivedChannel, 2, (uint8_t*)"\n", IWRAP_MODE_MUX);
+    */
+
+    for (int i=0; i < NUM_SENSORS; i++) {
+        char output[256];
+        build_single_data_json(i, output, sizeof(output));
+        //build_data_json();
+        strncat(output, "\n", sizeof(output));
+
+        //Serial.println(output);
+        iwrap_send_data(surefire_connection_id, strlen(output), (uint8_t*)output, IWRAP_MODE_MUX);
+        Serial1.flush();
+    }
 }

@@ -182,7 +182,7 @@
 					
 					for (var i = 0; i < 12; i++) {
 
-						$("#existence").append("<div class='col-xs-1'><input type='text' id='hour"+(11 - i)+"' value='"+hourPoints[i]+"' size='5' readonly></div>")
+						$("#existence").prepend("<div class='col-xs-1'><input type='text' value='"+(hourPoints[i] || 0) +"' size='5' readonly></div>")
 					}
 					
 				} catch (e) {
@@ -195,7 +195,7 @@
 		
 		$(document).ready(function(){
 			$('[data-toggle="tooltip"]').tooltip();	
-			var time0 = Math.floor(Date.now()/1000) - 10*60 // Ten minutes ago
+			var time0 = Math.floor(Date.now()/1000) - 12*60*60 // 12 Hours ago
 			var timeT = Math.floor(Date.now()/1000) + 10*60 // Ten minutes from now	
 			history(time0, timeT)
 		});

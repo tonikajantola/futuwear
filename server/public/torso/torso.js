@@ -6,7 +6,6 @@
 <3jossa sensor_name on ko. käskyn caseista löytyvä nimi. esim. "L_Shoulder_X_Rot" (Vasemman olkapän x-suunnan kääntymistä mittaava sensori).				<3
 <3Tämä päivittää globaalin kulma-arvon (eli missä kulmassa käden pitäisi olla), mutta ei vielä liikuta torsoa.												<3
 <3Kun olet päivittänyt haluamasi arvot, kutsu komentoa rotate_all(), jolloin torson luut kääntyvät vastaamaan globaaleihin muuttujiin talletettuja arvojaan.<3
-<3Toiseksialimmalla rivillä antamasi setinterval on vielä olemassa, mutta vaatii luonnollisesti jonkinlaista rukkaamista tähän hieman muuttuneeseen tyyliin.<3
 <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
 */
 b4w.register("torso", function(exports, require) {
@@ -17,8 +16,20 @@ b4w.register("torso", function(exports, require) {
 	var m_armat  = require("armature");
 	var m_tsr    = require("tsr");
 	var m_quat	 = require("quat");
+	var m_geom	 = require("geometry");
+	var m_obj	 = require("objects");
 
 	var bones = ["Back_Lower", "Back_Middle", "Back_Upper", "Neck", "R_Shoulder", "R_Arm_Inner", "R_Arm_Outer", "L_Shoulder", "L_Arm_Inner", "L_Arm_Outer"];
+	var start_time = new Date()/1000;//seconds
+	var sample_size = 100;
+	var compare_time;//declared in acquire_fat
+	var fat_value = 0;
+	var index = 0;
+	var back_values_old = [];
+	var old_values_is_full = false;
+	var back_values_new = [];
+	var back_mean_new = 0;
+	var back_mean_old = 0;
 
 	/*
 	Tweak these values to calibrate the shirt.
@@ -303,6 +314,82 @@ b4w.register("torso", function(exports, require) {
 		m_armat.set_bone_tsr_rel(rig, bone_name, arm_tsr);
 		
 	}
+	
+	function calculate_mean(){
+		/*
+		Updates the global variables back_mean_old and back_mean_new.
+		*/
+		var ka = 0;
+		var i = 0;
+		if (old_values_is_full == false) {
+			while (i < sample_size) {
+				ka = ka + back_values_old[i];
+				i = i + 1;
+			}
+			back_mean_old = ka / sample_size;
+		}
+		else {
+			while (i < sample_size) {
+				ka = ka + back_values_new[i];
+				i = i + 1;
+			}
+			back_mean_new = ka / sample_size;
+		}
+		
+	}
+	
+	function acquire_fat(new_angle) {
+		/*
+		Compares the means of last 100 angle changes in a sensor and compares them to the 100 values before them.
+		If the mean hasn't canged enough, fat will be acquired.
+		There is a time window between both of the large samples, which are compared to each other.
+		This time is at least min_interval_for_change (in seconds). Actually reading sensors slows down the process a bit further.
+		*/
+		var obj = m_scs.get_object_by_name("Arnold");
+		var min_interval_for_change = 3;//in seconds
+		var required_change = 15;//% change from last mean. Used as a threshold to see if change is necessary.
+		var fat_change = 0.03;//0 for athlete, 1 for maximum mass. This variable determines the amount each step increments the transformation.
+		var compare_time = new Date()/1000 - start_time;
+		
+		if (old_values_is_full == false) {
+			back_values_old[index] = new_angle;
+			index = index + 1;
+			if (index == sample_size) {
+				calculate_mean();
+				old_values_is_full = true;
+				index = 0;
+			}
+		}
+		else if (index < sample_size && old_values_is_full == true && compare_time > min_interval_for_change) {
+			back_values_new[index] = new_angle;
+			index = index + 1;
+		}
+		else if (index == sample_size){
+			//Here the global mean values are compared and mesh updated accordingly.
+			calculate_mean();
+			index = 0;
+			
+			var change = (Math.abs((back_mean_new - back_mean_old)) / back_mean_old) * 100;//% change from the old position
+			if (change < required_change) {
+				back_mean_old = back_mean_new;
+				fat_value = fat_value + fat_change;
+				if (fat_value > 1) {fat_value = 1;}
+				m_geom.set_shape_key_value(obj, "Engineer_Stomach", fat_value);
+				start_time = new Date()/1000;
+			}
+			else if (change >= required_change){
+				back_mean_old = back_mean_new;
+				fat_value = fat_value - fat_change;
+				if (fat_value < 0) {fat_value = 0;}
+				m_geom.set_shape_key_value(obj, "Engineer_Stomach", fat_value);
+				start_time = new Date()/1000;
+			}
+			
+			
+		}
+		
+		
+	}
 		
 	exports.sensor_update_degree = function (sensor_name, sensor_min, sensor_max, sensor_value) {
 		/*
@@ -320,6 +407,9 @@ b4w.register("torso", function(exports, require) {
 				Back_Middle_X_Rot = x2/2;
 				var x3 = map_value_to_degree(Back_Upper_X_Min,Back_Upper_X_Max,sensor_min,sensor_max,sensor_value);
 				Back_Upper_X_Rot = x3/2;
+				
+				//Here we determine if fat is changed
+				acquire_fat(Back_Middle_X_Rot);
 				break;
 			case "Back_Y":
 				//Currently whole back is modified to use one sensor per direction for all three virtual bones.
@@ -372,6 +462,7 @@ b4w.register("torso", function(exports, require) {
 		return degrees;
 	}
 	
+	//setInterval(function () { acquire_fat(30) }, 10);
 });
 
 var animator = b4w.require("torso"); 

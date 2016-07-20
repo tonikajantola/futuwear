@@ -115,10 +115,12 @@
 			}
 		}
 		function animate(selector, prevIndex) {
-			if (selector.value == prevIndex && timeMachine(selector)) {
-				selector.value = prevIndex + 1
-				setTimeout(function () {animate(selector, prevIndex + 1)}, animationInterval)
+			if (parseInt(selector.value) == parseInt(prevIndex) && timeMachine(selector)) {
+				console.log("animating")
+				selector.value = parseInt(prevIndex) + 1
+				setTimeout(function () {animate(selector, parseInt(prevIndex) + 1)}, animationInterval)
 			}
+			else console.log("NOT animating")
 		}
 		
 		

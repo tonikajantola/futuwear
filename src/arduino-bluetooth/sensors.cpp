@@ -9,8 +9,13 @@ bool ledBlink = false;
 
 //List of all sensors connected.
 Sensor sensorList[NUM_SENSORS] = {
-    {RESISTOR_DIVIDER, "L_Shoulder_Y_Rot", A0, {0}},
-    {RESISTOR_DIVIDER, "R_Shoulder_Y_Rot", A1, {0}}//,
+    {RESISTOR_DIVIDER, "L_Shoulder_Y_Rot",  A0, {0}},
+    {RESISTOR_DIVIDER, "R_Shoulder_Y_Rot",  A1, {0}},
+    {RESISTOR_DIVIDER, "L_Shoulder_X_Rot",  A2, {0}},
+    {RESISTOR_DIVIDER, "R_Shoulder_X_Rot",  A3, {0}},
+    {RESISTOR_DIVIDER, "Back_X",            A4, {0}},
+    {RESISTOR_DIVIDER, "Back_Y",            A5, {0}}
+    //,
     //{RESISTOR_DIVIDER, "Stretch2", A2, {0}},
     //{RESISTOR_DIVIDER, "Stretch3", A3, {0}},
     //{RESISTOR_DIVIDER, "Stretch4", A4, {0}},

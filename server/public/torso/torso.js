@@ -346,9 +346,9 @@ b4w.register("torso", function(exports, require) {
 		This time is at least min_interval_for_change (in seconds). Actually reading sensors slows down the process a bit further.
 		*/
 		var obj = m_scs.get_object_by_name("Arnold");
-		var min_interval_for_change = 3;//in seconds
+		var min_interval_for_change = 2;//in seconds
 		var required_change = 25;//% change from last mean. Used as a threshold to see if change is necessary.
-		var fat_change = 0.03;//0 for athlete, 1 for maximum mass. This variable determines the amount each step increments the transformation.
+		var fat_change = 0.05;//0 for athlete, 1 for maximum mass. This variable determines the amount each step increments the transformation.
 		var compare_time = new Date()/1000 - start_time;
 		
 		if (old_values_is_full == false) {
@@ -496,7 +496,7 @@ b4w.register("torso", function(exports, require) {
 		return degrees;
 	}
 	
-	setInterval(function () { acquire_fat(30) }, 10);
+	//setInterval(function () { acquire_fat(30) }, 10);
 });
 
 var animator = b4w.require("torso"); 

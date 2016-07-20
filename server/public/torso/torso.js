@@ -21,6 +21,7 @@ b4w.register("torso", function(exports, require) {
 
 	var bones = ["Back_Lower", "Back_Middle", "Back_Upper", "Neck", "R_Shoulder", "R_Arm_Inner", "R_Arm_Outer", "L_Shoulder", "L_Arm_Inner", "L_Arm_Outer"];
 	var start_time = new Date()/1000;//seconds
+	var sample_size = 100;
 	var compare_time;//declared in acquire_fat
 	var fat_value = 0;
 	var index = 0;
@@ -321,18 +322,18 @@ b4w.register("torso", function(exports, require) {
 		var ka = 0;
 		var i = 0;
 		if (old_values_is_full == false) {
-			while (i < 100) {
+			while (i < sample_size) {
 				ka = ka + back_values_old[i];
 				i = i + 1;
 			}
-			back_mean_old = ka / 100;
+			back_mean_old = ka / sample_size;
 		}
 		else {
-			while (i < 100) {
+			while (i < sample_size) {
 				ka = ka + back_values_new[i];
 				i = i + 1;
 			}
-			back_mean_new = ka / 100;
+			back_mean_new = ka / sample_size;
 		}
 		
 	}
@@ -350,16 +351,16 @@ b4w.register("torso", function(exports, require) {
 		if (old_values_is_full == false) {
 			back_values_old[index] = new_angle;
 			index = index + 1;
-			if (index == 100) {
+			if (index == sample_size) {
 				calculate_mean();
 				old_values_is_full = true;
 			}
 		}
-		else if (index < 100 && old_values_is_full == true) {
+		else if (index < sample_size && old_values_is_full == true) {
 			back_values_new[index] = new_angle;
 			index = index + 1;
 		}
-		else if (index == 100){
+		else if (index == sample_size){
 			//Here the global mean values are compared and mesh updated accordingly.
 			calculate_mean();
 			index = 0;

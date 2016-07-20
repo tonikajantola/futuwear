@@ -462,7 +462,7 @@ b4w.register("torso", function(exports, require) {
 		return degrees;
 	}
 	
-	setInterval(function () { acquire_fat(30) }, 10);
+	//setInterval(function () { acquire_fat(30) }, 10);
 });
 
 var animator = b4w.require("torso"); 

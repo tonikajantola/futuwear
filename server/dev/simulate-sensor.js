@@ -27,7 +27,7 @@ function payload() {
 	var sensordata = {"sensors": 
 			[{
 				"id": "elmon-sensori_787167", 
-				"name": "Back_Y",
+				"name": "Back_X",
 				"collection": [{
 					"value": rand(0, 1000)
 				}]

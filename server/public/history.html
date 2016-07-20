@@ -38,6 +38,21 @@
 		td {
 			padding: 0.5em;
 		}
+		#existence {
+			width: 100%;
+			height: 2em;
+			margin: 0;
+		}
+		#existence div {
+			height: 100%;
+			padding:0px;
+		}
+		#existence div input {
+			font-size: 10px;
+			width:100%;
+			height:100%;
+			text-align:center;
+		}
 	</style>
 </head>
 <body>
@@ -60,7 +75,8 @@
 		<div id="torso_wrapper">
 			<iframe style="border:0px;" id="torso">Your browser doesn't support iframes, so we can't visualise posture data.</iframe>
 		</div>
-		<input type="range" min="-43200" max="0" id="time" onchange="timeMachine(this)" oninput="timeMachine(this)"><br>
+		<input type="range" min="-43199" max="0" id="time" onchange="timeMachine(this)" oninput="timeMachine(this)"><br>
+		<div id="existence" class="row"></div>
 		<button onclick="animate(document.getElementById('time'), document.getElementById('time').value)">Animate</button><br>
 		<div id="clock">(move slider)</div>
 		<div id="knobs" class="row"></div>
@@ -79,7 +95,7 @@
 		
 		var torso = document.getElementById("torso")
 		
-		var archive = []
+		var archive = {}
 		var maxTime = Math.floor(new Date() / 1000)
 		
 		function timeMachine(selector) {
@@ -87,7 +103,6 @@
 			var val = parseInt(selector.value)
 			
 			var sqlTime = (maxTime + val)
-			console.log(sqlTime)
 			var jsTime = new Date(sqlTime * 1000)
 			
 			var h = jsTime.getHours()
@@ -114,6 +129,8 @@
 				return true
 			}
 		}
+		
+		
 		function animate(selector, prevIndex) {
 			if (parseInt(selector.value) == parseInt(prevIndex) && timeMachine(selector)) {
 				console.log("animating")
@@ -122,21 +139,32 @@
 			}
 			else console.log("NOT animating")
 		}
+		
+		
 		function history(time0, timeT) {
 			console.log("Getting history from " + time0 + " to " + timeT)
+			
+			$("#existence").html("")
+			for (var i = 0; i < 12; i++) {
+				$("#existence").append("<div class='col-xs-1'><input type='text' id='hour"+i+"' value='0' size='5' readonly></div>")
+			}
+			
 			$.get("/fetch", "data=" + JSON.stringify({time0: time0, timeT: timeT}), function (resp) {
 				try {
+				
+					hourPoints = {}
+					
 					console.log(JSON.stringify(resp))
 					
 					archive = {}
 					maxTime = 0
-					
-					$("#list").html("<tr><td colspan='3'>Records from <b>"+(new Date(time0*1000).toLocaleString())+"</b> to <b>"+(new Date(timeT*1000).toLocaleString())+"</b></td></tr>")
-										
+						
 					for (var i = 0; i < resp.length; i++) {
 					
 						var reading = resp[i]
 						var logTimestamp = new Date(reading["logged"] * 1000)
+						
+						hourPoints[logTimestamp.getHours()] = (hourPoints[logTimestamp.getHours()] || 0) + 1
 						
 						maxTime = Math.max(maxTime, reading.logged)
 						
@@ -145,11 +173,12 @@
 							archive[parseInt(reading.logged)] = [payload]
 						else archive[parseInt(reading.logged)].push(payload)
 						
-						$("#list").append("<tr><td><b>" + reading.sensorID + "</b></td><td>" + reading.val + "</td><td><small>" + timeSince(logTimestamp) + " ago</small></td></tr>")
 					}
+					var maxHour
 					
-					if (i <= 0) {
-						$("#list").append("<tr><td colspan='3'>No records were found</td></tr>")
+					for (var i = 0; i < 12; i++) {
+						var hour = (new Date((maxTime - i * 3600) * 1000)).getHours()
+						$("#hour" + i).val(hourPoints[hour])
 					}
 					
 				} catch (e) {
@@ -162,7 +191,6 @@
 		
 		$(document).ready(function(){
 			$('[data-toggle="tooltip"]').tooltip();	
-			
 			var time0 = Math.floor(Date.now()/1000) - 10*60 // Ten minutes ago
 			var timeT = Math.floor(Date.now()/1000) + 10*60 // Ten minutes from now	
 			history(time0, timeT)

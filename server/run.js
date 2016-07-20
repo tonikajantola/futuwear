@@ -89,7 +89,7 @@ client.on('message', msg => {
 		if (!sensors[0])
 			sensors = [sensors]
 			
-		nodeLog("Got vör message [" + sensors.length + " sensor(s)].")
+		//nodeLog("Got vör message [" + sensors.length + " sensor(s)].")
 		
 		// Iterate through every sensor
 		for (var i = 0; i < sensors.length; i++) {

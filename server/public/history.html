@@ -73,12 +73,11 @@
 	<script>
 		var torso = document.getElementById("torso")
 		
-		var animationInterval = 500
+		var animationInterval = 50
 		if (window.location.host.indexOf("tunk") < 0)
 			$("#warn").show()
 		
 		var torso = document.getElementById("torso")
-		var torsoVisible = false
 		
 		var archive = []
 		var maxTime = Math.floor(new Date() / 1000)
@@ -102,16 +101,17 @@
 				var tuple = archive[sqlTime]
 				
 				for (var i = 0; i < tuple.length; i++) {
-					var sensor = tuple[i]
+					var collection = tuple[i]
 					
-					appendVisualiser(views, sensor.sensorID, sensor.sensorName, "knobs")
+					appendVisualiser(views, collection.sensorID, collection.sensorName, "knobs")
 										
-					var callback = views[sensor.sensorID]
-					callback(sensor.val - bounds.min)
+					var callback = views[collection.sensorID]
+					callback(collection.val - bounds.min)
 				}
 				return true
 			} catch (e) {
-				return false
+				console.log("Error " + JSON.stringify(e))
+				return true
 			}
 		}
 		function animate(selector, prevIndex) {
@@ -121,17 +121,6 @@
 				setTimeout(function () {animate(selector, parseInt(prevIndex) + 1)}, animationInterval)
 			}
 			else console.log("NOT animating")
-		}
-		
-		
-		function timeString(hours, minutes, seconds) {
-			var clock = [hours, minutes, seconds]
-			clock = clock.map(function (digit) {
-				if (digit.toString().length == 1)
-					return "0" + digit;
-				else return digit
-			})
-			return clock.join(":")
 		}
 		function history(time0, timeT) {
 			console.log("Getting history from " + time0 + " to " + timeT)
@@ -168,23 +157,6 @@
 				}
 			})
 		}
-		
-		function postToFrame(callbackID, sensorValue) {
-			if (!torsoVisible) {
-				$("#torso_wrapper").show()
-				torso.src = 'torso/index.html'
-				torsoVisible = true
-			}
-			var context = torso.contentWindow.animator
-			var success = false
-			if (!!callbackID && typeof sensorValue != "undefined") {
-				success = context.sensor_update_degree(callbackID, 0, 1000, sensorValue)
-				context.rotate_all()
-			}
-			return success;
-		}
-		
-		var bounds = {min: 0, max: 1000} //TODO: Make this dynamic
 		
 		var views = {} // List of callback functions
 		

@@ -118,3 +118,18 @@ function postToFrame(callbackID, sensorValue) {
 var torsoVisible = false
 var bounds = {min: 0, max: 1000}
 var views = {} // List of callback functions
+
+
+
+
+		
+		
+function timeString(hours, minutes, seconds) {
+	var clock = [hours, minutes, seconds]
+	clock = clock.map(function (digit) {
+		if (digit.toString().length == 1)
+			return "0" + digit;
+		else return digit
+	})
+	return clock.join(":")
+}

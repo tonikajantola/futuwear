@@ -80,31 +80,11 @@
 			$("#warn").show()
 		
 		var torso = document.getElementById("torso")
-		var torsoVisible = false
 	
 		
-		var archive = []
-		
-		function postToFrame(callbackID, sensorValue) {
-			if (!torsoVisible) {
-				$("#torso_wrapper").show()
-				torso.src = 'torso/index.html'
-				torsoVisible = true
-			}
-			var context = torso.contentWindow.animator
-			var success = false
-			if (!!callbackID && typeof sensorValue != "undefined") {
-				success = context.sensor_update_degree(callbackID, 0, 1000, sensorValue)
-				context.rotate_all()
-			}
-			return success;
-		}
-		
-		var bounds = {min: 0, max: 1000} //TODO: Make this dynamic
 		
 		var socket = io.connect("http://futuwear.tunk.org:13337");
 		
-		var views = {} // List of callback functions
 		
 		socket.on('message', function(resp){
 			var now = Math.floor(new Date() / 1000)
@@ -121,38 +101,13 @@
 				// Iterate through all the received sensors
 				for (var i = 0; i < sensors.length; i++) {
 					
-					
 					$("#no-data").hide()
 					
 					var sensor = sensors[i]
 					var value = parseInt(sensor.collection[0].value)
-					if (typeof views[sensor.id] != "function") {
-						$("#knobs").append('<div class="col-xs-4" data-toggle="tooltip" title="'+sensor.name+'" style="text-align:center;"><input type="text" id="'+sensor.name+'" value="0" class="dial" data-fgColor="#66CC66" data-angleOffset=-125 data-angleArc=250 data-width="80%"></div>')
-						$('[data-toggle="tooltip"]').tooltip();
-						
-						$("#" + sensor.name).knob({
-							'min': bounds.min,
-							'max': bounds.max,
-							'readOnly': true,
-							'displayPrevious': true
-						});
-						
-						var domify = function (newVal) {
-							$("#" + sensor.name)
-								.val(newVal)
-								.trigger('change');
-						}						
-						
-						views[sensor.id] = function(newVal) {
-						
-							if (sensor.name.indexOf("_") > -1) // Assuming Torso-related names always have an underscore
-								postToFrame(sensor.name, newVal)
-							
-							domify(newVal)
-							
-						}
-					}
 					
+					appendVisualiser(views, sensor.id, sensor.name, "knobs")
+										
 					var callback = views[sensor.id]
 					callback(value - bounds.min)
 				}
@@ -169,7 +124,8 @@
 		$(document).ready(function(){
 			$('[data-toggle="tooltip"]').tooltip();
 		});
-
+		
+		
 	</script>
 	
 	<br><br><br>

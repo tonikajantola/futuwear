@@ -69,3 +69,67 @@ function readCookie(name) {
 function removeCookie(name) {
     createCookie(name,"",-1);
 }
+
+
+function appendVisualiser(viewContainer, sensorID, sensorName, containerID) {
+	if (typeof viewContainer[sensorID] != "function") {
+		$("#" + containerID).append('<div class="col-xs-4" data-toggle="tooltip" title="'+sensorName+'" style="text-align:center;"><input type="text" id="sensor-'+sensorName+'" value="0" class="dial" data-fgColor="#66CC66" data-angleOffset=-125 data-angleArc=250 data-width="80%"></div>')
+		$('[data-toggle="tooltip"]').tooltip();
+		
+		$("#sensor-" + sensorName).knob({
+			'min': 0,
+			'max': 1000,
+			'readOnly': true,
+			'displayPrevious': true
+		});
+		
+		var domify = function (newVal) {
+			$("#sensor-" + sensorName)
+				.val(newVal)
+				.trigger('change');
+		}						
+		
+		viewContainer[sensorID] = function(newVal) {
+		
+			if (sensorName.indexOf("_") > -1) // Assuming Torso-related names always have an underscore
+				postToFrame(sensorName, newVal)
+			
+			domify(newVal)
+			
+		}
+	}
+}
+		
+		
+function postToFrame(callbackID, sensorValue) {
+	if (!torsoVisible) {
+		$("#torso_wrapper").show()
+		torso.src = 'torso/index.html'
+		torsoVisible = true
+	}
+	var context = torso.contentWindow.animator
+	var success = false
+	if (!!callbackID && typeof sensorValue != "undefined") {
+		success = context.sensor_update_degree(callbackID, 0, 1000, sensorValue)
+		context.rotate_all()
+	}
+	return success;
+}
+var torsoVisible = false
+var bounds = {min: 0, max: 1000}
+var views = {} // List of callback functions
+
+
+
+
+		
+		
+function timeString(hours, minutes, seconds) {
+	var clock = [hours, minutes, seconds]
+	clock = clock.map(function (digit) {
+		if (digit.toString().length == 1)
+			return "0" + digit;
+		else return digit
+	})
+	return clock.join(":")
+}

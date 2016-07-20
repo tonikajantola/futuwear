@@ -71,14 +71,14 @@
 		
 		<br><br>
 		
-		<b>Your posture in the past 12 hours</b><br><br>
+		<b>Your posture (12 hours from the last activity)</b><br><br>
 		<div id="torso_wrapper">
 			<iframe style="border:0px;" id="torso">Your browser doesn't support iframes, so we can't visualise posture data.</iframe>
 		</div>
 		<input type="range" min="-43199" max="0" id="time" onchange="timeMachine(this)" oninput="timeMachine(this)"><br>
 		<div id="existence" class="row"></div>
-		<button onclick="animate(document.getElementById('time'), document.getElementById('time').value)">Animate</button><br>
-		<div id="clock">(move slider)</div>
+		<button class="btn" onclick="animate(document.getElementById('time'), document.getElementById('time').value)">Animate</button>
+		<span id="clock">(move slider first)</span>
 		<div id="knobs" class="row"></div>
 		<br><br><hr><br>
 		<a href="https://github.com/EinoVirtanen/futuwear">Git</a> | <a href="https://github.com/futurice/vor">Vör</a>
@@ -145,28 +145,31 @@
 			console.log("Getting history from " + time0 + " to " + timeT)
 			
 			$("#existence").html("")
-			for (var i = 0; i < 12; i++) {
-				$("#existence").append("<div class='col-xs-1'><input type='text' id='hour"+i+"' value='0' size='5' readonly></div>")
-			}
 			
 			$.get("/fetch", "data=" + JSON.stringify({time0: time0, timeT: timeT}), function (resp) {
 				try {
-				
+					
+					maxTime = resp.reduce(function(highest, tuple){
+						return highest > tuple.logged ? highest : tuple.logged
+					}, 0)
+					var maxTime2 = 0
+					
 					hourPoints = {}
 					
 					console.log(JSON.stringify(resp))
 					
 					archive = {}
-					maxTime = 0
 						
 					for (var i = 0; i < resp.length; i++) {
 					
 						var reading = resp[i]
 						var logTimestamp = new Date(reading["logged"] * 1000)
 						
-						hourPoints[logTimestamp.getHours()] = (hourPoints[logTimestamp.getHours()] || 0) + 1
 						
-						maxTime = Math.max(maxTime, reading.logged)
+						var hoursAgo = Math.floor((maxTime - reading.logged) / 3600)
+						hourPoints[hoursAgo] = (hourPoints[hoursAgo] || 0) + 1
+						
+						maxTime2 = Math.max(maxTime2, reading.logged)
 						
 						var payload = {val: reading.val, sensorID: reading.sensorID, sensorName: reading.sensorName}
 						if (typeof archive[parseInt(reading.logged)] == "undefined")
@@ -174,11 +177,12 @@
 						else archive[parseInt(reading.logged)].push(payload)
 						
 					}
-					var maxHour
+					
+					console.log("Max times match? " + maxTime + " / " + maxTime2)
 					
 					for (var i = 0; i < 12; i++) {
-						var hour = (new Date((maxTime - i * 3600) * 1000)).getHours()
-						$("#hour" + i).val(hourPoints[hour])
+
+						$("#existence").append("<div class='col-xs-1'><input type='text' id='hour"+(11 - i)+"' value='"+hourPoints[i]+"' size='5' readonly></div>")
 					}
 					
 				} catch (e) {

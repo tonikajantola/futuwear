@@ -342,11 +342,14 @@ b4w.register("torso", function(exports, require) {
 		/*
 		Compares the means of last 100 angle changes in a sensor and compares them to the 100 values before them.
 		If the mean hasn't canged enough, fat will be acquired.
+		There is a time window between both of the large samples, which are compared to each other.
+		This time is at least min_interval_for_change (in seconds). Actually reading sensors slows down the process a bit further.
 		*/
 		var obj = m_scs.get_object_by_name("Arnold");
-		var min_interval_for_change = 1;//in seconds
+		var min_interval_for_change = 3;//in seconds
 		var required_change = 15;//% change from last mean. Used as a threshold to see if change is necessary.
-		var fat_change = 0.05;//0 for athlete, 1 for maximum mass. This variable determines the amount each step increments the transformation.
+		var fat_change = 0.03;//0 for athlete, 1 for maximum mass. This variable determines the amount each step increments the transformation.
+		var compare_time = new Date()/1000 - start_time;
 		
 		if (old_values_is_full == false) {
 			back_values_old[index] = new_angle;
@@ -354,9 +357,10 @@ b4w.register("torso", function(exports, require) {
 			if (index == sample_size) {
 				calculate_mean();
 				old_values_is_full = true;
+				index = 0;
 			}
 		}
-		else if (index < sample_size && old_values_is_full == true) {
+		else if (index < sample_size && old_values_is_full == true && compare_time > min_interval_for_change) {
 			back_values_new[index] = new_angle;
 			index = index + 1;
 		}
@@ -365,18 +369,15 @@ b4w.register("torso", function(exports, require) {
 			calculate_mean();
 			index = 0;
 			
-			var compare_time = new Date()/1000 - start_time;
-			console.log(compare_time);
-			
 			var change = (Math.abs((back_mean_new - back_mean_old)) / back_mean_old) * 100;//% change from the old position
-			if (change < required_change && compare_time > min_interval_for_change) {
+			if (change < required_change) {
 				back_mean_old = back_mean_new;
 				fat_value = fat_value + fat_change;
 				if (fat_value > 1) {fat_value = 1;}
 				m_geom.set_shape_key_value(obj, "Engineer_Stomach", fat_value);
 				start_time = new Date()/1000;
 			}
-			else if (change >= required_change && compare_time > min_interval_for_change){
+			else if (change >= required_change){
 				back_mean_old = back_mean_new;
 				fat_value = fat_value - fat_change;
 				if (fat_value < 0) {fat_value = 0;}
@@ -461,7 +462,7 @@ b4w.register("torso", function(exports, require) {
 		return degrees;
 	}
 	
-	//setInterval(function () { acquire_fat(30) }, 10);
+	setInterval(function () { acquire_fat(30) }, 10);
 });
 
 var animator = b4w.require("torso"); 

@@ -30,7 +30,7 @@
 		#torso_wrapper {
 			overflow: auto;
 			resize:vertical;
-			width:80%;
+			width:100%;
 			height:50vh;
 			min-height:80px;
 			display:none;
@@ -63,9 +63,7 @@
 		<input type="range" min="-43200" max="0" id="time" onchange="timeMachine(this)" oninput="timeMachine(this)"><br>
 		<button onclick="animate(document.getElementById('time'), document.getElementById('time').value)">Animate</button><br>
 		<div id="clock">(move slider)</div>
-		<input type="text" id="sensor"> Sensor name<br>
-		<input type="text" id="sensorName"> Sensor ID<br>
-		<input type="text" id="datetime"> Timestamp<br>
+		<div id="knobs" class="row"></div>
 		<br><br><hr><br>
 		<a href="https://github.com/EinoVirtanen/futuwear">Git</a> | <a href="https://github.com/futurice/vor">Vör</a>
 		
@@ -73,6 +71,8 @@
 	
 	
 	<script>
+		var torso = document.getElementById("torso")
+		
 		var animationInterval = 500
 		if (window.location.host.indexOf("tunk") < 0)
 			$("#warn").show()
@@ -100,10 +100,15 @@
 			
 			try {				
 				var tuple = archive[sqlTime]
-				document.getElementById('datetime').value = tuple.logged
-				document.getElementById('sensor').value = tuple.sensorID
-				document.getElementById('sensorName').value = tuple.sensorName
-				postToFrame(tuple.sensorName, tuple.val)
+				
+				for (var i = 0; i < tuple.length; i++) {
+					var sensor = tuple[i]
+					
+					appendVisualiser(views, sensor.sensorID, sensor.sensorName, "knobs")
+										
+					var callback = views[sensor.sensorID]
+					callback(sensor.val - bounds.min)
+				}
 				return true
 			} catch (e) {
 				return false
@@ -144,7 +149,10 @@
 						
 						maxTime = Math.max(maxTime, reading.logged)
 						
-						archive[parseInt(reading.logged)] = {val: reading.val, sensorID: reading.sensorID, sensorName: reading.sensorName}
+						var payload = {val: reading.val, sensorID: reading.sensorID, sensorName: reading.sensorName}
+						if (typeof archive[parseInt(reading.logged)] == "undefined")
+							archive[parseInt(reading.logged)] = [payload]
+						else archive[parseInt(reading.logged)].push(payload)
 						
 						$("#list").append("<tr><td><b>" + reading.sensorID + "</b></td><td>" + reading.val + "</td><td><small>" + timeSince(logTimestamp) + " ago</small></td></tr>")
 					}

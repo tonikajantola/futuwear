@@ -1,4 +1,4 @@
-"use strict"
+ "use strict"
 
 /*
 <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
@@ -90,16 +90,16 @@ b4w.register("torso", function(exports, require) {
 	//+x bows forward
 	//+y leans to the right
 	var Back_Lower_X_Rot = 0;
-	var Back_Lower_X_Min = -30;
-	var Back_Lower_X_Max = 45;
+	var Back_Lower_X_Min = -90;
+	var Back_Lower_X_Max = 90;
 	var Back_Lower_Y_Rot = 0;
-	var Back_Lower_Y_Min = -45;
-	var Back_Lower_Y_Max = 45;
+	var Back_Lower_Y_Min = -90;
+	var Back_Lower_Y_Max = 90;
 
 	//+x bows forward
 	//+y leans to the right
 	var Back_Middle_X_Rot = 0;
-	var Back_Middle_X_Min = -30;
+	var Back_Middle_X_Min = -5;
 	var Back_Middle_X_Max = 45;
 	var Back_Middle_Y_Rot = 0;
 	var Back_Middle_Y_Min = -30;
@@ -108,7 +108,7 @@ b4w.register("torso", function(exports, require) {
 	//+x bows forward
 	//+y leans to the right
 	var Back_Upper_X_Rot = 0;
-	var Back_Upper_X_Min = -30;
+	var Back_Upper_X_Min = -5;
 	var Back_Upper_X_Max = 45;
 	var Back_Upper_Y_Rot = 0;
 	var Back_Upper_Y_Min = -30;
@@ -347,7 +347,7 @@ b4w.register("torso", function(exports, require) {
 		*/
 		var obj = m_scs.get_object_by_name("Arnold");
 		var min_interval_for_change = 3;//in seconds
-		var required_change = 15;//% change from last mean. Used as a threshold to see if change is necessary.
+		var required_change = 25;//% change from last mean. Used as a threshold to see if change is necessary.
 		var fat_change = 0.03;//0 for athlete, 1 for maximum mass. This variable determines the amount each step increments the transformation.
 		var compare_time = new Date()/1000 - start_time;
 		
@@ -379,7 +379,7 @@ b4w.register("torso", function(exports, require) {
 			}
 			else if (change >= required_change){
 				back_mean_old = back_mean_new;
-				fat_value = fat_value - fat_change;
+				fat_value = fat_value - 4*fat_change;
 				if (fat_value < 0) {fat_value = 0;}
 				m_geom.set_shape_key_value(obj, "Engineer_Stomach", fat_value);
 				start_time = new Date()/1000;
@@ -390,6 +390,32 @@ b4w.register("torso", function(exports, require) {
 		
 		
 	}
+	
+	exports.sensor_update_gyro = function (sensor_name, angle_x, angle_y) {
+		switch (sensor_name) {
+			case "Back_Lower":
+				Back_Lower_X_Rot = angle_x;
+				Back_Lower_Y_Rot = angle_y;
+				break;
+			case "Back_Upper":
+				Back_Middle_X_Rot = angle_x/2;
+				if (Back_Middle_X_Rot > Back_Middle_X_Max) {Back_Middle_X_Rot = Back_Middle_X_Max;}
+				if (Back_Middle_X_Rot < Back_Middle_X_Min) {Back_Middle_X_Rot = Back_Middle_X_Min;}
+				
+				Back_Middle_Y_Rot = angle_y/2;
+				if (Back_Middle_Y_Rot > Back_Middle_Y_Max) {Back_Middle_Y_Rot = Back_Middle_Y_Max;}
+				if (Back_Middle_Y_Rot < Back_Middle_Y_Min) {Back_Middle_Y_Rot = Back_Middle_Y_Min;}
+				
+				Back_Upper_X_Rot = angle_x/2;
+				if (Back_Upper_X_Rot > Back_Upper_X_Max) {Back_Upper_X_Rot = Back_Upper_X_Max;}
+				if (Back_Upper_X_Rot < Back_Upper_X_Min) {Back_Upper_X_Rot = Back_Upper_X_Min;}
+				
+				Back_Upper_Y_Rot = angle_y/2;
+				if (Back_Upper_Y_Rot > Back_Upper_Y_Max) {Back_Upper_Y_Rot = Back_Upper_Y_Max;}
+				if (Back_Upper_Y_Rot < Back_Upper_Y_Min) {Back_Upper_Y_Rot = Back_Upper_Y_Min;}
+				break;
+		}
+	}
 		
 	exports.sensor_update_degree = function (sensor_name, sensor_min, sensor_max, sensor_value) {
 		/*
@@ -399,10 +425,18 @@ b4w.register("torso", function(exports, require) {
 		*/
 		
 		switch (sensor_name) {
+			case "Back_Lower_X":
+				var x1 = map_value_to_degree(Back_Lower_X_Min,Back_Lower_X_Max,sensor_min,sensor_max,sensor_value);
+				Back_Lower_X_Rot = x1;
+				break;
+			case "Back_Lower_Y":
+				var y1 = map_value_to_degree(Back_Lower_Y_Min,Back_Lower_Y_Max,sensor_min,sensor_max,sensor_value);
+				Back_Lower_Y_Rot = y1;
+				break;
 			case "Back_X":
 				//Currently whole back is modified to use one sensor per direction for all three virtual bones.
-				var x1 = map_value_to_degree(Back_Lower_X_Min,Back_Lower_X_Max,sensor_min,sensor_max,sensor_value);
-				Back_Lower_X_Rot = x1/2;
+				//var x1 = map_value_to_degree(Back_Lower_X_Min,Back_Lower_X_Max,sensor_min,sensor_max,sensor_value);
+				//Back_Lower_X_Rot = x1/2;
 				var x2 = map_value_to_degree(Back_Middle_X_Min,Back_Middle_X_Max,sensor_min,sensor_max,sensor_value);
 				Back_Middle_X_Rot = x2/2;
 				var x3 = map_value_to_degree(Back_Upper_X_Min,Back_Upper_X_Max,sensor_min,sensor_max,sensor_value);
@@ -413,8 +447,8 @@ b4w.register("torso", function(exports, require) {
 				break;
 			case "Back_Y":
 				//Currently whole back is modified to use one sensor per direction for all three virtual bones.
-				var y1 = map_value_to_degree(Back_Lower_Y_Min,Back_Lower_Y_Max,sensor_min,sensor_max,sensor_value);
-				Back_Lower_Y_Rot = y1/2;
+				//var y1 = map_value_to_degree(Back_Lower_Y_Min,Back_Lower_Y_Max,sensor_min,sensor_max,sensor_value);
+				//Back_Lower_Y_Rot = y1/2;
 				var y2 = map_value_to_degree(Back_Middle_Y_Min,Back_Middle_Y_Max,sensor_min,sensor_max,sensor_value);
 				Back_Middle_Y_Rot = y2/2;
 				var y3 = map_value_to_degree(Back_Upper_Y_Min,Back_Upper_Y_Max,sensor_min,sensor_max,sensor_value);
@@ -467,3 +501,4 @@ b4w.register("torso", function(exports, require) {
 
 var animator = b4w.require("torso"); 
 animator.init();
+

@@ -144,7 +144,7 @@ maintainConnection();
 
 /* Method to extract archived sensor data (JSON) */
 function getData(time1, timeT, req, res) {
-	var accuracy = 5 			// Seconds, ie. what to average at (60 => 1 minute averages)
+	var accuracy = 1 			// Seconds, ie. what to average at (60 => 1 minute averages)
 	var changePeriod = 1 * 60 	// Seconds
 	
 	var devices = getUserDevices(req)
@@ -159,7 +159,7 @@ function getData(time1, timeT, req, res) {
 				WHERE logged >= FROM_UNIXTIME(?) AND logged <= FROM_UNIXTIME(?) AND ownerKey IN (?) \
 				GROUP BY ID, ROUND(logged/?) \
 				ORDER BY logged DESC \
-				LIMIT 5000;'
+				LIMIT 43200;'
 				
 	c.query(sql, [time0, timeT, devices, accuracy], function(err, result) {
 		res.setHeader('Content-Type', 'application/json');

@@ -68,14 +68,13 @@
 			</div>
 		</div>
 		
-		
 		<br><br>
 		
-		<b>Your posture (12 hours from the last activity)</b><br><br>
+		<b>Your posture (60 mins from the last activity)</b><br><br>
 		<div id="torso_wrapper">
 			<iframe style="border:0px;" id="torso">Your browser doesn't support iframes, so we can't visualise posture data.</iframe>
 		</div>
-		<input type="range" min="-43199" max="0" id="time" onchange="timeMachine(this)" oninput="timeMachine(this)"><br>
+		<input type="range" min="-3600" max="0" id="time" onchange="timeMachine(this)" oninput="timeMachine(this)"><br>
 		<div id="existence" class="row"></div>
 		<button class="btn" onclick="animate(document.getElementById('time'), document.getElementById('time').value)">Animate</button>
 		<span id="clock">(move slider first)</span>
@@ -148,15 +147,14 @@
 			
 			$.get("/fetch", "data=" + JSON.stringify({time0: time0, timeT: timeT}), function (resp) {
 				try {
+					console.log(JSON.stringify(resp))
 					
 					maxTime = resp.reduce(function(highest, tuple){
 						return highest > tuple.logged ? highest : tuple.logged
 					}, 0)
-					var maxTime2 = 0
+					
 					
 					hourPoints = {}
-					
-					console.log(JSON.stringify(resp))
 					
 					archive = {}
 						
@@ -166,10 +164,9 @@
 						var logTimestamp = new Date(reading["logged"] * 1000)
 						
 						
-						var hoursAgo = Math.floor((maxTime - reading.logged) / 3600)
+						var hoursAgo = Math.floor((maxTime - reading.logged) / 600)
 						hourPoints[hoursAgo] = (hourPoints[hoursAgo] || 0) + 1
 						
-						maxTime2 = Math.max(maxTime2, reading.logged)
 						
 						var payload = {val: reading.val, sensorID: reading.sensorID, sensorName: reading.sensorName}
 						if (typeof archive[parseInt(reading.logged)] == "undefined")
@@ -178,11 +175,10 @@
 						
 					}
 					
-					console.log("Max times match? " + maxTime + " / " + maxTime2)
 					
-					for (var i = 0; i < 12; i++) {
+					for (var i = 0; i < 6; i++) {
 
-						$("#existence").prepend("<div class='col-xs-1'><input type='text' value='"+(hourPoints[i] || 0) +"' size='5' readonly></div>")
+						$("#existence").prepend("<div class='col-xs-2'><input type='text' value='"+(hourPoints[i] || 0) +"' size='5' readonly></div>")
 					}
 					
 				} catch (e) {
@@ -193,11 +189,15 @@
 		
 		var views = {} // List of callback functions
 		
+		
+		
 		$(document).ready(function(){
 			$('[data-toggle="tooltip"]').tooltip();	
-			var time0 = Math.floor(Date.now()/1000) - 12*60*60 // 12 Hours ago
+			var time0 = Math.floor(Date.now()/1000) - 1*60*60 // 1 Hours ago
 			var timeT = Math.floor(Date.now()/1000) + 10*60 // Ten minutes from now	
 			history(time0, timeT)
+			
+			
 		});
 		
 

@@ -53,6 +53,7 @@
 			</div>
 		</div>
 		
+		<div class="" id="devices"></div>
 
 		
 		
@@ -66,12 +67,13 @@
 		</div>
 		<br><br><hr><br>
 		
+		<textarea id="lastMsg" style="display:none;width:100%;min-height:10em;"></textarea><br>
 		
 		
 		
 		
 		
-		<a href="https://github.com/EinoVirtanen/futuwear">Git</a> | <a href="https://github.com/futurice/vor">Vör</a>
+		<center><a href="https://github.com/EinoVirtanen/futuwear">Git</a> | <a href="https://github.com/futurice/vor">Vör</a> | <a href="#" onclick="$('#lastMsg').show()">JSON</a></center>
 	</div>
 	
 	
@@ -88,6 +90,9 @@
 		
 		socket.on('message', function(resp){
 			var now = Math.floor(new Date() / 1000)
+			
+			$("#lastMsg").val(JSON.stringify(json(resp), null, 3))
+			
 			try {
 				var sensors = json(resp)["sensors"]
 				
@@ -107,7 +112,6 @@
 					var value = parseInt(sensor.collection[0].value)
 					
 					appendVisualiser(views, sensor.id, sensor.name, "knobs")
-										
 					var callback = views[sensor.id]
 					callback(value - bounds.min)
 				}
@@ -123,6 +127,39 @@
 		
 		$(document).ready(function(){
 			$('[data-toggle="tooltip"]').tooltip();
+			
+			var deviceMsg = ""			
+			switch (devices().length) {
+				case 0:
+					deviceMsg += "You haven't <a href='manage.html'>added your smart device</a>."
+					break;
+				case 1:
+					deviceMsg += "You are tuned into your smart device <a href='#' onclick='showDevices(this)'>(show)</a>"
+					break;
+				default:
+					deviceMsg += "You are watching multiple devices <a href='#' onclick='showDevices(this)'>(show)</a>"
+					break;
+			}
+			for (var i = 0; i < devices().length; i++) {
+				var devices = devices()
+				socket.on(devices[i], function(resp) {
+					try {
+						var notification = json(resp)
+						notify(notification.title, notification.message)
+						
+					} catch (e) {
+						console.log("JSON data problem: " + e.message)
+					}
+				});
+			}
+			function notify(title, body) {
+				alert(title + "\n-----\n\n" + body)
+			}
+			
+			$("#devices").html(deviceMsg)
+			
+			
+			
 		});
 		
 		

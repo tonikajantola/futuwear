@@ -113,12 +113,6 @@
 			setInterval(function () { fetch(); }, 1000)
 		})
 		
-		function devices() {
-			var devices = readCookie("devices")
-			if (!devices) return []
-			
-			return devices.split(',')
-		}
 		
 		function login() {
 			var uname = prompt("Device name?","proto")

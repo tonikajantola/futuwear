@@ -99,7 +99,21 @@ function appendVisualiser(viewContainer, sensorID, sensorName, containerID) {
 		}
 	}
 }
-		
+
+
+function devices() {
+	var devices = readCookie("devices")
+	if (!devices) return []
+	
+	return devices.split(',')
+}
+
+function showDevices(container) {
+	container.innerHTML = devices().join(", ")
+	setTimeout(function () { container.href = "manage.html" }, 1)
+}
+
+var loggedIn = devices().length > 0
 		
 function postToFrame(callbackID, sensorValue) {
 	if (!torsoVisible) {

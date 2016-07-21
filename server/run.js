@@ -1,6 +1,18 @@
 const UI_PORT = 8080	// Port to serve HTML UI on
 const SOCKET_SERVER = "http://futuwear.tunk.org:13337/"; // Where to listen to Vör messages
 
+var options = {
+	analyzation: {
+		riskyMuscles: ["Back_Y", "Back_X"] // Muscles that should be excercised every now and then
+		
+	}
+}
+
+
+
+var devices = {}
+
+
 // Dependencies
 const http = require("http")
 const fs = require("fs")
@@ -20,15 +32,6 @@ app.use(bodyParser.json());       	// to support JSON-encoded bodies
 app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
   extended: true
 })); 
-
-/* Method to get archived data with */
-app.get('/fetch', function (req, res) {
-	
-	var content = req.query.data // TODO: Safety
-	content = JSON.parse(content)
-	
-	getData(parseInt(content.time0), parseInt(content.timeT), req, res)
-});
 
 /* Method to get archived data with */
 app.get('/fetch', function (req, res) {
@@ -102,6 +105,8 @@ client.on('message', msg => {
 					throw new Error("Sensor value was not an integer.")
 				saveData(sensor["id"], value)
 			}
+			
+			if (typeof sensor.)
 		}
 	} catch (e) {
 		nodeLog("Could not save vör data (" + e.message + "): " + JSON.stringify(msg))
@@ -142,16 +147,17 @@ function maintainConnection() {
 }
 maintainConnection();
 
+var accuracy = 1 			// Seconds, ie. what to average at (60 => 1 minute averages)
+
 /* Method to extract archived sensor data (JSON) */
 function getData(time1, timeT, req, res) {
-	var accuracy = 1 			// Seconds, ie. what to average at (60 => 1 minute averages)
 	var changePeriod = 1 * 60 	// Seconds
 	
 	var devices = getUserDevices(req)
 	var time0 = Math.max(time1 - changePeriod, 0)
 	
 	if (!devices)
-		return res.send(JSON.stringify({error: "No devices stored with user"}, null, 3));
+		return res && res.send(JSON.stringify({error: "No devices stored with user"}, null, 3));
 	
 	
 	var sql = '	SELECT sensorID, name AS sensorName, UNIX_TIMESTAMP(ROUND(AVG(logged))) AS logged, ROUND(AVG(val)) AS val \
@@ -166,19 +172,6 @@ function getData(time1, timeT, req, res) {
 		
 		if (!err) {
 			nodeLog("Found " + result.length + " data points between " + (new Date(time0*1000)).toLocaleString() + " and " + (new Date(timeT*1000)).toLocaleString())
-			/*
-			var interestPoints = result.filter(function (tuple, i, arr) {
-				return tuple.logged >= time1
-			})
-			var r = interestPoints.map(function (tuple, i, arr) {
-				var previousOnes = result.filter(function (elem, index, array) {
-					var isPrevious = elem.logged < tuple.logged
-					var isInPeriod = elem.logged >= tuple.logged - changePeriod
-					elem.logged >= tuple.logged
-				})
-				return tuple
-			})
-			*/
 			res.send(JSON.stringify(result, null, 3));	
 		}
 		else  {
@@ -188,14 +181,36 @@ function getData(time1, timeT, req, res) {
 	});	
 }
 
+function analyzeData(ownerKey) {
+	var sql = '	SELECT sensorID, name AS sensorName, STD(val) AS std, ownerKey AS device \
+				FROM Data INNER JOIN Sensors \
+				WHERE logged >= FROM_UNIXTIME(?) AND logged <= FROM_UNIXTIME(?) AND ownerKey IN (?) \
+				GROUP BY sensorID \
+				LIMIT 100;'
+	var now = Math.ceil(Date.now()/1000)
+	var period = 60 // Mins
+	c.query(sql, [now - period * 15, now, [ownerKey], accuracy], function(err, result) {
+		
+		if (err) {
+			return nodeLog("Mysql error while analyzing from archive: " + JSON.stringify(err))
+		
+		for (var i = 0; i < result.length; i++) {
+			var sensor = result[i]
+			notify(sensor.device, "You've been still for a while now", sensor.sensorName + " needs a shake, because it's standard deviation is " + sensor.std)
+		}		
+	});	
+}
+
 /* Saves a given value as reported by #sensorID */
 function saveData(sensorID, val, failCallback) {
-	c.query('SELECT Count(ID) AS matchedSensors FROM Sensors WHERE ID=?;', [sensorID], function(err, result) {
+	c.query('SELECT DISTINCT ownerKey FROM Sensors WHERE ID=?;', [sensorID], function(err, result) {
 		try {
-			var sensorExists = parseInt(result[0]['matchedSensors']) > 0
+			var sensorExists = result.length > 0
 			if (!sensorExists)
 				throw new Error("Sensor #" + sensorID + " has not been registered.");
 			var insertion = {sensorID: sensorID, val: val} // Information to INSERT INTO the "Data" table
+			
+			analyzeData(result.ownerKey)
 			
 			c.query('INSERT INTO Data SET ?;', insertion, function(err, result) {
 				if (err)
@@ -316,4 +331,14 @@ function getUserDevices(req) {
 	var devices = cookies.devices.split(",")
 	return devices
 }
+
+
+function analyze() {
+	
+}
+
+function notify(device, title, message) {
+	client.emit(device, {title: title, message: message})
+}
+
 

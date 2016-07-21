@@ -124,6 +124,13 @@
 			socket.close();
 		});
 		
+		var devices = devices()
+		
+		function showDevices(container) {
+			container.innerHTML = devices.join(", ")
+			container.href = "manage.html"
+		}
+		
 		
 		$(document).ready(function(){
 			$('[data-toggle="tooltip"]').tooltip();
@@ -141,7 +148,6 @@
 					break;
 			}
 			for (var i = 0; i < devices.length; i++) {
-				var devices = devices
 				socket.on(devices[i], function(resp) {
 					try {
 						var notification = json(resp)

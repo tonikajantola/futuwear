@@ -83,7 +83,7 @@ client.on('message', msg => {
 		
 		var receivedHash = json(msg)["token"]
 		
-		/* AES-CBC-MAC salaus+autentikointi*/
+		/* AES-CBC-MAC salaus+autentikointi */
 		
 		if (computedHash != receivedHash)
 			throw new Error("Received hash " + receivedHash + " didn't match the computed hash " + computedHash)
@@ -209,7 +209,7 @@ function saveData(sensorID, val, failCallback) {
 				throw new Error("Sensor #" + sensorID + " has not been registered.");
 			var insertion = {sensorID: sensorID, val: val} // Information to INSERT INTO the "Data" table
 			
-			analyzeData(result.ownerKey)
+			analyzeData(result[0].ownerKey)
 			
 			c.query('INSERT INTO Data SET ?;', insertion, function(err, result) {
 				if (err)

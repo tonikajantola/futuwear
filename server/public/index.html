@@ -148,9 +148,12 @@
 					break;
 			}
 			for (var i = 0; i < devices.length; i++) {
+			console.log("Listening to messages for " + devices[i])
 				socket.on(devices[i], function(resp) {
+				
 					try {
 						var notification = json(resp)
+						console.log("GOT DEDICATED MESSAGE")
 						notify(notification.title, notification.message)
 						
 					} catch (e) {

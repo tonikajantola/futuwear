@@ -29,7 +29,7 @@ function payload() {
 				"id": "elmon-sensori_787167", 
 				"name": "Back_X",
 				"collection": [{
-					"value": rand(0, 1000)
+					"value": 500
 				}]
 			},{
 				"id": "Back_Y_445885", 

@@ -106,7 +106,6 @@ client.on('message', msg => {
 				saveData(sensor["id"], value)
 			}
 			
-			if (typeof sensor.)
 		}
 	} catch (e) {
 		nodeLog("Could not save vör data (" + e.message + "): " + JSON.stringify(msg))
@@ -191,7 +190,7 @@ function analyzeData(ownerKey) {
 	var period = 60 // Mins
 	c.query(sql, [now - period * 15, now, [ownerKey], accuracy], function(err, result) {
 		
-		if (err) {
+		if (err)
 			return nodeLog("Mysql error while analyzing from archive: " + JSON.stringify(err))
 		
 		for (var i = 0; i < result.length; i++) {

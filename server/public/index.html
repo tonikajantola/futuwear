@@ -129,7 +129,7 @@
 			$('[data-toggle="tooltip"]').tooltip();
 			
 			var deviceMsg = ""			
-			switch (devices().length) {
+			switch (devices.length) {
 				case 0:
 					deviceMsg += "You haven't <a href='manage.html'>added your smart device</a>."
 					break;
@@ -140,8 +140,8 @@
 					deviceMsg += "You are watching multiple devices <a href='#' onclick='showDevices(this)'>(show)</a>"
 					break;
 			}
-			for (var i = 0; i < devices().length; i++) {
-				var devices = devices()
+			for (var i = 0; i < devices.length; i++) {
+				var devices = devices
 				socket.on(devices[i], function(resp) {
 					try {
 						var notification = json(resp)

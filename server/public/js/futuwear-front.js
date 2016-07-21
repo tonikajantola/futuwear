@@ -101,19 +101,19 @@ function appendVisualiser(viewContainer, sensorID, sensorName, containerID) {
 }
 
 
-function devices() {
-	var devices = readCookie("devices")
-	if (!devices) return []
+var devices = function () {
+	var d = readCookie("devices")
+	if (!d) return []
 	
-	return devices.split(',')
+	return d.split(',')
 }
 
 function showDevices(container) {
-	container.innerHTML = devices().join(", ")
+	container.innerHTML = devices.join(", ")
 	setTimeout(function () { container.href = "manage.html" }, 1)
 }
 
-var loggedIn = devices().length > 0
+var loggedIn = devices.length > 0
 		
 function postToFrame(callbackID, sensorValue) {
 	if (!torsoVisible) {

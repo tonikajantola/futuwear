@@ -116,7 +116,7 @@
 		
 		function login() {
 			var uname = prompt("Device name?","proto")
-			if (devices().indexOf(uname) >= 0)
+			if (devices.indexOf(uname) >= 0)
 				return
 			if (readCookie("devices"))
 				uname = uname + "," + readCookie("devices")
@@ -128,7 +128,7 @@
 			removeCookie("devices")
 			location.reload(); 
 		}
-		console.log("Watched device(s): " + devices().join(" "))
+		console.log("Watched device(s): " + devices.join(" "))
 	</script>
 </body>
 </html>

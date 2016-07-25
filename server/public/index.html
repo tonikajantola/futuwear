@@ -78,6 +78,8 @@
 	
 	
 	<script>
+		var devices = devices()
+		
 		if (window.location.host.indexOf("tunk") < 0)
 			$("#warn").show()
 		
@@ -87,6 +89,18 @@
 		
 		var vor = io.connect("http://futuwear.tunk.org:13337");
 		var node = io.connect("http://futuwear.tunk.org:8001");
+		
+		var ourId = false
+		
+		node.on('id', function(resp){
+			var reception = json(resp)
+			ourId = reception.id
+			console.log("We are now identified by " + ourId)
+			
+			node.emit("registration", {devices: devices, id: ourId})
+			
+		})
+		
 		
 		
 		vor.on('message', function(resp){
@@ -125,7 +139,6 @@
 			vor.close();
 		});
 		
-		var devices = devices()
 		
 		function showDevices(container) {
 			container.innerHTML = devices.join(", ")

@@ -20,11 +20,14 @@ const express = require('express');
 const socketIO = require('socket.io-client');
 const socketServer = require('socket.io')
 const mysql = require('mysql');
-const crypto = require('crypto');'
+const crypto = require('crypto');
 
 ioServer = socketServer.listen(8001)
 ioServer.on('connection', function (socket) {
-	console.log("Registration from " + socket.id)
+	client.emit("id", {id: socket.id})
+})
+ioServer.on('register', function (req) {
+	console.log("Registered device(s) " + req)
 })
 
 var app = express();

@@ -186,21 +186,22 @@
 					try {
 						var notification = json(resp)
 						console.log("GOT DEDICATED MESSAGE")
-						notify(notification.title, notification.message)
+						notifyUser(notification.title, notification.message)
 						
 					} catch (e) {
 						console.log("JSON data problem: " + e.message)
 					}
 				});
 			}
-			function notify(title, body) {
-				if (title && body) {
+			function notifyUser(title, body) {
+				if (!!title && !!body) {
 					$("#notification-panel").prepend('<div class="alert alert-warning"> \
-						<a href="#" class="close" data-dismiss="alert" aria-label="close" onclick="notifications--;notify()">&times;</a> \
+						<a href="#" class="close" data-dismiss="alert" aria-label="close" onclick="notifyUser(false, false)">&times;</a> \
 						<strong>'+title+'</strong> '+body+'\
 					</div>')
 					notifications += 1
 				}
+				else notifications -= 1
 				$("#notification-count").html("Notifications <span class='badge'>"+notifications+"</span>")
 			}
 			

@@ -11,64 +11,62 @@ void communication_init() {
     packetIndex = 0;
 }
 
+//Called upon receiving data
 void communication_rx_callback(uint8_t packet_channel, uint16_t, const unsigned char *data) {
     serial_out(F("========\nReceived data: "));
     serial_out((const char *)data);
     serial_out(F("\n========\n"));
-    surefire_connection_id = packet_channel;
+    surefire_connection_id = packet_channel; //Client software is expected to spam some line of data.
 }
-#define USE_ARDUINOJSON
+
+//Called upon connection
+void my_iwrap_evt_ring(uint8_t link_id, const iwrap_address_t *address, uint16_t channel, const char *profile) {
+    //add_mapped_connection(link_id, address, profile, channel);
+    surefire_connection_id = link_id;
+}
+
+void send_data(char* output) {
+    iwrap_send_data(surefire_connection_id, strlen(output), (uint8_t*)output, IWRAP_MODE_MUX);
+    Serial1.flush();
+}
+
 void build_data_json(char *buffer, int len) {
-    #ifdef USE_ARDUINOJSON
-        StaticJsonBuffer<200> jsonBuffer;
-        JsonObject& dump = jsonBuffer.createObject();
-        //dump["packetID"] = packetIndex++;
-        //JsonObject& data = dump.createNestedObject("sensorData");
-        JsonArray& data = dump.createNestedArray("sensors");
-    #else
-        aJsonObject *dump = aJson.createObject();
-    #endif
-    //if (!dump) {Serial.println(F("****ERROR*** couldn't create dump object!"));}
+    StaticJsonBuffer<200> jsonBuffer;
+    JsonObject& dump = jsonBuffer.createObject();
+    //dump["packetID"] = packetIndex++;
+    //JsonObject& data = dump.createNestedObject("sensorData");
+    JsonArray& data = dump.createNestedArray("sensors");
 
     for (int i=0; i < NUM_SENSORS; i++) {
-        #ifdef USE_ARDUINOJSON
-            JsonObject& sensor = data.createNestedObject();
-            sensor["name"]          = sensorList[i].name;
-            sensor["description"]   = "None";
-            JsonArray& collection  = sensor.createNestedArray("collection");
-            JsonObject& value       = collection.createNestedObject();
-            value["value"]          = sensorList[i].value.out;
-            value["timestamp"]      = packetIndex;
-            //field["value"]  = sensorList[i].outValue;
-            //data[sensorList[i].name] = sensorList[i].outValue;
-        #else
-            aJsonObject *data = aJson.createObject();
-            if (!data) {Serial.println(F("****ERROR*** couldn't create data object!"));}
-
-            aJson.addItemToObject(dump, "sensorData", data);
-            aJson.addStringToObject(data, "name", sensorList[i].name);
-            aJson.addNumberToObject(data, "value", sensorList[i].outValue);
-        #endif
+        JsonObject& sensor = data.createNestedObject();
+        sensor["name"]          = sensorList[i].name;
+        sensor["description"]   = "None";
+        JsonArray& collection  = sensor.createNestedArray("collection");
+        JsonObject& value       = collection.createNestedObject();
+        value["value"]          = sensorList[i].value.out;
+        value["timestamp"]      = packetIndex;
+        //field["value"]  = sensorList[i].outValue;
+        //data[sensorList[i].name] = sensorList[i].outValue;
     }
     packetIndex++;
-    #ifdef USE_ARDUINOJSON
-        dump.printTo(buffer, len);
-        //BluetoothStream b;
-        //dump.printTo(b);
-        //b.println();;
-        //b.println("lolwhat");
-        //iwrap_send_data(surefire_connection_id, 4, (const uint8_t*)"wtf\n", IWRAP_MODE_MUX);
-    #else
-        //char *output = aJson.print(dump);
-        //aJson.deleteItem(dump);
-    #endif
+    dump.printTo(buffer, len);
+    //BluetoothStream b;
+    //dump.printTo(b);
+    //b.println();;
+    //b.println("lolwhat");
+    //iwrap_send_data(surefire_connection_id, 4, (const uint8_t*)"wtf\n", IWRAP_MODE_MUX);
+
 }
 
 void build_single_data_json(int sensor_index, char *buffer, int len) {
     StaticJsonBuffer<200> jsonBuffer;
     JsonObject& dump = jsonBuffer.createObject();
-
+    JsonObject& data = dump.createNestedObject("sensorData");
+    /*
     dump[sensorList[sensor_index].name] = sensorList[sensor_index].value.out;
+    */
+    data["name"]    = sensorList[sensor_index].name;
+    data["value"]   = sensorList[sensor_index].value.out;
     dump.printTo(buffer, len);
 }
 
@@ -110,9 +108,18 @@ void send_sensor_data() {
         build_single_data_json(i, output, sizeof(output));
         //build_data_json();
         strncat(output, "\n", sizeof(output));
-
-        //Serial.println(output);
-        iwrap_send_data(surefire_connection_id, strlen(output), (uint8_t*)output, IWRAP_MODE_MUX);
-        Serial1.flush();
+        send_data(output);
     }
+}
+
+void send_configuration() {
+    char output[256];
+    StaticJsonBuffer<100> buffer;
+    JsonObject& dump = buffer.createObject();
+    JsonObject& config = dump.createNestedObject("configuration");
+    config["uuid"] = DEVICE_UUID_STR;
+    dump.printTo(output, sizeof(output));
+
+    strncat(output, "\n", sizeof(output));
+    send_data(output);
 }

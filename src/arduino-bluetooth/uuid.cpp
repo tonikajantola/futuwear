@@ -1,11 +1,11 @@
 #include "uuid.h"
 
-uint8_t EEMEM eeprom_device_uuid_generated_check[4];
-uint8_t EEMEM eeprom_device_uuid_str[36];
+uint8_t EEMEM eeprom_device_uuid_generated_check[4]; //No default values written in EEPROM.
+uint8_t EEMEM eeprom_device_uuid_str[36];            //Fresh chips generate a fresh UUID upon boot.
 
 char DEVICE_UUID_STR[37] = {0};
 
-bool is_uuid_generated() {
+bool is_uuid_generated() { //Read the check string
     char v[5] = {0};
     eeprom_read_block((void*)v, (const void*)eeprom_device_uuid_generated_check, 4);
     return strcmp(v, UUID_CHECK_STRING) == 0;

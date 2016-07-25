@@ -2,6 +2,7 @@
 #define COMMUNICATION_H
 #include "iwrapper.h"
 #include "sensors.h"
+#include "uuid.h"
 
 #define USE_ARDUINOJSON
 #define PACKET_BUF_SIZE 1
@@ -15,6 +16,7 @@
 void communication_init();
 void communication_rx_callback(uint8_t packet_channel, uint16_t, const unsigned char *data);
 void send_sensor_data();
+void send_configuration();
 
 class BluetoothStream : public Print {
     virtual size_t write(uint8_t);

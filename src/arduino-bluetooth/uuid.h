@@ -7,7 +7,9 @@
 #include <string.h>
 #include <TrueRandom.h>
 
-#define UUID_CHECK_STRING "LOLS"
+//Written in EEPROM to check whether a new UUID needs to be generated.
+//Change this to generate a fresh one
+#define UUID_CHECK_STRING "UUID"
 
 extern uint8_t eeprom_device_uuid_generated_check[4];
 extern uint8_t eeprom_device_uuid_str[36];

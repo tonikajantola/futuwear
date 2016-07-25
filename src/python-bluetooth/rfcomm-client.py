@@ -33,13 +33,23 @@ def forwardToServer(jsonStuff):
     if connection:
         try:
             inData = json.loads(jsonStuff)
-            s_name = inData.keys()[0]
+            
+            s_name = inData["sensorData"]["name"]
+            s_value = inData["sensorData"]["value"]
             s_id = ""
             if s_name == "L_Shoulder_Y_Rot":
                 s_id = "L_Shoulder_Y_Rot_725627"
             elif s_name == "R_Shoulder_Y_Rot":
-                s_id = "L_Shoulder_Y_Rot_985566"
-            jsonData = {'sensors': [{"id":s_id, "name": s_name, "description": "None", "collection" : [{"value": inData[s_name], "timestamp": 0}]}]}
+                s_id = "R_Shoulder_Y_Rot_985566"
+            elif s_name == "L_Shoulder_X_Rot":
+                s_id = "L_Shoulder_X_Rot_524467"
+            elif s_name == "R_Shoulder_X_Rot":
+                s_id = "R_Shoulder_X_Rot_30064"
+            elif s_name == "Back_X":
+                s_id = "Back_X_123825"
+            elif s_name == "Back_Y":
+                s_id = "Back_Y_445885"
+            jsonData = {'sensors': [{"id":s_id, "name": s_name, "description": "None", "collection" : [{"value": s_value, "timestamp": 0}]}]}
             hashable = json.dumps(jsonData["sensors"], separators=(',',':')) + deviceCode
             jsonData["token"] = hashlib.md5(hashable.encode('utf-8')).hexdigest() #TODO: List access safety
             print("Hashing ", hashable)
@@ -63,7 +73,7 @@ while running:
     try:
         bt.readData()
         while bt.dataAvailable():
-            #send line_buf[0] over socketIO		
+            #send line_buf[0] over socketIO	
             forwardToServer(bt.nextLine())
     except KeyboardInterrupt:
         running = False

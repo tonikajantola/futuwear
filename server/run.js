@@ -41,7 +41,7 @@ ioServer.on('connection', function (socket) {
 				deviceClients[deviceName] = clientlist
 			}
 			
-			if (devices.length > 0) notify(devices[0], "Test message", "Hello wolrd")
+			if (devices.length > 0) notify(devices[0], "Hello world!", "The notification system is connected. /" + new Date())
 			
 		} catch (e) {
 			

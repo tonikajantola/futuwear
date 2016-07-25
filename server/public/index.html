@@ -38,6 +38,13 @@
 		td {
 			padding: 0.5em;
 		}
+		#notification-panel div {
+			width:100%;
+			display:none;
+		}
+		#notification-panel div:nth-child(1), #notification-panel div:nth-child(2), #notification-panel div:nth-child(3), #notification-panel.verbose div {
+			display:block;
+		}
 	</style>
 </head>
 <body>
@@ -54,8 +61,8 @@
 		</div>
 		
 		<div class="" id="devices"></div>
-
-		
+		<span id="notification-count">Notifications</span>
+		<div id="notification-panel"></div>
 		
 		<br><br>
 		
@@ -79,6 +86,7 @@
 	
 	<script>
 		var devices = devices()
+		var notifications = 0
 		
 		if (window.location.host.indexOf("tunk") < 0)
 			$("#warn").show()
@@ -95,7 +103,6 @@
 		node.on('id', function(resp){
 			var reception = json(resp)
 			ourId = reception.id
-			console.log("We are now identified by " + ourId)
 			
 			node.emit("registration", {devices: devices, id: ourId})
 			
@@ -176,7 +183,13 @@
 				});
 			}
 			function notify(title, body) {
-				alert(title + "\n-----\n\n" + body)
+				$("#notification-panel").prepend('<div class="alert alert-warning"> \
+					<strong>'+title+'</strong><br>'+body+'\
+				</div>')
+				notifications += 1
+				$("#notification-count").html("Notifications ("+notifications+")")
+				if (notifications == 4) 
+					$("#notification-count").onclick = function () {$("#notification-panel").addClass("verbose")}
 			}
 			
 			$("#devices").html(deviceMsg)

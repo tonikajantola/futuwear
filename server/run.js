@@ -25,7 +25,6 @@ const crypto = require('crypto');
 ioServer = socketServer.listen(8001)
 ioServer.on('connection', function (socket) {
 	socket.emit("id", {id: socket.id})
-	nodeLog("Got connection from " + socket.id)
 	
 	socket.on('registration', req => {
 		try {
@@ -35,7 +34,7 @@ ioServer.on('connection', function (socket) {
 			
 			for (var i = 0; i < devices.length; j++) {
 				var deviceName = devices[i]
-				nodeLog("Registered device(s) " + deviceName + " ("+JSON.stringify(devices)+")")
+				nodeLog("Registered device(s) " + deviceName)
 				var clientlist = deviceClients[deviceName] || []// TODO: Clean up on disconnect
 				clientlist.push(id)
 				deviceClients[deviceName] = clientlist
@@ -239,7 +238,7 @@ function saveData(sensorID, val, failCallback) {
 				throw new Error("Sensor #" + sensorID + " has not been registered.");
 			var insertion = {sensorID: sensorID, val: val} // Information to INSERT INTO the "Data" table
 			
-			analyzeData(result[0].ownerKey)
+			//analyzeData(result[0].ownerKey)
 			
 			c.query('INSERT INTO Data SET ?;', insertion, function(err, result) {
 				if (err)
@@ -369,7 +368,7 @@ function analyze() {
 function notify(device, title, message) {
 	var clients = deviceClients[device] || []
 	clients.forEach(function (elem, i, arr) {
-		ioServer.socket(elem).emit(device, {title: title, message: message})
+		ioServer.to(elem).emit(device, {title: title, message: message})
 	})
 }
 

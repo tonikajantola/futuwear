@@ -3,13 +3,13 @@ const SOCKET_SERVER = "http://futuwear.tunk.org:13337/"; // Where to listen to V
 
 var options = {
 	analyzation: {
-		riskyMuscles: ["Back_Y", "Back_X"] // Muscles that should be excercised every now and then
-		
+		riskyMuscles: ["Back_Y", "Back_X"], // Muscles that should be excercised every now and then
+		period: 60 //Seconds
 	}
 }
 
 
-
+var analysisTimestamps = {}
 var deviceClients = {}
 
 
@@ -210,6 +210,11 @@ function getData(time1, timeT, req, res) {
 }
 
 function analyzeData(ownerKey) {
+	var tooSoon = !!analysisTimestamps[ownerKey] && (new Date() - analysisTimestamps[ownerKey]) < options.analyzation.period * 1000
+	
+	if (tooSoon)
+		return
+	
 	var sql = '	SELECT sensorID, name AS sensorName, STD(val) AS std, ownerKey AS device \
 				FROM Data INNER JOIN Sensors \
 				WHERE logged >= FROM_UNIXTIME(?) AND logged <= FROM_UNIXTIME(?) AND ownerKey IN (?) \
@@ -217,7 +222,10 @@ function analyzeData(ownerKey) {
 				LIMIT 100;'
 	var now = Math.ceil(Date.now()/1000)
 	var period = 60 // Mins
-	c.query(sql, [now - period * 15, now, [ownerKey], accuracy], function(err, result) {
+	
+	analysisTimestamps[ownerKey] = new Date()
+	
+	c.query(sql, [now - period * 60, now, [ownerKey], accuracy], function(err, result) {
 		
 		if (err)
 			return nodeLog("Mysql error while analyzing from archive: " + JSON.stringify(err))

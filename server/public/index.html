@@ -65,7 +65,7 @@
 		<div class="" id="devices"></div>
 		<br><br>
 		
-		<a id="notification-count"></a>
+		<a href="#" id="notification-count" onclick="$('#notification-panel').toggleClass('verbose')"></a><br>
 		<div id="notification-panel"></div>
 		
 		<br><br>
@@ -187,14 +187,14 @@
 				});
 			}
 			function notify(title, body) {
-				$("#notification-panel").prepend('<div class="alert alert-warning"> \
-					<a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a> \
-					<strong>'+title+'</strong> '+body+'\
-				</div>')
-				notifications += 1
+				if (title && body) {
+					$("#notification-panel").prepend('<div class="alert alert-warning"> \
+						<a href="#" class="close" data-dismiss="alert" aria-label="close" onclick="notifications--;notify()">&times;</a> \
+						<strong>'+title+'</strong> '+body+'\
+					</div>')
+					notifications += 1
+				}
 				$("#notification-count").html("Notifications <span class='badge'>"+notifications+"</span>")
-				if (notifications > 3) 
-					$("#notification-count").onclick = function () {$("#notification-panel").addClass("verbose")}
 			}
 			
 			$("#devices").html(deviceMsg)

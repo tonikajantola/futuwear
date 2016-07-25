@@ -40,6 +40,8 @@
 		<Unit filename="sensors.cpp" />
 		<Unit filename="sensors.h" />
 		<Unit filename="src/Sensors.cpp" />
+		<Unit filename="uuid.cpp" />
+		<Unit filename="uuid.h" />
 		<Extensions>
 			<code_completion>
 				<search_path add="/home/elmo/Downloads/arduino-1.6.6/hardware/arduino/avr/cores/arduino" />

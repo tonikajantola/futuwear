@@ -32,11 +32,13 @@ Sensor sensorList[NUM_SENSORS] = {
     //{FLEX, "test4", A5}
 };
 
+//Auto-ranging + smoothing
 void filter_value(int raw, FilteredValue* f) {
     if (raw < f->raw_min) {f->raw_min = raw;}
     if (raw > f->raw_max) {f->raw_max = raw;}
 
     //exponential smoothing
+    //Wikipedia <3
     f->filtered = SMOOTH_FACTOR*raw + (1 - SMOOTH_FACTOR)*f->filtered;
 
     f->out = map(round(f->filtered), f->raw_min, f->raw_max, 0, 1000);
@@ -49,14 +51,17 @@ void sensors_init() {
 }
 
 void sensors_update() {
+    //Measure & filter
     if ((millis() - lastSensorsUpdate) > SENSOR_MEASURE_INTERVAL) {
         for (int i=0; i < NUM_SENSORS; i++) {
             sensor_update(&sensorList[i]);
         }
         lastSensorsUpdate = millis();
     }
+    //Send filtered data
     if ((millis() - lastDataDump) > SENSOR_UPDATE_INTERVAL) {
         send_sensor_data();
+        //send_configuration();
         lastDataDump = millis();
         ledBlink = !ledBlink;
         //digitalWrite(11, ledBlink);
@@ -70,6 +75,7 @@ void sensor_init(Sensor *s) {
     s->value.raw_max = 0;
 }
 
+//Measure
 void sensor_update(Sensor *s) {
     if (s->pin < 0) { //undefined pin
         return;

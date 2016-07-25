@@ -1,3 +1,5 @@
+//Adapted example code for handling WT11
+
 // iWRAP external host controller library generic demo
 // 2014-05-25 by Jeff Rowberg <jeff@rowberg.net>
 //
@@ -28,6 +30,7 @@ THE SOFTWARE.
 ===============================================
 */
 #include "iwrapper.h"
+#include "communication.h"
 
 
 //AltSoftSerial mySerial;
@@ -50,6 +53,14 @@ uint8_t surefire_connection_id = 0xFF;
 iwrap_connection_t *iwrap_connection_map[IWRAP_MAX_PAIRINGS];
 
 void iwrapper_setup() {
+    //First time setup code
+    Serial1.begin(115200);//default BAUD
+    iwrap_send_command("SET CONTROL MUX 1", IWRAP_MODE_COMMAND);
+    iwrap_send_command("AT", iwrap_mode);
+    iwrap_send_command("SET CONTROL CONFIG 3400 0040 07A1", iwrap_mode);
+    iwrap_send_command("SET PROFILE SPP Futuwear_data", iwrap_mode);
+    iwrap_send_command("SET CONTROL BAUD 500000", iwrap_mode);
+
     #if defined(PLATFORM_ARDUINO_UNO)
         // open the hardware serial port for debug/status output and software serial for iWRAP
         //Serial.begin(HOST_BAUD);
@@ -85,10 +96,6 @@ void iwrapper_setup() {
 
     // boot message to host
     //serial_out(F("iWRAP host library generic demo started\n"));
-    //iwrap_send_command("SET CONTROL MUX 0", iwrap_mode);
-    //iwrap_send_command("SET CONTROL CONFIG 3400 0040 07A1", iwrap_mode);
-    //iwrap_send_command("SET PROFILE SPP Futuwear_data", iwrap_mode);
-    //iwrap_send_command("SET CONTROL BAUD 500000", iwrap_mode);
     //while (1) {}
 }
 
@@ -297,13 +304,6 @@ void my_iwrap_evt_pair(const iwrap_address_t *address, uint8_t key_type, const u
 void my_iwrap_evt_ready() {
     iwrap_state = IWRAP_STATE_UNKNOWN;
 }
-
-void my_iwrap_evt_ring(uint8_t link_id, const iwrap_address_t *address, uint16_t channel, const char *profile) {
-    //add_mapped_connection(link_id, address, profile, channel);
-    surefire_connection_id = link_id;
-    //print_connection_map();
-}
-
 /* ============================================================================
  * GENERAL HELPER FUNCTIONS
  * ========================================================================= */
@@ -441,33 +441,8 @@ uint8_t remove_mapped_connection(uint8_t link_id) {
 #endif
 
 void print_connection_map() {
-    /*char s[100];
-    serial_out(F("==============================================================================\n"));
-    sprintf(s, "Connection map (%d pairings, %d connected devices, %d total connections)\n", iwrap_pairings, iwrap_connected_devices, iwrap_active_connections);
-    serial_out(s);
-    serial_out(F("--------+-------+-------+-----+-------+-------+-----+-------+-----+-----+-----\n"));
-    serial_out(F("Device\t|  A2DP | AVRCP | HFP | HFPAG |  HID  | HSP | HSPAG | IAP | SCO | SPP\n"));
-    serial_out(F("--------+-------+-------+-----+-------+-------+-----+-------+-----+-----+-----\n"));
-    uint8_t i;
-    for (i = 0; i < iwrap_pairings; i++) {
-        sprintf(s, "#%d (%d)\t| %2d/%2d |  %2d   |  %2d |   %2d  | %2d/%2d |  %2d |   %2d  |  %2d |  %2d |  %2d\n", i, iwrap_connection_map[i] -> active_links,
-            (int8_t)iwrap_connection_map[i] -> link_a2dp1,
-            (int8_t)iwrap_connection_map[i] -> link_a2dp2,
-            (int8_t)iwrap_connection_map[i] -> link_avrcp,
-            (int8_t)iwrap_connection_map[i] -> link_hfp,
-            (int8_t)iwrap_connection_map[i] -> link_hfpag,
-            (int8_t)iwrap_connection_map[i] -> link_hid_control,
-            (int8_t)iwrap_connection_map[i] -> link_hid_interrupt,
-            (int8_t)iwrap_connection_map[i] -> link_hsp,
-            (int8_t)iwrap_connection_map[i] -> link_hspag,
-            (int8_t)iwrap_connection_map[i] -> link_iap,
-            (int8_t)iwrap_connection_map[i] -> link_sco,
-            (int8_t)iwrap_connection_map[i] -> link_spp
-            );
-        serial_out(s);
-    }
-    serial_out(F("--------+-------+-------+-----+-------+-------+-----+-------+-----+-----+-----\n"));
-*/}
+    //Disabled example code
+}
 
 void print_demo_menu() {
     serial_out(F("iWRAP generic demo menu\n"));

@@ -10,7 +10,7 @@ var options = {
 
 
 
-var devices = {}
+var deviceClients = {}
 
 
 // Dependencies
@@ -24,11 +24,25 @@ const crypto = require('crypto');
 
 ioServer = socketServer.listen(8001)
 ioServer.on('connection', function (socket) {
-	client.emit("id", {id: socket.id})
+	socket.emit("id", {id: socket.id})
+	socket.on('registration', function (req) {
+		console.log("Registered device(s) " + req)
+		try {
+			var j = json(req)
+			var devices = j.devices
+			var id = j.id
+			
+			for (var i = 0; i < devices.length; j++) {
+				var clientlist = deviceClients[devices[i]] || []// TODO: Clean up on disconnect
+				clientlist.push(id)
+				deviceClients[devices[i]] = clientlist
+			}
+		} catch (e) {
+			
+		}
+	})
 })
-ioServer.on('register', function (req) {
-	console.log("Registered device(s) " + req)
-})
+
 
 var app = express();
 
@@ -347,7 +361,10 @@ function analyze() {
 }
 
 function notify(device, title, message) {
-	client.emit("message", {title: title, message: message})
+	var clients = deviceClients[device] || []
+	clients.forEach(function (elem, i, arr) {
+		ioServer.socket(elem).emit(device, {title: title, message: message})
+	})
 }
 
 

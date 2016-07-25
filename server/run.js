@@ -190,6 +190,7 @@ function getData(time1, timeT, req, res) {
 	
 	var sql = '	SELECT sensorID, name AS sensorName, UNIX_TIMESTAMP(ROUND(AVG(logged))) AS logged, ROUND(AVG(val)) AS val \
 				FROM Data INNER JOIN Sensors \
+				ON Sensors.ID=Data.sensorID \
 				WHERE logged >= FROM_UNIXTIME(?) AND logged <= FROM_UNIXTIME(?) AND ownerKey IN (?) \
 				GROUP BY ID, ROUND(logged/?) \
 				ORDER BY logged DESC \
@@ -213,12 +214,13 @@ function analyzeData(ownerKey) {
 	var tooSoon = !!analysisTimestamps[ownerKey] && (new Date() - analysisTimestamps[ownerKey]) < options.analyzation.period * 1000
 	
 	if (tooSoon)
-		return nodeLog("Skipping analysis: " + (new Date() - analysisTimestamps[ownerKey]))
+		return //nodeLog("Skipping analysis: " + (new Date() - analysisTimestamps[ownerKey]))
 	
 	nodeLog("Gonna analyze")
 	
 	var sql = '	SELECT sensorID, name AS sensorName, STD(val) AS std, ownerKey AS device \
 				FROM Data INNER JOIN Sensors \
+				ON Sensors.ID=Data.sensorID \
 				WHERE logged >= FROM_UNIXTIME(?) AND logged <= FROM_UNIXTIME(?) AND ownerKey IN (?) \
 				GROUP BY sensorID \
 				LIMIT 100;'

@@ -193,23 +193,22 @@
 					}
 				});
 			}
-			function notifyUser(title, body) {
-				if (!!title && !!body) {
-					$("#notification-panel").prepend('<div class="alert alert-warning"> \
-						<a href="#" class="close" data-dismiss="alert" aria-label="close" onclick="notifyUser(false, false)">&times;</a> \
-						<strong>'+title+'</strong> '+body+'\
-					</div>')
-					notifications += 1
-				}
-				else notifications -= 1
-				$("#notification-count").html("Notifications <span class='badge'>"+notifications+"</span>")
-			}
 			
 			$("#devices").html(deviceMsg)
 			
-			
-			
 		});
+		
+		function notifyUser(title, body) {
+			if (!!title && !!body) {
+				$("#notification-panel").prepend('<div class="alert alert-warning"> \
+					<a href="#" class="close" data-dismiss="alert" aria-label="close" onclick="notifyUser(false, false)">&times;</a> \
+					<strong>'+title+'</strong> '+body+'\
+				</div>')
+				notifications += 1
+			}
+			else notifications -= 1
+			$("#notification-count").html("Notifications <span class='badge'>"+notifications+"</span>")
+		}
 		
 		
 	</script>

@@ -18,8 +18,14 @@ const http = require("http")
 const fs = require("fs")
 const express = require('express');
 const socketIO = require('socket.io-client');
+const socketServer = require('socket.io')
 const mysql = require('mysql');
-const crypto = require('crypto');
+const crypto = require('crypto');'
+
+ioServer = socketServer.listen(8001)
+ioServer.on('connection', function (socket) {
+	console.log("Registration from " + socket.id)
+})
 
 var app = express();
 
@@ -108,7 +114,7 @@ client.on('message', msg => {
 			
 		}
 	} catch (e) {
-		nodeLog("Could not save vör data (" + e.message + "): " + JSON.stringify(msg))
+		//nodeLog("Could not save vör data (" + e.message + "): " + JSON.stringify(msg))
 	}
 	
 });
@@ -192,6 +198,7 @@ function analyzeData(ownerKey) {
 		
 		if (err)
 			return nodeLog("Mysql error while analyzing from archive: " + JSON.stringify(err))
+		
 		
 		for (var i = 0; i < result.length; i++) {
 			var sensor = result[i]
@@ -337,7 +344,7 @@ function analyze() {
 }
 
 function notify(device, title, message) {
-	client.emit(device, {title: title, message: message})
+	client.emit("message", {title: title, message: message})
 }
 
 

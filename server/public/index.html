@@ -85,10 +85,11 @@
 	
 		
 		
-		var socket = io.connect("http://futuwear.tunk.org:13337");
+		var vor = io.connect("http://futuwear.tunk.org:13337");
+		var node = io.connect("http://futuwear.tunk.org:8001");
 		
 		
-		socket.on('message', function(resp){
+		vor.on('message', function(resp){
 			var now = Math.floor(new Date() / 1000)
 			
 			$("#lastMsg").val(JSON.stringify(json(resp), null, 3))
@@ -121,7 +122,7 @@
 		});
 		
 		$(window).on('beforeunload', function(){
-			socket.close();
+			vor.close();
 		});
 		
 		var devices = devices()
@@ -149,7 +150,7 @@
 			}
 			for (var i = 0; i < devices.length; i++) {
 			console.log("Listening to messages for " + devices[i])
-				socket.on(devices[i], function(resp) {
+				node.on(devices[i], function(resp) {
 				
 					try {
 						var notification = json(resp)

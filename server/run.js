@@ -10,7 +10,7 @@ var options = {
 
 
 
-var devices = {}
+var deviceClients = {}
 
 
 // Dependencies
@@ -24,11 +24,31 @@ const crypto = require('crypto');
 
 ioServer = socketServer.listen(8001)
 ioServer.on('connection', function (socket) {
-	client.emit("id", {id: socket.id})
+	socket.emit("id", {id: socket.id})
+	
+	socket.on('registration', req => {
+		try {
+			var j = json(req)
+			var devices = j.devices
+			var id = j.id
+			
+			for (var i = 0; i < devices.length; i++) {
+				var deviceName = devices[i]
+				nodeLog("Registered device(s) " + deviceName)
+				var clientlist = deviceClients[deviceName] || []// TODO: Clean up on disconnect
+				if (clientlist.indexOf(id) < 0)
+					clientlist.push(id)
+				deviceClients[deviceName] = clientlist
+			}
+			
+			if (devices.length > 0) notify(devices[0], "Test message", "Hello wolrd")
+			
+		} catch (e) {
+			
+		}
+	})
 })
-ioServer.on('register', function (req) {
-	console.log("Registered device(s) " + req)
-})
+
 
 var app = express();
 
@@ -219,7 +239,7 @@ function saveData(sensorID, val, failCallback) {
 				throw new Error("Sensor #" + sensorID + " has not been registered.");
 			var insertion = {sensorID: sensorID, val: val} // Information to INSERT INTO the "Data" table
 			
-			analyzeData(result[0].ownerKey)
+			//analyzeData(result[0].ownerKey)
 			
 			c.query('INSERT INTO Data SET ?;', insertion, function(err, result) {
 				if (err)
@@ -347,7 +367,10 @@ function analyze() {
 }
 
 function notify(device, title, message) {
-	client.emit("message", {title: title, message: message})
+	var clients = deviceClients[device] || []
+	clients.forEach(function (elem, i, arr) {
+		ioServer.to(elem).emit(device, {title: title, message: message})
+	})
 }
 
 

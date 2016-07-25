@@ -73,7 +73,7 @@ function removeCookie(name) {
 
 function appendVisualiser(viewContainer, sensorID, sensorName, containerID) {
 	if (typeof viewContainer[sensorID] != "function") {
-		$("#" + containerID).append('<div class="col-xs-4" data-toggle="tooltip" title="'+sensorName+'" style="text-align:center;"><input type="text" id="sensor-'+sensorName+'" value="0" class="dial" data-fgColor="#66CC66" data-angleOffset=-125 data-angleArc=250 data-width="80%"></div>')
+		$("#" + containerID).append('<div class="col-xs-2" data-toggle="tooltip" title="'+sensorName+'" style="text-align:center;"><input type="text" id="sensor-'+sensorName+'" value="0" class="dial" data-fgColor="#66CC66" data-angleOffset=-125 data-angleArc=250 data-width="80%"></div>')
 		$('[data-toggle="tooltip"]').tooltip();
 		
 		$("#sensor-" + sensorName).knob({

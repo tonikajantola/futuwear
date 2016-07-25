@@ -32,11 +32,12 @@ ioServer.on('connection', function (socket) {
 			var devices = j.devices
 			var id = j.id
 			
-			for (var i = 0; i < devices.length; j++) {
+			for (var i = 0; i < devices.length; i++) {
 				var deviceName = devices[i]
 				nodeLog("Registered device(s) " + deviceName)
 				var clientlist = deviceClients[deviceName] || []// TODO: Clean up on disconnect
-				clientlist.push(id)
+				if (clientlist.indexOf(id) < 0)
+					clientlist.push(id)
 				deviceClients[deviceName] = clientlist
 			}
 			

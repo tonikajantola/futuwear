@@ -45,6 +45,9 @@
 		#notification-panel div:nth-child(1), #notification-panel div:nth-child(2), #notification-panel div:nth-child(3), #notification-panel.verbose div {
 			display:block;
 		}
+		#notification-count {
+			display:block;
+		}
 	</style>
 </head>
 <body>
@@ -59,9 +62,10 @@
 				<h3><a href="manage.html" data-toggle="tooltip" title="Configure your devices" data-placement="bottom"><i class="fa fa-tachometer" aria-hidden="true"></i></a></h3>
 			</div>
 		</div>
-		
 		<div class="" id="devices"></div>
-		<span id="notification-count">Notifications</span>
+		<br><br>
+		
+		<a id="notification-count"></a>
 		<div id="notification-panel"></div>
 		
 		<br><br>
@@ -149,7 +153,7 @@
 		
 		function showDevices(container) {
 			container.innerHTML = devices.join(", ")
-			container.href = "manage.html"
+			setTimeout(function () { container.href = "manage.html" }, 100)
 		}
 		
 		
@@ -184,11 +188,12 @@
 			}
 			function notify(title, body) {
 				$("#notification-panel").prepend('<div class="alert alert-warning"> \
-					<strong>'+title+'</strong><br>'+body+'\
+					<a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a> \
+					<strong>'+title+'</strong> '+body+'\
 				</div>')
 				notifications += 1
-				$("#notification-count").html("Notifications ("+notifications+")")
-				if (notifications == 4) 
+				$("#notification-count").html("Notifications <span class='badge'>"+notifications+"</span>")
+				if (notifications > 3) 
 					$("#notification-count").onclick = function () {$("#notification-panel").addClass("verbose")}
 			}
 			

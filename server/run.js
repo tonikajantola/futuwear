@@ -25,18 +25,22 @@ const crypto = require('crypto');
 ioServer = socketServer.listen(8001)
 ioServer.on('connection', function (socket) {
 	socket.emit("id", {id: socket.id})
-	socket.on('registration', function (req) {
-		console.log("Registered device(s) " + req)
+	socket.on('registration', req => {
 		try {
 			var j = json(req)
 			var devices = j.devices
 			var id = j.id
 			
 			for (var i = 0; i < devices.length; j++) {
-				var clientlist = deviceClients[devices[i]] || []// TODO: Clean up on disconnect
+				var deviceName = devices[i]
+				console.log("Registered device(s) " + deviceName)
+				var clientlist = deviceClients[deviceName] || []// TODO: Clean up on disconnect
 				clientlist.push(id)
-				deviceClients[devices[i]] = clientlist
+				deviceClients[deviceName] = clientlist
 			}
+			
+			if (devices.length > 0) notify(devices[0], "Test message", "Hello wolrd")
+			
 		} catch (e) {
 			
 		}

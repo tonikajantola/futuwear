@@ -213,7 +213,9 @@ function analyzeData(ownerKey) {
 	var tooSoon = !!analysisTimestamps[ownerKey] && (new Date() - analysisTimestamps[ownerKey]) < options.analyzation.period * 1000
 	
 	if (tooSoon)
-		return
+		return nodeLog("Skipping analysis: " + (new Date() - analysisTimestamps[ownerKey]))
+	
+	nodeLog("Gonna analyze")
 	
 	var sql = '	SELECT sensorID, name AS sensorName, STD(val) AS std, ownerKey AS device \
 				FROM Data INNER JOIN Sensors \
@@ -247,7 +249,7 @@ function saveData(sensorID, val, failCallback) {
 				throw new Error("Sensor #" + sensorID + " has not been registered.");
 			var insertion = {sensorID: sensorID, val: val} // Information to INSERT INTO the "Data" table
 			
-			//analyzeData(result[0].ownerKey)
+			analyzeData(result[0].ownerKey)
 			
 			c.query('INSERT INTO Data SET ?;', insertion, function(err, result) {
 				if (err)
@@ -375,6 +377,7 @@ function analyze() {
 }
 
 function notify(device, title, message) {
+	console.log("Notifying " + device + ": " + message)
 	var clients = deviceClients[device] || []
 	clients.forEach(function (elem, i, arr) {
 		ioServer.to(elem).emit(device, {title: title, message: message})

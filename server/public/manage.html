@@ -43,7 +43,7 @@
 		<br><br>
 		<button type="button" class="btn btn-primary btn-lg" data-toggle="modal" data-target="#login-modal">
 			<i class="fa fa-tachometer" aria-hidden="true"></i> Add Device
-		</button>	
+		</button>
 		<br><hr></br>
 		
 		<div id="device-list">
@@ -72,7 +72,7 @@
 					</div>
 					<div class="modal-footer">
 						<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-						<button type="button" class="btn btn-primary" onclick="login(document.getElementById('newDevice').value)" data-dismiss="modal">Add!</button>
+						<button type="button" class="btn btn-primary" onclick="login(document.getElementById('newDevice').value)" id="newDeviceAdd" data-dismiss="modal">Add!</button>
 					</div>
 				</div>
 			</div>
@@ -83,6 +83,12 @@
 	
 	
 	<script>
+	
+		$("#newDevice").keyup(function(event){
+			if(event.keyCode == 13){
+				$("#newDeviceAdd").click();
+			}
+		});
 	
 		if (window.location.host.indexOf("tunk") < 0)
 			$("#warn").show()

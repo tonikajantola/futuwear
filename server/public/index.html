@@ -76,12 +76,13 @@
 		<div id="notification-panel"></div>
 		
 		<br><br>
-		
-		<b>Your posture</b><br><br>
-		<div id="no-data"><small>Nothing is coming in. Have you <a href="manage.html">added your device</a>?</small></div>
-		<div id="knobs" class="row"></div>
-		<div id="torso_wrapper">
-			<iframe style="border:0px;" id="torso">Your browser doesn't support iframes, so we can't visualise real-time posture data.</iframe>
+		<div id="posture-wrapper">
+			<b>Your posture</b><br><br>
+			<div id="no-data"><small>Nothing is coming in. Have you <a href="manage.html">added your device</a>?</small></div>
+			<div id="knobs" class="row"></div>
+			<div id="torso_wrapper">
+				<iframe style="border:0px;" id="torso">Your browser doesn't support iframes, so we can't visualise real-time posture data.</iframe>
+			</div>
 		</div>
 		<br><br><hr><br>
 		
@@ -161,6 +162,7 @@
 			switch (devices.length) {
 				case 0:
 					deviceMsg += "You haven't <a href='manage.html'>added your smart device</a>."
+					$("#posture-wrapper").hide()
 					break;
 				case 1:
 					deviceMsg += "You are tuned into your smart device <a href='#' onclick='showDevices(this)'>(show)</a>"
@@ -172,7 +174,6 @@
 			for (var i = 0; i < devices.length; i++) {
 			console.log("Listening to messages for " + devices[i])
 				node.on(devices[i], function(resp) {
-				
 					try {
 						var notification = json(resp)
 						console.log("GOT DEDICATED MESSAGE")

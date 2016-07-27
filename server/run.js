@@ -351,7 +351,6 @@ function getSensors(req, res) {
 			res.send(JSON.stringify({error: JSON.stringify(err)}, null, 3));
 		}
 	});	
-	nodeLog(q.sql)
 }
 
 

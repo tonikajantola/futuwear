@@ -67,21 +67,19 @@ app.get('/fetch', function (req, res) {
 	
 	var content = req.query.data // TODO: Safety
 	content = JSON.parse(content)
-	
 	getData(parseInt(content.time0), parseInt(content.timeT), req, res)
 });
 
 /* Method to register a new sensor with */
 app.get('/register', function (req, res) {
 	
-	res.setHeader('Content-Type', 'application/json');
 	
 	try {
-		var jsonData = json(req.query)
+		var jsonData = json(req.body)
 		
 		var uuid = jsonData.uuid
-		var pin = json.pin
-		var name = json.name
+		var pin = jsonData.pin
+		var name = jsonData.name
 		
 		if (!uuid || !pin || !name)
 			throw new Error("A required field was missing")
@@ -89,25 +87,21 @@ app.get('/register', function (req, res) {
 		var insertion = {UUID: uuid, pin: pin, name: name}
 		
 		c.query('INSERT INTO Devices SET ?;', insertion, function (err, result) {
+			res.setHeader('Content-Type', 'application/json');
 			if (err) {
 				nodeLog("Mysql error: " + JSON.stringify(err));
-				res.send(JSON.stringify({error: JSON.stringify(err)}, null, 3));
+				res.send(JSON.stringify({error: "A sensor with that name/uuid combo could not be added."}, null, 3));
 			}
 			else {
-				nodeLog("Saved new sensor " + name)
+				nodeLog("Saved new device " + name)
 				res.send(JSON.stringify({error: false}, null, 3));
 			}
 		});
 		
 	} catch (e) {
 		nodeLog("Could not register sensor: " + e)
-		res.send(JSON.stringify({error: JSON.stringify(err)}, null, 3));
+		res.send(JSON.stringify({error: JSON.stringify(e)}, null, 3));
 	}
-	
-	var content = req.query.data // TODO: Safety
-	content = JSON.parse(content)
-	
-	getData(parseInt(content.time0), parseInt(content.timeT), req, res)
 });
 
 /* Method to get registered sensors with */
@@ -232,7 +226,7 @@ function getData(time1, timeT, req, res) {
 				ORDER BY logged DESC \
 				LIMIT 43200;'
 				
-	c.query(sql, [time0, timeT, devices, accuracy], function(err, result) {
+	var q = c.query(sql, [time0, timeT, devices, accuracy], function(err, result) {
 		res.setHeader('Content-Type', 'application/json');
 		
 		if (!err) {
@@ -247,51 +241,51 @@ function getData(time1, timeT, req, res) {
 }
 
 function analyzeData(ownerKey) {
-	var tooSoon = !!analysisTimestamps[ownerKey] && (new Date() - analysisTimestamps[ownerKey]) < options.analyzation.period * 1000
+	var tooSoon = !analysisTimestamps[ownerKey] || (new Date() - analysisTimestamps[ownerKey]) < options.analyzation.period * 1000
 	
 	if (tooSoon)
 		return analysisTimestamps[ownerKey] = analysisTimestamps[ownerKey] || new Date()//nodeLog("Skipping analysis: " + (new Date() - analysisTimestamps[ownerKey]))
 	
-	nodeLog("Gonna analyze")
+	nodeLog("Gonna analyze device " + ownerKey)
 	
 	var sql = '	SELECT sensorID, name AS sensorName, STD(val) AS std, ownerKey AS device \
 				FROM Data INNER JOIN Sensors \
 				ON Sensors.ID=Data.sensorID \
 				WHERE logged >= FROM_UNIXTIME(?) AND logged <= FROM_UNIXTIME(?) AND ownerKey IN (?) \
 				GROUP BY sensorID \
-				HAVING \
 				LIMIT 100;'
 	var now = Math.ceil(Date.now()/1000)
 	var period = 60 // Mins 
 	
 	analysisTimestamps[ownerKey] = new Date()
 	
-	c.query(sql, [now - period * 60, now, [ownerKey], accuracy], function(err, result) {
-		
+	var analysis = c.query(sql, [now - period * 60, now, [ownerKey], accuracy], function(err, result) {
+				
 		if (err)
 			return nodeLog("Mysql error while analyzing from archive: " + JSON.stringify(err))
 		
-		
 		for (var i = 0; i < result.length; i++) {
 			var sensor = result[i]
-			notify(sensor.device, "You've been still for a while now", sensor.sensorName + " needs a shake, because it's standard deviation is " + sensor.std)
+			notify(sensor.device, "You've been still for a while now", sensor.sensorName + " needs a shake, because it's standard deviation is " +sensor.std)
 		}		
 	});	
+	//console.log(analysis.sql)
 }
 
 /* Saves a given value as reported by #sensorID */
 function saveData(deviceName, sensorName, val, failCallback) {
-	c.query('SELECT DISTINCT ownerKey FROM Sensors WHERE name=? AND ownerKey=?;', [sensorName, deviceName], function(err, result) {
+	c.query('SELECT DISTINCT ID FROM Sensors WHERE name=? AND ownerKey=?;', [sensorName, deviceName], function(err, result) {
 		try {
 			var sensorExists = result.length > 0
 			if (!sensorExists) {
-				var id = content.name + "_" + Math.round(Math.random()*1000000)
+				var id = sensorName + "_" + Math.round(Math.random()*1000000)
 				saveSensor(id, sensorName, deviceName) // Register the sensor
-				throw new Error("Sensor #" + sensorID + " had not been registered.");
+				throw new Error("Sensor " + sensorName + " for device " + deviceName + " had not been registered.");
 			}
+			var sensorID = result[0].ID
 			var insertion = {sensorID: sensorID, val: val} // Information to INSERT INTO the "Data" table
 			
-			analyzeData(result[0].ownerKey)
+			analyzeData(deviceName)
 			
 			c.query('INSERT INTO Data SET ?;', insertion, function(err, result) {
 				if (err)
@@ -310,11 +304,10 @@ function saveSensor(ID, name, device) {
 	c.query('SELECT Count(ID) AS results FROM Sensors WHERE ID=?;', [ID], function(err, result) {
 		if (!err) {
 			var found = !isNaN(result[0]["results"]) && parseInt(result[0]["results"]) > 0
-			
-			
+						
 			if (!found) {
-				var insertion = {ID: ID, type: "kinetic", name: name, ownerKey: device}
-				c.query('INSERT INTO Sensors SET ?;', insertion, function(err, result) {
+				var insertion = {ID: ID, name: name, ownerKey: device}
+				var mysql = c.query('INSERT INTO Sensors SET ?;', insertion, function(err, result) {
 					if (!err) {
 						nodeLog("Registered new sensor " + ID + " with device " + device)
 					}
@@ -322,6 +315,7 @@ function saveSensor(ID, name, device) {
 						nodeLog("Mysql sensor insertion error: " + JSON.stringify(err))
 					}
 				});
+				//console.log(mysql.sql)
 			}
 			else nodeLog("Sensor #" + ID + " already exists, please give a fresh id.")
 		}
@@ -337,7 +331,7 @@ function getSensors(req, res) {
 	
 	if (!devices)
 		return res.send(JSON.stringify({error: "No devices were found."}, null, 3));
-	
+		
 	var sql = '	SELECT ID, name, ownerKey, COUNT(ID) - 1 AS collection \
 				FROM Sensors \
 				LEFT JOIN Data ON Sensors.ID=Data.sensorID \
@@ -346,7 +340,7 @@ function getSensors(req, res) {
 				ORDER BY ownerKey \
 				LIMIT 100;'
 				
-	c.query(sql, [devices], function(err, result) {
+	var q = c.query(sql, [devices], function(err, result) {
 		res.setHeader('Content-Type', 'application/json');
 		
 		if (!err) {			
@@ -357,6 +351,7 @@ function getSensors(req, res) {
 			res.send(JSON.stringify({error: JSON.stringify(err)}, null, 3));
 		}
 	});	
+	nodeLog(q.sql)
 }
 
 

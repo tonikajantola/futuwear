@@ -39,20 +39,47 @@
 				<h3><a href="javascript:history.back(0)" data-toggle="tooltip" title="Back" data-placement="bottom"><i class="fa fa-arrow-left" aria-hidden="true"></i></a></h3>
 			</div>
 		</div>
-		<br>
-	
-		<button onclick="login()" class="btn btn-primary">Add your device</button>
-		<br><br><br>
+		<div class="" id="devices"></div>
+		<br><br>
+		<button type="button" class="btn btn-primary btn-lg" data-toggle="modal" data-target="#login-modal">
+			<i class="fa fa-tachometer" aria-hidden="true"></i> Add Device
+		</button>	
+		<br><hr></br>
 		
-		<h4>Your sensors</h4>
-		<table id="list"><tr><td>(nothing)</td></tr></table>
-		<br><br><hr><br>
+		<div id="device-list">
+			<h4>Your Devices</h4>
+			<table id="list"><tr><td>loading</td></tr></table>
+			<br><br>
+			<button type="button" class="btn btn-danger" onclick="logout()">
+				Forget All
+			</button>	
+			<hr><br>
+		</div>
 		
-		
-		
-		
+		<div class="modal fade" id="login-modal">
+			<div class="modal-dialog" role="document">
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+							<span aria-hidden="true">&times;</span>
+						</button>
+						<h4 class="modal-title">Watch a New Device</h4>
+					</div>
+					<div class="modal-body">
+						<p>
+							<input type="text" class="form-control" id="newDevice" placeholder="Unique Device Name" value="">
+						</p>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+						<button type="button" class="btn btn-primary" onclick="login(document.getElementById('newDevice').value)" data-dismiss="modal">Add!</button>
+					</div>
+				</div>
+			</div>
+		</div>
 		
 	</div>
+	
 	
 	
 	<script>
@@ -61,11 +88,10 @@
 			$("#warn").show()
 			
 		function fetch() {
-			$("#list").html("<tr><td>loading...</td></tr>")
 			
 			$.get("/sensors", "", function (res) {
 			
-				$("#list").html("  ")
+				$("#list").html("<tr><td>Sensor</td><td></td><td>Smart device</td></tr>")
 				
 				try {
 					var resp = json(res)
@@ -80,6 +106,7 @@
 						var reading = resp[i]
 						
 						var sensorID = reading["ID"]
+						var sensorName = reading["name"]
 						var deviceKey = reading["ownerKey"]
 						
 						if (!$("#option-" + deviceKey).length) {
@@ -87,8 +114,10 @@
 						}
 						$("#new-sensor").show()
 						
-						$("#list").append("<tr><td><b>" + sensorID + "</b></td><td>"+reading.collection+" values</td><td><small>" + deviceKey + " </small></td></tr>")
+						$("#list").append("<tr><td><b>" + sensorName + "</b> <span class='badge' data-toggle='tooltip' title='We have received this many readings' data-placement='right'>"+reading.collection+"</span></td><td></td><td><small>" + deviceKey + " </small></td></tr>")
 					}
+					
+					$('[data-toggle="tooltip"]').tooltip();
 					
 					if (i >= 100) {
 						$("#list").append("<tr><td colspan='3'>Some data may have been truncated</td></tr>")
@@ -106,18 +135,33 @@
 	
 		$(document).ready(function () {
 			fetch();
-			setInterval(function () { fetch(); }, 1000)
+			setInterval(function () { fetch(); }, 5000)
+			var deviceMsg = ""			
+			switch (devices.length) {
+				case 0:
+					$("#device-list").hide()
+					break;
+				case 1:
+					deviceMsg += "You are tuned into your smart device " + devices.join(", ")
+					break;
+				default:
+					deviceMsg += "You are watching devices " + devices.join(", ")
+					break;
+			}
+			
+			$('[data-toggle="tooltip"]').tooltip();
+			
+			$("#devices").html(deviceMsg)
 		})
 		
 		
-		function login() {
-			var uname = prompt("Device name?","proto")
-			if (devices.indexOf(uname) >= 0)
+		function login(uname) {
+			if (devices.indexOf(uname) >= 0 || !uname)
 				return
 			if (readCookie("devices"))
 				uname = uname + "," + readCookie("devices")
 			createCookie("devices", uname, 1)
-			location.reload(); 
+			setTimeout(function () { location.reload(); }, 100) 
 		}
 		
 		function logout() {

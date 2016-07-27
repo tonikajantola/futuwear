@@ -140,3 +140,9 @@ function timeString(hours, minutes, seconds) {
 	})
 	return clock.join(":")
 }
+		
+
+function showDevices(container) {
+	container.innerHTML = devices.join(", ")
+	setTimeout(function () { container.href = "manage.html" }, 100)
+}

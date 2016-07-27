@@ -1,7 +1,8 @@
 // Pretend to be a sensor sending data to Vör
 var target = "http://futuwear.tunk.org:13337/messages/"
 var interval = 60 // Milliseconds
-var serial = "Rand0mSens0rSerialNumber"
+var serial = "1234"
+var uuid = "1:2:3:4"
 const crypto = require('crypto');
 
 var variation = 40
@@ -39,10 +40,12 @@ function payload() {
 				}]
 			}]
 		}
+	
 	var md5 = crypto.createHash('md5')
 	var hashPie = JSON.stringify(sensordata["sensors"])
-	md5.update(hashPie + serial);
+	md5.update(hashPie + uuid + serial);
 	sensordata["token"] = md5.digest('hex')
+	sensordata["uuid"] = uuid
 	return sensordata;
 }
 

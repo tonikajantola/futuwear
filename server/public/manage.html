@@ -45,14 +45,7 @@
 		<br><br><br>
 		
 		<h4>Your sensors</h4>
-		<table id="list"><tr><td>loading...</td></tr></table>
-		<form action="/manage.html" method="post" id="new-sensor">
-			<input name="name" placeholder="New Sensor Name">
-			<select name="device" id="device">
-			<option disabled>Select device</option>
-			</select> 
-			<input type="submit" class="btn btn-primary" value="Add Sensor">
-		</form>
+		<table id="list"><tr><td>(nothing)</td></tr></table>
 		<br><br><hr><br>
 		
 		
@@ -68,6 +61,8 @@
 			$("#warn").show()
 			
 		function fetch() {
+			$("#list").html("<tr><td>loading...</td></tr>")
+			
 			$.get("/sensors", "", function (res) {
 			
 				$("#list").html("  ")

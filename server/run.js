@@ -71,16 +71,48 @@ app.get('/fetch', function (req, res) {
 	getData(parseInt(content.time0), parseInt(content.timeT), req, res)
 });
 
+/* Method to register a new sensor with */
+app.get('/register', function (req, res) {
+	
+	res.setHeader('Content-Type', 'application/json');
+	
+	try {
+		var jsonData = json(req.query)
+		
+		var uuid = jsonData.uuid
+		var pin = json.pin
+		var name = json.name
+		
+		if (!uuid || !pin || !name)
+			throw new Error("A required field was missing")
+		
+		var insertion = {UUID: uuid, pin: pin, name: name}
+		
+		c.query('INSERT INTO Devices SET ?;', insertion, function (err, result) {
+			if (err) {
+				nodeLog("Mysql error: " + JSON.stringify(err));
+				res.send(JSON.stringify({error: JSON.stringify(err)}, null, 3));
+			}
+			else {
+				nodeLog("Saved new sensor " + name)
+				res.send(JSON.stringify({error: false}, null, 3));
+			}
+		});
+		
+	} catch (e) {
+		nodeLog("Could not register sensor: " + e)
+		res.send(JSON.stringify({error: JSON.stringify(err)}, null, 3));
+	}
+	
+	var content = req.query.data // TODO: Safety
+	content = JSON.parse(content)
+	
+	getData(parseInt(content.time0), parseInt(content.timeT), req, res)
+});
+
 /* Method to get registered sensors with */
 app.get('/sensors', getSensors);
 
-/* Method to save new sensors to a device */
-app.post('/manage.html', function (req, res) {
-	var content = req.body
-	var id = content.name + "_" + Math.round(Math.random()*1000000)
-	saveSensor(id, content.name, content.device)
-	res.redirect("/manage.html");	
-});
 
 app.listen(UI_PORT, function () {
 	nodeLog('Serving on port ' + UI_PORT.toString());
@@ -102,42 +134,46 @@ client.on('error', error => console.error(`Error - socket connection: ${error} :
 client.on('message', msg => {
 	
 	try {
-		var md5 = crypto.createHash('md5')
+		var payload = json(msg)
+		var uuid = payload.uuid
 		
-		var sensors = json(msg)["sensors"]
-		var serial = "Rand0mSens0rSerialNumber" // TODO: Get from database
-		
-		md5.update(JSON.stringify(sensors) + serial); // TODO: SHA256
-		var computedHash = md5.digest('hex')
-		
-		var receivedHash = json(msg)["token"]
-		
-		/* AES-CBC-MAC salaus+autentikointi */
-		
-		if (computedHash != receivedHash)
-			throw new Error("Received hash " + receivedHash + " didn't match the computed hash " + computedHash)
-		
-		// Allow a single sensor to not be inside of list
-		if (!sensors[0])
-			sensors = [sensors]
-			
-		//nodeLog("Got vör message [" + sensors.length + " sensor(s)].")
-		
-		// Iterate through every sensor
-		for (var i = 0; i < sensors.length; i++) {
-			var sensor = sensors[i]
-			
-			// Iterate through every value
-			for (var j = 0; j < sensor["collection"].length; j++) {
-				var value = parseInt(sensor["collection"][j]["value"])
-				if (isNaN(value))
-					throw new Error("Sensor value was not an integer.")
-				saveData(sensor["id"], value)
+		c.query('SELECT DISTINCT pin, name FROM Devices WHERE UUID=?;', [uuid], function(err, result) {
+			try {
+				var pin = result[0].pin // This will fail if UUID not found
+				var name = result[0].name // This will fail if UUID not found
+				if (!pin)
+					throw new Error("Pin code did not match");
+				
+				var md5 = crypto.createHash('md5')
+				var sensors = payload.sensors
+				
+				md5.update(JSON.stringify(sensors) + uuid + pin); // TODO: SHA256
+				var computedHash = md5.digest('hex')
+				var receivedHash = payload.token
+				
+				if (computedHash != receivedHash)
+					throw new Error("Received hash " + receivedHash + " didn't match the computed hash " + computedHash)
+				
+				if (!sensors[0]) sensors = [sensors] // Allow a single sensor to not be inside of list
+				
+				// Iterate through every sensor
+				for (var i = 0; i < sensors.length; i++) {
+					var sensor = sensors[i]
+					
+					// Iterate through every value
+					for (var j = 0; j < sensor.collection.length; j++) {
+						var value = parseInt(sensor.collection[j]["value"])
+						if (isNaN(value))
+							throw new Error("Sensor value was not an integer.")
+						saveData(name, sensor.name, value)
+					}
+				}
+			} catch (e) {
+				nodeLog("Could not load pin code from database")
 			}
-			
-		}
+		});		
 	} catch (e) {
-		//nodeLog("Could not save vör data (" + e.message + "): " + JSON.stringify(msg))
+		nodeLog("Could not save vör data (" + e.message + "): " + JSON.stringify(msg))
 	}
 	
 });
@@ -214,7 +250,7 @@ function analyzeData(ownerKey) {
 	var tooSoon = !!analysisTimestamps[ownerKey] && (new Date() - analysisTimestamps[ownerKey]) < options.analyzation.period * 1000
 	
 	if (tooSoon)
-		return //nodeLog("Skipping analysis: " + (new Date() - analysisTimestamps[ownerKey]))
+		return analysisTimestamps[ownerKey] = analysisTimestamps[ownerKey] || new Date()//nodeLog("Skipping analysis: " + (new Date() - analysisTimestamps[ownerKey]))
 	
 	nodeLog("Gonna analyze")
 	
@@ -223,9 +259,10 @@ function analyzeData(ownerKey) {
 				ON Sensors.ID=Data.sensorID \
 				WHERE logged >= FROM_UNIXTIME(?) AND logged <= FROM_UNIXTIME(?) AND ownerKey IN (?) \
 				GROUP BY sensorID \
+				HAVING \
 				LIMIT 100;'
 	var now = Math.ceil(Date.now()/1000)
-	var period = 60 // Mins
+	var period = 60 // Mins 
 	
 	analysisTimestamps[ownerKey] = new Date()
 	
@@ -243,12 +280,15 @@ function analyzeData(ownerKey) {
 }
 
 /* Saves a given value as reported by #sensorID */
-function saveData(sensorID, val, failCallback) {
-	c.query('SELECT DISTINCT ownerKey FROM Sensors WHERE ID=?;', [sensorID], function(err, result) {
+function saveData(deviceName, sensorName, val, failCallback) {
+	c.query('SELECT DISTINCT ownerKey FROM Sensors WHERE name=? AND ownerKey=?;', [sensorName, deviceName], function(err, result) {
 		try {
 			var sensorExists = result.length > 0
-			if (!sensorExists)
-				throw new Error("Sensor #" + sensorID + " has not been registered.");
+			if (!sensorExists) {
+				var id = content.name + "_" + Math.round(Math.random()*1000000)
+				saveSensor(id, sensorName, deviceName) // Register the sensor
+				throw new Error("Sensor #" + sensorID + " had not been registered.");
+			}
 			var insertion = {sensorID: sensorID, val: val} // Information to INSERT INTO the "Data" table
 			
 			analyzeData(result[0].ownerKey)
@@ -373,10 +413,6 @@ function getUserDevices(req) {
 	return devices
 }
 
-
-function analyze() {
-	
-}
 
 function notify(device, title, message) {
 	console.log("Notifying " + device + ": " + message)

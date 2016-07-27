@@ -349,6 +349,7 @@ b4w.register("torso", function(exports, require) {
 		var min_interval_for_change = 2;//in seconds
 		var required_change = 25;//% change from last mean. Used as a threshold to see if change is necessary.
 		var fat_change = 0.05;//0 for athlete, 1 for maximum mass. This variable determines the amount each step increments the transformation.
+		var slim_multiplier = 4;//Multiplier for weight loss. This enables small stretching to slim down hours of fat accumulation.
 		var compare_time = new Date()/1000 - start_time;
 		
 		if (old_values_is_full == false) {
@@ -379,7 +380,7 @@ b4w.register("torso", function(exports, require) {
 			}
 			else if (change >= required_change){
 				back_mean_old = back_mean_new;
-				fat_value = fat_value - 4*fat_change;
+				fat_value = fat_value - slim_multiplier*fat_change;
 				if (fat_value < 0) {fat_value = 0;}
 				m_geom.set_shape_key_value(obj, "Engineer_Stomach", fat_value);
 				start_time = new Date()/1000;

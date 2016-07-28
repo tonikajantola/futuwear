@@ -1,13 +1,5 @@
  "use strict"
 
-/*
-<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
-<3Rakkaalle Alexille: kutsu funktiota sensor_update_degree("sensor_name", sensor_min, sensor_max, sensor_value),											<3
-<3jossa sensor_name on ko. käskyn caseista löytyvä nimi. esim. "L_Shoulder_X_Rot" (Vasemman olkapän x-suunnan kääntymistä mittaava sensori).				<3
-<3Tämä päivittää globaalin kulma-arvon (eli missä kulmassa käden pitäisi olla), mutta ei vielä liikuta torsoa.												<3
-<3Kun olet päivittänyt haluamasi arvot, kutsu komentoa rotate_all(), jolloin torson luut kääntyvät vastaamaan globaaleihin muuttujiin talletettuja arvojaan.<3
-<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
-*/
 b4w.register("torso", function(exports, require) {
 
 	var m_app    = require("app");
@@ -164,20 +156,7 @@ b4w.register("torso", function(exports, require) {
 		rotate_bone("L_Shoulder",L_Shoulder_X_Rot,L_Shoulder_Y_Rot,0);
 		rotate_bone("Back_Lower",Back_Lower_X_Rot,Back_Lower_Y_Rot,0);
 		rotate_bone("Back_Middle",Back_Middle_X_Rot,Back_Middle_Y_Rot,0);
-		rotate_bone("Back_Upper",Back_Upper_X_Rot,Back_Upper_Y_Rot,0);
-		
-		/*
-		testausta varten toistaiseksi olemassa
-		rotate_bone("Neck",30,20,0);
-		rotate_bone("R_Shoulder",30,30,0);
-		rotate_bone("L_Shoulder",0,30,0);
-		rotate_bone("Back_Lower",10,-10,0);
-		rotate_bone("Back_Lower",30,30,0);
-		rotate_bone("Back_Middle",30,20,0);
-		rotate_bone("Back_Upper",0,30,0);
-		*/
-		
-		
+		rotate_bone("Back_Upper",Back_Upper_X_Rot,Back_Upper_Y_Rot,0);	
 	}
 		
 	function euler_to_quat(roll, pitch, yaw) {
@@ -221,59 +200,59 @@ b4w.register("torso", function(exports, require) {
 		
 		switch (bone_name) {
 			case "Back_Lower":
-				//+x eteen
-				//+y oikealle
+				//+x forward
+				//+y to the right
 				limit_x = [dtr(Back_Lower_X_Min),dtr(Back_Lower_X_Max)];
 				limit_y = [dtr(Back_Lower_Y_Min),dtr(Back_Lower_Y_Max)];
 				limit_z = [dtr(0),dtr(0)];
 				break;
 			case "Back_Middle":
-				//+x eteen
-				//+y oikealle
+				//+x forward
+				//+y to the right
 				limit_x = [dtr(Back_Middle_X_Min),dtr(Back_Middle_X_Max)];
 				limit_y = [dtr(Back_Middle_Y_Min),dtr(Back_Middle_Y_Max)];
 				limit_z = [dtr(0),dtr(0)];
 				break;
 			case "Back_Upper":
-				//+x eteen
-				//+y oikealle
+				//+x forward
+				//+y to the right
 				limit_x = [dtr(Back_Upper_X_Min),dtr(Back_Upper_X_Max)];
 				limit_y = [dtr(Back_Upper_Y_Min),dtr(Back_Upper_Y_Max)];
 				limit_z = [dtr(0),dtr(0)];
 				break;
 			case "Neck":
-				//+x eteen
-				//+y oikealle
+				//+x forward
+				//+y to the right
 				limit_x = [dtr(Neck_X_Min),dtr(Neck_X_Max)];
 				limit_y = [dtr(Neck_Y_Min),dtr(Neck_Y_Max)];
 				limit_z = [dtr(0),dtr(0)];
 				break;
 			case "R_Shoulder":
-				//+x eteen
-				//+y ylös
+				//+x forward
+				//+y upwards
 				values[1] = -y;
 				limit_x = [dtr(R_Shoulder_X_Min),dtr(R_Shoulder_X_Max)];
 				limit_y = [dtr(R_Shoulder_Y_Min),dtr(R_Shoulder_Y_Max)];
 				limit_z = [dtr(0),dtr(0)];
 				break;
 			case "L_Shoulder":
-				//+x eteen
-				//+y ylös
+				//+x forward
+				//+y upwards
 				limit_x = [dtr(L_Shoulder_X_Min),dtr(L_Shoulder_X_Max)];
 				limit_y = [dtr(L_Shoulder_Y_Min),dtr(L_Shoulder_Y_Max)];
 				limit_z = [dtr(0),dtr(0)];
 				break;
 			case "L_Arm_Inner":
-				//+-y vaakataso/pystytaso  ylös/eteen
-				//+-z suuntaan välillä (y-akselin kääntö, määrittää onko y ylös vai viistossa. + vie ylös)
+				//+-y + take the arm forward or upward depending on the current z-axis twist
+				//+-z rotation of the y-axis (+ turns the y-axis to face up) this in itself only twists the arm
 				values[1] = -y;
 				limit_x = [dtr(0),dtr(0)];
 				limit_y = [dtr(L_Arm_Inner_Y_Min),dtr(L_Arm_Inner_Y_Max)];
 				limit_z = [dtr(L_Arm_Inner_Z_Min),dtr(L_Arm_Inner_Z_Max)];
 				break;
 			case "R_Arm_Inner":
-				//+-y vaakataso/pystytaso  ylös/eteen
-				//+-z suuntaan välillä (y-akselin kääntö, määrittää onko y ylös vai viistossa. + vie ylös)
+				//+-y + take the arm forward or upward depending on the current z-axis twist
+				//+-z rotation of the y-axis (+ turns the y-axis to face up) this in itself only twists the arm
 				values[1] = -y;
 				values[2] = -z;
 				limit_x = [dtr(0),dtr(0)];
@@ -281,14 +260,14 @@ b4w.register("torso", function(exports, require) {
 				limit_z = [dtr(R_Arm_Inner_Z_Min),dtr(R_Arm_Inner_Z_Max)];
 				break;
 			case "L_Arm_Outer":
-				//+y eteenpäin
+				//+y forward
 				values[1] = -y;
 				limit_x = [0,0];
 				limit_y = [dtr(L_Arm_Outer_Y_Min),dtr(L_Arm_Outer_Y_Max)];
 				limit_z = [0,0];
 				break;
 			case "R_Arm_Outer":
-				//+y eteenpäin
+				//+y forward
 				values[1] = -y;
 				limit_x = [0,0];
 				limit_y = [dtr(R_Arm_Outer_Y_Min),dtr(R_Arm_Outer_Y_Max)];
@@ -349,6 +328,7 @@ b4w.register("torso", function(exports, require) {
 		var min_interval_for_change = 2;//in seconds
 		var required_change = 25;//% change from last mean. Used as a threshold to see if change is necessary.
 		var fat_change = 0.05;//0 for athlete, 1 for maximum mass. This variable determines the amount each step increments the transformation.
+		var slim_multiplier = 4;//Multiplier for weight loss. This enables small stretching to slim down hours of fat accumulation.
 		var compare_time = new Date()/1000 - start_time;
 		
 		if (old_values_is_full == false) {
@@ -379,7 +359,7 @@ b4w.register("torso", function(exports, require) {
 			}
 			else if (change >= required_change){
 				back_mean_old = back_mean_new;
-				fat_value = fat_value - 4*fat_change;
+				fat_value = fat_value - slim_multiplier*fat_change;
 				if (fat_value < 0) {fat_value = 0;}
 				m_geom.set_shape_key_value(obj, "Engineer_Stomach", fat_value);
 				start_time = new Date()/1000;
@@ -421,7 +401,7 @@ b4w.register("torso", function(exports, require) {
 		/*
 		Takes the sensor reading and its max and min values and updates the global current rotation variable related to the sensor.
 		Sensor_value should range from 0 to 1000.
-		All bones aren't implemented to move with sensors yet. All sensors regarding prototype 2 are implemented.
+		All bones aren't implemented to move with sensors yet. All sensors regarding the final prototype are implemented.
 		*/
 		
 		switch (sensor_name) {
@@ -434,9 +414,7 @@ b4w.register("torso", function(exports, require) {
 				Back_Lower_Y_Rot = y1;
 				break;
 			case "Back_X":
-				//Currently whole back is modified to use one sensor per direction for all three virtual bones.
-				//var x1 = map_value_to_degree(Back_Lower_X_Min,Back_Lower_X_Max,sensor_min,sensor_max,sensor_value);
-				//Back_Lower_X_Rot = x1/2;
+				//Currently whole upper back is modified to use one sensor per direction for two virtual bones.
 				var x2 = map_value_to_degree(Back_Middle_X_Min,Back_Middle_X_Max,sensor_min,sensor_max,sensor_value);
 				Back_Middle_X_Rot = x2/2;
 				var x3 = map_value_to_degree(Back_Upper_X_Min,Back_Upper_X_Max,sensor_min,sensor_max,sensor_value);
@@ -446,9 +424,7 @@ b4w.register("torso", function(exports, require) {
 				acquire_fat(Back_Middle_X_Rot);
 				break;
 			case "Back_Y":
-				//Currently whole back is modified to use one sensor per direction for all three virtual bones.
-				//var y1 = map_value_to_degree(Back_Lower_Y_Min,Back_Lower_Y_Max,sensor_min,sensor_max,sensor_value);
-				//Back_Lower_Y_Rot = y1/2;
+				//Currently whole upper back is modified to use one sensor per direction for two virtual bones.
 				var y2 = map_value_to_degree(Back_Middle_Y_Min,Back_Middle_Y_Max,sensor_min,sensor_max,sensor_value);
 				Back_Middle_Y_Rot = y2/2;
 				var y3 = map_value_to_degree(Back_Upper_Y_Min,Back_Upper_Y_Max,sensor_min,sensor_max,sensor_value);
@@ -496,7 +472,7 @@ b4w.register("torso", function(exports, require) {
 		return degrees;
 	}
 	
-	//setInterval(function () { acquire_fat(30) }, 10);
+	//setInterval(function () { acquire_fat(30) }, 10); //Mainly for testing, so all the code doesn't have to be uploaded to the server for that purpose.
 });
 
 var animator = b4w.require("torso"); 

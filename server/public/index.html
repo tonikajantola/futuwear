@@ -78,7 +78,7 @@
 		<br><br>
 		<div id="posture-wrapper">
 			<b>Your posture</b><br><br>
-			<div id="no-data"><small>Nothing is coming in. Have you <a href="manage.html">added your device</a>?</small></div>
+			<div id="no-data"><small>No sensors live.</small></div>
 			<div id="knobs" class="row"></div>
 			<div id="torso_wrapper">
 				<iframe style="border:0px;" id="torso">Your browser doesn't support iframes, so we can't visualise real-time posture data.</iframe>
@@ -116,6 +116,16 @@
 			
 		})
 		
+		var uuidNames = {}
+		
+		node.on("uuid-confirm", function(resp) {
+			try {
+				var translation = json(resp)				
+				uuidNames[translation.uuid] = translation.name
+			} catch (e) {
+				console.log("JSON data problem in UUID conversion: " + e.message)
+			}
+		});
 		
 		
 		vor.on('message', function(resp){
@@ -125,9 +135,13 @@
 			
 			try {
 				var sensors = json(resp)["sensors"]
+				var uuid = json(resp)["uuid"]
+				var device = uuidNames[uuid]
 				
-				if (sensors == undefined)
-					throw new Error("Key 'sensors' is absent.")
+				if (sensors == undefined || uuid == undefined)
+					throw new Error("A required field in vör message is absent.")
+				else if (typeof device == "undefined")
+					return console.log("Discarded vör message")
 				else if (!sensors[0])
 					sensors = [sensors] // Deal with single-sensor JSON data
 				
@@ -141,7 +155,7 @@
 					var sensor = sensors[i]
 					var value = parseInt(sensor.collection[0].value)
 					
-					appendVisualiser(views, sensor.id, sensor.name, "knobs")
+					appendVisualiser(views, sensor.id, sensor.name, device, "knobs")
 					var callback = views[sensor.id]
 					callback(value - bounds.min)
 				}
@@ -168,7 +182,7 @@
 					deviceMsg += "You are tuned into your smart device <a href='#' onclick='showDevices(this)'>(show)</a>"
 					break;
 				default:
-					deviceMsg += "You are watching multiple devices <a href='#' onclick='showDevices(this)'>(show)</a>"
+					deviceMsg += "You are watching <strong>"+devices.length+"</strong> devices <a href='#' onclick='showDevices(this)'>(show)</a>"
 					break;
 			}
 			for (var i = 0; i < devices.length; i++) {

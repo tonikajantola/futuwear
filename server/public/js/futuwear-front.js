@@ -70,10 +70,15 @@ function removeCookie(name) {
     createCookie(name,"",-1);
 }
 
+var deviceColors = {}
 
-function appendVisualiser(viewContainer, sensorID, sensorName, containerID) {
+function appendVisualiser(viewContainer, sensorID, sensorName, device, containerID) {
 	if (typeof viewContainer[sensorID] != "function") {
-		$("#" + containerID).append('<div class="col-xs-2" data-toggle="tooltip" title="'+sensorName+'" style="text-align:center;"><input type="text" id="sensor-'+sensorName+'" value="0" class="dial" data-fgColor="#66CC66" data-angleOffset=-125 data-angleArc=250 data-width="80%"></div>')
+		
+		if (typeof deviceColors[device] == "undefined")
+			deviceColors[device] = "#"+((1<<24)*Math.random()|0).toString(16) // Random color
+		
+		$("#" + containerID).append('<div class="col-xs-2" data-toggle="tooltip" title="'+sensorName+' ('+device+')" style="text-align:center;"><input type="text" id="sensor-'+sensorName+'" value="0" class="dial" data-fgColor="'+deviceColors[device]+'" data-angleOffset=-125 data-angleArc=250 data-width="80%"></div>')
 		$('[data-toggle="tooltip"]').tooltip();
 		
 		$("#sensor-" + sensorName).knob({
@@ -143,6 +148,6 @@ function timeString(hours, minutes, seconds) {
 		
 
 function showDevices(container) {
-	container.innerHTML = devices.join(", ")
+	container.innerHTML = "<strong>" + devices.join("</strong>, <strong>") + "</strong>"
 	setTimeout(function () { container.href = "manage.html" }, 100)
 }

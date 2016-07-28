@@ -41,16 +41,23 @@
 		</div>
 		<div class="" id="devices"></div>
 		<br><br>
-		<button type="button" class="btn btn-primary btn-lg" data-toggle="modal" data-target="#login-modal">
+		<button type="button" class="btn btn-primary btn-lg" data-toggle="modal" data-target="#login-modal" onmouseup="$('newDevice').focus()">
 			<i class="fa fa-tachometer" aria-hidden="true"></i> Add Device
 		</button>
 		<br><hr></br>
 		
 		<div id="device-list">
-			<h4>Your Devices</h4>
-			<table id="list"><tr><td>loading</td></tr></table>
+			<h4>Your Active Devices <a href="#" onmousedown="fetch()" style="transition:0.5s;margin-left:1em;" class="fa fa-refresh" id="device-refresh" aria-hidden="true"></a></h4>
+			
+			
+			
+			
+			<div id="list">
+				loading
+			</div>
+			
 			<br><br>
-			<button type="button" class="btn btn-danger" onclick="logout()">
+			<button type="button" class="btn btn-danger" onclick="logout(this)">
 				Forget All
 			</button>	
 			<hr><br>
@@ -84,26 +91,23 @@
 	
 	<script>
 	
-		$("#newDevice").keyup(function(event){
-			if(event.keyCode == 13){
-				$("#newDeviceAdd").click();
-			}
-		});
-	
 		if (window.location.host.indexOf("tunk") < 0)
 			$("#warn").show()
 			
 		function fetch() {
 			
-			$.get("/sensors", "", function (res) {
+			$("#device-refresh").fadeTo('fast', 0)
 			
-				$("#list").html("<tr><td>Sensor</td><td></td><td>Smart device</td></tr>")
+			$.get("/sensors", "", function (res) {
+				setTimeout(function () { $("#device-refresh").fadeTo('fast', 1) }, 500) 
+			
+				$("#list").html("")
 				
 				try {
 					var resp = json(res)
 					
-					if (typeof resp["error"] != "undefined")
-						throw new Error(resp["error"])
+					if (typeof resp.error != "undefined")
+						throw new Error(resp.error)
 					
 					console.log(JSON.stringify(resp))
 					
@@ -111,53 +115,77 @@
 					for (var i = 0; i < resp.length; i++) {
 						var reading = resp[i]
 						
-						var sensorID = reading["ID"]
-						var sensorName = reading["name"]
-						var deviceKey = reading["ownerKey"]
+						var sensorID = reading.ID
+						var sensorName = reading.name
+						var sensorPoints = reading.collection
+						var deviceKey = reading.ownerKey
 						
-						if (!$("#option-" + deviceKey).length) {
-							$("#device").append("<option value='"+deviceKey+"' id='option-"+deviceKey+"'>"+deviceKey+"</option>")
+						// Create a new panel for the device
+						if (!$("#list-" + deviceKey).length) {
+							
+							var state = ""
+							
+							$("#list").append('\
+								<div class="panel-group">\
+									<div class="panel panel-default">\
+										<div class="panel-heading" data-toggle="collapse" href="#device-'+deviceKey+'" style="cursor:pointer;">\
+											<h4 class="panel-title">\
+												<a>'+deviceKey+'</a>\
+											</h4>\
+										</div>\
+										<div id="device-'+deviceKey+'" class="panel-collapse collapse">\
+											<ul class="list-group" id="list-'+deviceKey+'"></ul>\
+										</div>\
+									</div>\
+								</div>\
+							');
 						}
-						$("#new-sensor").show()
 						
-						$("#list").append("<tr><td><b>" + sensorName + "</b> <span class='badge' data-toggle='tooltip' title='We have received this many readings' data-placement='right'>"+reading.collection+"</span></td><td></td><td><small>" + deviceKey + " </small></td></tr>")
+						// Add this sensor to the device's panel
+						$("#list-" + deviceKey).append('<li class="list-group-item">'+sensorName+' <span class="badge" data-toggle="tooltip" title="We have received this many readings" data-placement="left">'+sensorPoints+'</span></li>')
 					}
 					
 					$('[data-toggle="tooltip"]').tooltip();
 					
-					if (i >= 100) {
-						$("#list").append("<tr><td colspan='3'>Some data may have been truncated</td></tr>")
-					}
-					else if (i <= 0) {
-						throw new Error("No sensors could be found");
-					}
+					if (i <= 0)
+						throw new Error("Nothing was received from the server.");
+						
 				} catch (e) {
 					console.log("Problem loading sensors: " + e.message)
-					$("#list").append("<tr><td colspan='3'>" + e.message + "</td></tr>")
+					$("#list").append(e.message)
 				}
+			
+				
 			})
 		}
 		var devices = devices()
 	
 		$(document).ready(function () {
+		
 			fetch();
-			setInterval(function () { fetch(); }, 5000)
+			
 			var deviceMsg = ""			
 			switch (devices.length) {
 				case 0:
 					$("#device-list").hide()
 					break;
 				case 1:
-					deviceMsg += "You are tuned into your smart device " + devices.join(", ")
+					deviceMsg += "You are tuned into your smart device <strong>" + devices.join("</strong>, <strong>") + "</strong>"
 					break;
 				default:
-					deviceMsg += "You are watching devices " + devices.join(", ")
+					deviceMsg += "You are watching " + devices.length + " devices <strong>" + devices.join("</strong>, <strong>") + "</strong>"
 					break;
 			}
+			$("#devices").html(deviceMsg)
 			
 			$('[data-toggle="tooltip"]').tooltip();
-			
-			$("#devices").html(deviceMsg)
+	
+			// Enable the Enter button inside the Add Device modal
+			$("#newDevice").keyup(function(event){
+				if(event.keyCode == 13){
+					$("#newDeviceAdd").click();
+				}
+			});
 		})
 		
 		
@@ -170,11 +198,13 @@
 			setTimeout(function () { location.reload(); }, 100) 
 		}
 		
-		function logout() {
+		function logout(button) {
+			if ($(button).html().toLowerCase().indexOf("sure") < 0)
+				return $(button).html("You sure?")
+				
 			removeCookie("devices")
 			location.reload(); 
 		}
-		console.log("Watched device(s): " + devices.join(" "))
 	</script>
 </body>
 </html>

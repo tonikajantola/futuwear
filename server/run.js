@@ -10,7 +10,7 @@ var options = {
 
 
 var analysisTimestamps = {}
-var deviceClients = {}
+var deviceClients = {} // {"proto": ["SockEt1", "SoCKeT2"]}
 
 
 // Dependencies
@@ -147,6 +147,14 @@ client.on('message', msg => {
 				
 				if (computedHash != receivedHash)
 					throw new Error("Received hash " + receivedHash + " didn't match the computed hash " + computedHash)
+				
+				// Let the clients know what UUID(s) their device names correspond to
+				var clients = deviceClients[name] || []
+				clients.forEach(function (elem, i, arr) {
+					ioServer.to(elem).emit("uuid-confirm", {name: name, uuid: uuid})
+				})
+				
+				
 				
 				if (!sensors[0]) sensors = [sensors] // Allow a single sensor to not be inside of list
 				

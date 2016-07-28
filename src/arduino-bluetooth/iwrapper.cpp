@@ -54,13 +54,14 @@ iwrap_connection_t *iwrap_connection_map[IWRAP_MAX_PAIRINGS];
 
 void iwrapper_setup() {
     //First time setup code
-    Serial1.begin(115200);//default BAUD
+    /*Serial1.begin(115200);//default BAUD
     iwrap_send_command("SET CONTROL MUX 1", IWRAP_MODE_COMMAND);
     iwrap_send_command("AT", iwrap_mode);
     iwrap_send_command("SET CONTROL CONFIG 3400 0040 07A1", iwrap_mode);
     iwrap_send_command("SET PROFILE SPP Futuwear_data", iwrap_mode);
+    iwrap_send_command("SET BT NAME Futuwear_v0.666", iwrap_mode);
     iwrap_send_command("SET CONTROL BAUD 500000", iwrap_mode);
-
+*/
     #if defined(PLATFORM_ARDUINO_UNO)
         // open the hardware serial port for debug/status output and software serial for iWRAP
         //Serial.begin(HOST_BAUD);
@@ -72,12 +73,13 @@ void iwrapper_setup() {
     #else
         #error Select a supported platform, or add support for your own
     #endif
-
     // setup optional hardware reset pin connection (digital pin 9)
-    digitalWrite(MODULE_RESET_PIN, LOW);
-    pinMode(MODULE_RESET_PIN, OUTPUT);
+    //digitalWrite(MODULE_RESET_PIN, LOW);
+    //pinMode(MODULE_RESET_PIN, OUTPUT);
 
     // assign transport/debug output
+    //digitalWrite(11, HIGH);
+    //delay(1000);
     iwrap_output = iwrap_out;
     #ifdef IWRAP_DEBUG
         iwrap_debug = serial_out;
@@ -138,7 +140,7 @@ void iwrapper_loop() {
                 if (!iwrap_initialized) {
                     iwrap_initialized = 1;
                     serial_out(F("iWRAP initialization complete\n"));
-                    digitalWrite(11, HIGH);
+                    digitalWrite(INDICATOR_LED, HIGH);
                 }
                 print_connection_map();
                 print_demo_menu();

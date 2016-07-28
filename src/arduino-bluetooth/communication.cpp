@@ -22,6 +22,7 @@ void communication_rx_callback(uint8_t packet_channel, uint16_t, const unsigned 
 //Called upon connection
 void my_iwrap_evt_ring(uint8_t link_id, const iwrap_address_t *address, uint16_t channel, const char *profile) {
     //add_mapped_connection(link_id, address, profile, channel);
+    iwrap_active_connections++;
     surefire_connection_id = link_id;
 }
 
@@ -35,18 +36,12 @@ void build_data_json(char *buffer, int len) {
     JsonObject& dump = jsonBuffer.createObject();
     //dump["packetID"] = packetIndex++;
     //JsonObject& data = dump.createNestedObject("sensorData");
-    JsonArray& data = dump.createNestedArray("sensors");
+    JsonArray& data = dump.createNestedArray("sensorData");
 
     for (int i=0; i < NUM_SENSORS; i++) {
-        JsonObject& sensor = data.createNestedObject();
-        sensor["name"]          = sensorList[i].name;
-        sensor["description"]   = "None";
-        JsonArray& collection  = sensor.createNestedArray("collection");
-        JsonObject& value       = collection.createNestedObject();
-        value["value"]          = sensorList[i].value.out;
-        value["timestamp"]      = packetIndex;
-        //field["value"]  = sensorList[i].outValue;
-        //data[sensorList[i].name] = sensorList[i].outValue;
+        //sensorList[i]->dump_data(dump);
+        //field["value"]  = sensorList[i].value.out;
+        //data[sensorList[i].name] = sensorList[i].value.out;
     }
     packetIndex++;
     dump.printTo(buffer, len);
@@ -65,6 +60,7 @@ void build_single_data_json(int sensor_index, char *buffer, int len) {
     /*
     dump[sensorList[sensor_index].name] = sensorList[sensor_index].value.out;
     */
+    //sensorList[sensor_index]->dump_data(data);
     data["name"]    = sensorList[sensor_index].name;
     data["value"]   = sensorList[sensor_index].value.out;
     dump.printTo(buffer, len);
@@ -110,6 +106,8 @@ void send_sensor_data() {
         strncat(output, "\n", sizeof(output));
         send_data(output);
     }
+    Serial.print("Current connections: ");
+    Serial.println(iwrap_active_connections);
 }
 
 void send_configuration() {

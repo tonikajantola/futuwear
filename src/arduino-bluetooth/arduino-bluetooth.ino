@@ -12,12 +12,14 @@
 
 
 void setup() {
-    fetch_uuid();
-    sensors_init();
+    pinMode(11, OUTPUT);
     iwrapper_setup();
+    sensors_init();
     communication_init();
-    Serial.print("Device UUID: ");
-    Serial.println(DEVICE_UUID_STR);
+    delay(1000);
+    digitalWrite(11, LOW);
+    fetch_eeprom_configuration();
+    digitalWrite(11, HIGH);
     send_configuration();
 }
 

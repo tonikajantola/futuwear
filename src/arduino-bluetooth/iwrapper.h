@@ -4,7 +4,12 @@
 //#define PLATFORM_ARDUINO_UNO    // also Pro Mini and other ATMega328-based boards
 #define PLATFORM_TEENSY2
 
-#include <AltSoftSerial.h>
+                            //---------------------------------------------------
+                            //Elmo's specialty comment
+#include <AltSoftSerial.h>  //This library is not even used.
+                            //However, the Arduino compilation ecosystem's clusterfuck o' dependencies
+                            //does weird shit. No idea. If this isn't included, no F() macro is available.
+                            //---------------------------------------------------
 
 #define HOST_BAUD                   115200   // works with 8MHz CPU clock
 #define IWRAP_BAUD                  500000   // works with 8MHz CPU clock (REQUIRES iWRAP RECONFIGURATION, DEFAULT IS 115200)
@@ -39,6 +44,8 @@
 #define IWRAP_STATE_COMM_FAILED     255
 
 #define IWRAP_MAX_PAIRINGS          16
+
+#define INDICATOR_LED 11
 
 // connection map structure
 typedef struct {

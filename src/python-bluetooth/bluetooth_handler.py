@@ -2,7 +2,7 @@ from bluetooth import *
 import sys
 import hashlib
 
-bt_addr = "00:07:80:36:A6:03" # The MAC address of the device in question
+bt_addr = "00:07:80:36:A6:0D" # The MAC address of the device in question
 
 bt_connection = False
 bt_socket = None

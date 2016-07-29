@@ -45,7 +45,6 @@
 
 #define IWRAP_MAX_PAIRINGS          16
 
-#define INDICATOR_LED 11
 
 // connection map structure
 typedef struct {

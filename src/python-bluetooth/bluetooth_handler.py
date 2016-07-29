@@ -28,7 +28,7 @@ def init():
                 channel=1
 
     print("SUCCESS")
-    bt_socket.send("READY\n");
+    bt_socket.send('{"request": "configuration"}\n');
 
 def finish():
     global bt_socket

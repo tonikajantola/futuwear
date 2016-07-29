@@ -12,11 +12,47 @@ void communication_init() {
 }
 
 //Called upon receiving data
+//Looks for JSON-formatted requests, and parses them
 void communication_rx_callback(uint8_t packet_channel, uint16_t, const unsigned char *data) {
     serial_out(F("========\nReceived data: "));
     serial_out((const char *)data);
     serial_out(F("\n========\n"));
     surefire_connection_id = packet_channel; //Client software is expected to spam some line of data.
+
+    Serial.println("Received packet!");
+
+    bool send_config = false;
+    //creating a scope for static buffers
+    {
+        char buf[256];
+        strncpy(buf, (const char*)data, 255);
+
+        Serial.println("Begin parsing JSON from received data");
+        StaticJsonBuffer<30> jsonBuffer;
+        JsonObject &root = jsonBuffer.parseObject(buf);
+
+        //Give information as requested, change parameters as requested
+        if (root.success()) {
+            Serial.println("JSON was valid!");
+            if (root.containsKey("request")) {
+                Serial.println("Contains a request.");
+                if (strcmp(root["request"], "configuration") == 0) {
+                    send_config = true;
+                }
+                Serial.println("lol");
+            }
+            if (root.containsKey("configuration-set")) {
+                const JsonObject& cset = root["configuration-set"].as<const JsonObject&>();
+                if (cset.containsKey("name")) {
+                    set_friendly_name(cset["name"]);
+                }
+            }
+        }
+    }
+    if (send_config) {
+        Serial.println("Sending config");
+        send_configuration();
+    }
 }
 
 //Called upon connection
@@ -112,12 +148,21 @@ void send_sensor_data() {
 
 void send_configuration() {
     char output[256];
-    StaticJsonBuffer<100> buffer;
-    JsonObject& dump = buffer.createObject();
-    JsonObject& config = dump.createNestedObject("configuration");
-    config["uuid"] = DEVICE_UUID_STR;
-    dump.printTo(output, sizeof(output));
+    Serial.println("kek");
+    {
+        StaticJsonBuffer<50> buffer;
+        Serial.println("kok");
+        JsonObject& dump = buffer.createObject();
+        JsonObject& config = dump.createNestedObject("configuration");
+        config["uuid"]  = DEVICE_UUID_STR;
+        config["pin"]   = DEVICE_PIN_STR;
+        config["name"]  = DEVICE_FRIENDLY_NAME;
 
+        Serial.println("kekkek");
+        dump.printTo(output, sizeof(output));
+    }
+    Serial.println("keks");
     strncat(output, "\n", sizeof(output));
+    Serial.println(output);
     send_data(output);
 }

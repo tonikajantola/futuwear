@@ -105,9 +105,9 @@ void iwrapper_loop() {
     uint16_t result;
 
     // manage iWRAP state machine
-    if (!iwrap_pending_commands) {
+    if (!iwrap_pending_commands || !iwrap_initialized) {
         // no pending commands, some state transition occurring
-        if (iwrap_state) {
+        if (iwrap_state || !iwrap_initialized) {
             // not idle, in the middle of some process
             if (iwrap_state == IWRAP_STATE_UNKNOWN) {
                 // reset all detailed state trackers
@@ -140,7 +140,6 @@ void iwrapper_loop() {
                 if (!iwrap_initialized) {
                     iwrap_initialized = 1;
                     serial_out(F("iWRAP initialization complete\n"));
-                    digitalWrite(INDICATOR_LED, HIGH);
                 }
                 print_connection_map();
                 print_demo_menu();
@@ -190,7 +189,7 @@ void iwrapper_loop() {
     if (!iwrap_initialized && iwrap_state == IWRAP_STATE_PENDING_AT) {
         if (millis() - iwrap_time_ref > 5000) {
             serial_out(F("ERROR: Could not communicate with iWRAP module\n"));
-            iwrap_state = IWRAP_STATE_COMM_FAILED;
+            iwrap_state = IWRAP_STATE_UNKNOWN;
             iwrap_pending_commands = 0; // normally handled by the parser, but comms failed
         }
     }
@@ -291,10 +290,10 @@ void my_iwrap_evt_no_carrier(uint8_t link_id, uint16_t error_code, const char *m
     if (remove_mapped_connection(link_id) != 0xFF) {
         // only update and reprint if the connection was already mapped
         // (i.e. not already closed or a failed outgoing connection attempt)
-        if (iwrap_active_connections) iwrap_active_connections--;
         print_connection_map();
     }
     surefire_connection_id = 0xFF;
+    if (iwrap_active_connections) iwrap_active_connections--;
 }
 
 void my_iwrap_evt_pair(const iwrap_address_t *address, uint8_t key_type, const uint8_t *link_key) {

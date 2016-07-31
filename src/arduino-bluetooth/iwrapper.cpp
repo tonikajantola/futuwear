@@ -445,7 +445,7 @@ void print_connection_map() {
     //Disabled example code
 }
 
-void print_demo_menu() {
+void print_demo_menu() {/*
     serial_out(F("iWRAP generic demo menu\n"));
     serial_out(F("============================================================\n"));
     serial_out(F("0: Reset module (pulses iWRAP module RESET pin high for 5ms)\n"));
@@ -453,10 +453,11 @@ void print_demo_menu() {
     serial_out(F("2: Make module discoverable and connectable (SET BT PAGE 3)\n"));
     serial_out(F("3: Make module undiscoverable, but connectable (SET BT PAGE 2)\n"));
     serial_out(F("4: Make module undiscoverable and unconnectable (SET BT PAGE 0)\n"));
+    */
 }
 
 void process_demo_choice(char b) {
-    // check for RESET command ("0")
+    /* check for RESET command ("0")
     if (b == '0') {
         serial_out(F("=> (0) Performing hardware reset on iWRAP module\n\n"));
         digitalWrite(MODULE_RESET_PIN, HIGH);
@@ -483,4 +484,5 @@ void process_demo_choice(char b) {
     } else if (b == '5') {
       print_connection_map();
     }
+    */
 }

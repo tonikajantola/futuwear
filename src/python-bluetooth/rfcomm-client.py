@@ -1,3 +1,11 @@
+'''
+Futuwear python client
+
+The client's role is to connect to the Futuwear 
+
+
+'''
+
 from __future__ import print_function
 import bluetooth_handler as bt
 import sys
@@ -7,10 +15,13 @@ import hashlib
 
 socketServer = "futuwear.tunk.org"
 socketPort = 13337
-deviceCode = "Rand0mSens0rSerialNumber" # This should be different for all devices
 
 if sys.version < '3':
     input = raw_input
+
+device_uuid = ""
+device_pin  = ""
+device_name = ""
 
 
 connection = False
@@ -27,13 +38,11 @@ def disconnected(*args):
 	
 socket = SocketIO(socketServer, socketPort, LoggingNamespace)
 
-def forwardToServer(jsonStuff):
+def forwardToServer(inData):
     global socketIO
     global connection
     if connection:
-        try:
-            inData = json.loads(jsonStuff)
-            
+        try: 
             s_name = inData["sensorData"]["name"]
             s_value = inData["sensorData"]["value"]
             s_id = ""
@@ -50,7 +59,9 @@ def forwardToServer(jsonStuff):
             elif s_name == "Back_Y":
                 s_id = "Back_Y_445885"
             jsonData = {'sensors': [{"id":s_id, "name": s_name, "description": "None", "collection" : [{"value": s_value, "timestamp": 0}]}]}
-            hashable = json.dumps(jsonData["sensors"], separators=(',',':')) + deviceCode
+
+            jsonData['uuid'] = device_uuid
+            hashable = json.dumps(jsonData["sensors"], separators=(',',':')) + device_uuid + device_pin
             jsonData["token"] = hashlib.md5(hashable.encode('utf-8')).hexdigest() #TODO: List access safety
             print("Hashing ", hashable)
             socket.emit('message', json.dumps(jsonData, separators=(',',':')))
@@ -64,9 +75,10 @@ socket.on("disonnect", disconnected)
 socket.wait(seconds=1)
 
 bt.init()
+bt.sendData('{"request":"configuration"}\n')
 
-buf = "";
-line_buf = [];
+
+config_received = False
 
 running = True
 while running:
@@ -74,7 +86,23 @@ while running:
         bt.readData()
         while bt.dataAvailable():
             #send line_buf[0] over socketIO	
-            forwardToServer(bt.nextLine())
+            inData = json.loads(bt.nextLine())
+            if "configuration" in inData:
+                print("Fetched configuration from device")
+                config_received = True
+                conf = inData["configuration"]
+                if "uuid" in conf:
+                    device_uuid = conf["uuid"]
+                    print("UUID: " + device_uuid)
+                if "pin" in conf:
+                    device_pin = conf["pin"]
+                    print("PIN (watch your back!): " + device_pin)
+                if "name" in conf:
+                    device_name = conf["name"]
+                    print("Name: " + device_name)
+                
+            if config_received and "sensorData" in inData:
+                forwardToServer(inData)
     except KeyboardInterrupt:
         running = False
 print("Shutting down")

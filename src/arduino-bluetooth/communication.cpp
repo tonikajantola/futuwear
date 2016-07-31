@@ -1,4 +1,5 @@
 #include "communication.h"
+#include "debug.h"
 
 uint32_t packetIndex = 0;
 
@@ -14,12 +15,12 @@ void communication_init() {
 //Called upon receiving data
 //Looks for JSON-formatted requests, and parses them
 void communication_rx_callback(uint8_t packet_channel, uint16_t, const unsigned char *data) {
-    serial_out(F("========\nReceived data: "));
-    serial_out((const char *)data);
-    serial_out(F("\n========\n"));
+    LOG(F("========\nReceived data: "));
+    LOG((const char *)data);
+    LOG(F("\n========\n"));
     surefire_connection_id = packet_channel; //Client software is expected to spam some line of data.
 
-    Serial.println("Received packet!");
+    LOG("Received packet!");
 
     bool send_config = false;
     //creating a scope for static buffers
@@ -27,19 +28,19 @@ void communication_rx_callback(uint8_t packet_channel, uint16_t, const unsigned 
         char buf[256];
         strncpy(buf, (const char*)data, 255);
 
-        Serial.println("Begin parsing JSON from received data");
+        LOG(F("Begin parsing JSON from received data"));
         StaticJsonBuffer<30> jsonBuffer;
         JsonObject &root = jsonBuffer.parseObject(buf);
 
         //Give information as requested, change parameters as requested
         if (root.success()) {
-            Serial.println("JSON was valid!");
+            LOG(F("JSON was valid!"));
             if (root.containsKey("request")) {
-                Serial.println("Contains a request.");
+                LOG(F("Contains a request."));
                 if (strcmp(root["request"], "configuration") == 0) {
                     send_config = true;
                 }
-                Serial.println("lol");
+                LOG(F("lol"));
             }
             if (root.containsKey("configuration-set")) {
                 const JsonObject& cset = root["configuration-set"].as<const JsonObject&>();
@@ -50,7 +51,7 @@ void communication_rx_callback(uint8_t packet_channel, uint16_t, const unsigned 
         }
     }
     if (send_config) {
-        Serial.println("Sending config");
+        LOG(F("Sending config"));
         send_configuration();
     }
 }

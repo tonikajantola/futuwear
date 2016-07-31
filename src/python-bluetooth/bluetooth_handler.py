@@ -28,7 +28,6 @@ def init():
                 channel=1
 
     print("SUCCESS")
-    bt_socket.send('{"request": "configuration"}\n');
 
 def finish():
     global bt_socket
@@ -40,6 +39,9 @@ def finish():
 
 buf = "";
 line_buf = [];
+
+def sendData(s):
+    bt_socket.send(str(s));
 
 def dataAvailable():
     if bt_connection and bt_socket:

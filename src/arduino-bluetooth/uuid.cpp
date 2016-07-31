@@ -67,7 +67,7 @@ void set_friendly_name(const char* str) {
 
     iwrap_send_command(buf, iwrap_mode);
 
-    eeprom_update_block((const void*)str, (void*)eeprom_device_uuid_str, strlen(str) + 1);
+    eeprom_update_block((const void*)str, (void*)eeprom_device_friendly_name, strlen(str) + 1);
     eeprom_update_block((const void*)UUID_CHECK_STRING, (void*) eeprom_device_uuid_generated_check, 4);
 
     Serial.print("Friendly name changed to ");

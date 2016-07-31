@@ -12,11 +12,11 @@
 //This is mostly for checking whether the chip's EEPROM is fresh
 //and full of zeros/garbage data.
 //This is used for resetting the friendly name as well.
-#define UUID_CHECK_STRING "UUID"
+#define UUID_CHECK_STRING "FUTU"
 #define PIN_SIZE 32 //bytes
 
 #define FRIENDLY_NAME_SIZE 21
-#define FRIENDLY_NAME_DEFAULT "Futuwear_v0.666"
+#define FRIENDLY_NAME_DEFAULT "Futuwear_v0.2"
 //extern uint8_t eeprom_device_uuid_generated_check[4];
 //extern uint8_t eeprom_device_uuid_str[36];
 

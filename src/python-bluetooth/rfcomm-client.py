@@ -60,6 +60,7 @@ def forwardToServer(inData):
             jsonData = {'sensors': [{"name": s_name, "description": "None", "collection" : [{"value": s_value, "timestamp": 0}]}]}
 
             jsonData['uuid'] = device_uuid
+            jsonData['name'] = device_name
             hashable = json.dumps(jsonData["sensors"], separators=(',',':')) + device_uuid + device_pin
             jsonData["token"] = hashlib.md5(hashable.encode('utf-8')).hexdigest() #TODO: List access safety
             socket.emit('message', json.dumps(jsonData, separators=(',',':')))
@@ -106,8 +107,8 @@ while running:
                     
                 if config_received and "sensorData" in inData:
                     forwardToServer(inData)
-            except json.decoder.JSONDecodeError:
-                print("Got faulty JSON data")
+            except Exception as e:
+                print("Error: " + str(e))
     except KeyboardInterrupt:
         running = False
 print("Shutting down")

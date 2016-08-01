@@ -115,10 +115,10 @@
 					for (var i = 0; i < resp.length; i++) {
 						var reading = resp[i]
 						
-						var sensorID = reading.ID
-						var sensorName = reading.name
+						var sensorID = reading.ID.replace(/\W/g, '_')
+						var sensorName = reading.name.replace(/\W/g, '_')
 						var sensorPoints = reading.collection
-						var deviceKey = reading.ownerKey
+						var deviceKey = reading.ownerKey.replace(/\W/g, '_')
 						
 						// Create a new panel for the device
 						if (!$("#list-" + deviceKey).length) {

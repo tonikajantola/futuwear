@@ -165,11 +165,14 @@ client.on('message', msg => {
 				
 				/* Clients know their names, now give them their UUIDs
 				   so that they know which vör messages concern them */
+				   
+			   /*
 				var clients = deviceClients[name] || []
 				clients.forEach(function (elem, i, arr) {
 					nodeLog("Sending to " + elem)
 					ioServer.to(elem).emit("uuid-confirm", {name: name, uuid: uuid})
-				})				
+				})
+				*/
 				
 				if (!sensors[0]) sensors = [sensors] // Allow a single sensor to not be inside of list
 				

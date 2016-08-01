@@ -138,6 +138,9 @@
 			try {
 				var sensors = json(resp)["sensors"]
 				var uuid = json(resp)["uuid"]
+				
+				uuidNames[json(resp)["name"]]
+				
 				var device = uuidNames[uuid]
 				
 				if (sensors == undefined || uuid == undefined)

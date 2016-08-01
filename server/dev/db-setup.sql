@@ -7,7 +7,9 @@ CREATE TABLE Sensors (
 	ID VARCHAR(255) PRIMARY KEY,
 	name VARCHAR(255),
 	ownerKey VARCHAR(255),
-	FOREIGN KEY(ownerKey) REFERENCES Devices(name)
+	FOREIGN KEY(ownerKey) 
+		REFERENCES Devices(name)
+		ON UPDATE CASCADE 
 );
 CREATE TABLE Data (
 	sensorID VARCHAR(255),

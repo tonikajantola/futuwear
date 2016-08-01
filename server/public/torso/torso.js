@@ -371,7 +371,7 @@ b4w.register("torso", function(exports, require) {
 		
 	}
 	
-	exports.sensor_update_gyro = function (sensor_name, angle_x, angle_y) {
+	exports.sensor_update_accelerometer = function (sensor_name, angle_x, angle_y) {
 		switch (sensor_name) {
 			case "Back_Lower":
 				Back_Lower_X_Rot = angle_x;

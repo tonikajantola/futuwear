@@ -72,16 +72,19 @@ function removeCookie(name) {
 
 var deviceColors = {}
 
-function appendVisualiser(viewContainer, sensorID, sensorName, device, containerID) {
+function appendVisualiser(viewContainer, sensorName, device, containerID) {
+	
+	var sensorID = (sensorName + "_" + device).replace(/\W/g, '_')
+	
 	if (typeof viewContainer[sensorID] != "function") {
 		
 		if (typeof deviceColors[device] == "undefined")
 			deviceColors[device] = "#"+((1<<24)*Math.random()|0).toString(16) // Random color
 		
-		$("#" + containerID).append('<div class="col-xs-2" data-toggle="tooltip" title="'+sensorName+' ('+device+')" style="text-align:center;"><input type="text" id="sensor-'+sensorName+'" value="0" class="dial" data-fgColor="'+deviceColors[device]+'" data-angleOffset=-125 data-angleArc=250 data-width="80%"></div>')
+		$("#" + containerID).append('<div class="col-xs-2" data-toggle="tooltip" title="'+sensorName+' ('+device+')" style="text-align:center;"><input type="text" id="sensor-'+sensorID+'" value="0" class="dial" data-fgColor="'+deviceColors[device]+'" data-angleOffset=-125 data-angleArc=250 data-width="80%"></div>')
 		$('[data-toggle="tooltip"]').tooltip();
 		
-		$("#sensor-" + sensorName).knob({
+		$("#sensor-" + sensorID).knob({
 			'min': 0,
 			'max': 1000,
 			'readOnly': true,
@@ -89,7 +92,8 @@ function appendVisualiser(viewContainer, sensorID, sensorName, device, container
 		});
 		
 		var domify = function (newVal) {
-			$("#sensor-" + sensorName)
+			console.log("Domifying " + sensorID)
+			$("#sensor-" + sensorID)
 				.val(newVal)
 				.trigger('change');
 		}						
@@ -103,6 +107,8 @@ function appendVisualiser(viewContainer, sensorID, sensorName, device, container
 			
 		}
 	}
+	
+	return sensorID
 }
 
 

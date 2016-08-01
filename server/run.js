@@ -139,9 +139,14 @@ client.on('message', msg => {
 		var payload = json(msg)
 		var uuid = payload.uuid
 		
+		if (!uuid)
+			throw new Error("Field 'uuid' was missing from request.")
 
 		c.query('SELECT DISTINCT pin, name FROM Devices WHERE UUID=?;', [uuid], function(err, result) {
 			try {
+				if (err)
+					throw new Error("Could not load name/pin for device " + uuid);
+				
 				var pin = result[0].pin // This will fail if UUID not found
 				var name = result[0].name // This will fail if UUID not found
 				if (!pin)
@@ -162,6 +167,7 @@ client.on('message', msg => {
 				   so that they know which vör messages concern them */
 				var clients = deviceClients[name] || []
 				clients.forEach(function (elem, i, arr) {
+					nodeLog("Sending to " + elem)
 					ioServer.to(elem).emit("uuid-confirm", {name: name, uuid: uuid})
 				})				
 				
@@ -182,11 +188,11 @@ client.on('message', msg => {
 					}
 				}
 			} catch (e) {
-				nodeLog("Could not load pin code from database")
+				nodeLog("Could not save data: " + e.message)
 			}
 		});		
 	} catch (e) {
-		nodeLog("Could not save vör data (" + e.message + "): " + JSON.stringify(msg))
+		nodeLog("Could not save vör data: " + e.message)
 	}
 	
 });

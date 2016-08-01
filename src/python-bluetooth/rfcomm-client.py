@@ -10,10 +10,11 @@ from __future__ import print_function
 import bluetooth_handler as bt
 import sys
 from socketIO_client import SocketIO, LoggingNamespace
-import json
+import json, requests
 import hashlib
 
 socketServer = "futuwear.tunk.org"
+registerUrl = 'http://futuwear.tunk.org/register/'
 socketPort = 13337
 
 if sys.version < '3':
@@ -35,7 +36,17 @@ def disconnected(*args):
     global connection
     print("Connection to web socket was interrupted!")
     connection = False
-	
+    
+def registerSensor(name, uuid, pin):
+    global registerUrl
+    payload = {"name": name, "uuid": uuid, "pin": pin}
+    resp = requests.get(registerUrl, data=payload)
+    data = json.loads(resp.text)
+    status = data['error']
+    if not status:
+        status = "Registration successful"
+    return status
+    
 socket = SocketIO(socketServer, socketPort, LoggingNamespace)
 
 def forwardToServer(inData):
@@ -45,31 +56,19 @@ def forwardToServer(inData):
         try: 
             s_name = inData["sensorData"]["name"]
             s_value = inData["sensorData"]["value"]
-            s_id = ""
-            if s_name == "L_Shoulder_Y_Rot":
-                s_id = "L_Shoulder_Y_Rot_725627"
-            elif s_name == "R_Shoulder_Y_Rot":
-                s_id = "R_Shoulder_Y_Rot_985566"
-            elif s_name == "L_Shoulder_X_Rot":
-                s_id = "L_Shoulder_X_Rot_524467"
-            elif s_name == "R_Shoulder_X_Rot":
-                s_id = "R_Shoulder_X_Rot_30064"
-            elif s_name == "Back_X":
-                s_id = "Back_X_123825"
-            elif s_name == "Back_Y":
-                s_id = "Back_Y_445885"
-            jsonData = {'sensors': [{"id":s_id, "name": s_name, "description": "None", "collection" : [{"value": s_value, "timestamp": 0}]}]}
+            
+            jsonData = {'sensors': [{"name": s_name, "description": "None", "collection" : [{"value": s_value, "timestamp": 0}]}]}
 
             jsonData['uuid'] = device_uuid
             hashable = json.dumps(jsonData["sensors"], separators=(',',':')) + device_uuid + device_pin
             jsonData["token"] = hashlib.md5(hashable.encode('utf-8')).hexdigest() #TODO: List access safety
-            print("Hashing ", hashable)
             socket.emit('message', json.dumps(jsonData, separators=(',',':')))
+            print("Forwarded hashed data from sensor ", s_name)
         except Exception as e:
             print("ERROR", str(e))
     else:
         print("Couldn't emit due to faulty socket connection.")
-	
+    
 socket.on("connect", connected)
 socket.on("disonnect", disconnected)
 socket.wait(seconds=1)
@@ -85,24 +84,30 @@ while running:
     try:
         bt.readData()
         while bt.dataAvailable():
-            #send line_buf[0] over socketIO	
-            inData = json.loads(bt.nextLine())
-            if "configuration" in inData:
-                print("Fetched configuration from device")
-                config_received = True
-                conf = inData["configuration"]
-                if "uuid" in conf:
-                    device_uuid = conf["uuid"]
-                    print("UUID: " + device_uuid)
-                if "pin" in conf:
-                    device_pin = conf["pin"]
-                    print("PIN (watch your back!): " + device_pin)
-                if "name" in conf:
-                    device_name = conf["name"]
-                    print("Name: " + device_name)
+            #send line_buf[0] over socketIO    
+            try:
+                inData = json.loads(bt.nextLine())
                 
-            if config_received and "sensorData" in inData:
-                forwardToServer(inData)
+                if "configuration" in inData:
+                    print("Fetched configuration from device")
+                    config_received = True
+                    conf = inData["configuration"]
+                    if "uuid" in conf:
+                        device_uuid = conf["uuid"]
+                        print("UUID: " + device_uuid)
+                    if "pin" in conf:
+                        device_pin = conf["pin"]
+                        print("PIN (watch your back!): " + device_pin)
+                    if "name" in conf:
+                        device_name = conf["name"]
+                        print("Name: " + device_name)
+                    
+                    #print(registerSensor(device_name, device_uuid, device_pin))
+                    
+                if config_received and "sensorData" in inData:
+                    forwardToServer(inData)
+            except json.decoder.JSONDecodeError:
+                print("Got faulty JSON data")
     except KeyboardInterrupt:
         running = False
 print("Shutting down")

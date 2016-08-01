@@ -34,6 +34,7 @@
 			height:50vh;
 			min-height:80px;
 			display:none;
+			border: 1px solid green;
 		}
 		td {
 			padding: 0.5em;
@@ -113,7 +114,7 @@
 			ourId = reception.id
 			
 			node.emit("registration", {devices: devices, id: ourId})
-			
+			console.log("Registered " + devices.join(" and "))
 		})
 		
 		var uuidNames = {}
@@ -122,6 +123,7 @@
 			try {
 				var translation = json(resp)				
 				uuidNames[translation.uuid] = translation.name
+				console.log("Got UUID for " + translation.name)
 			} catch (e) {
 				console.log("JSON data problem in UUID conversion: " + e.message)
 			}
@@ -155,12 +157,12 @@
 					var sensor = sensors[i]
 					var value = parseInt(sensor.collection[0].value)
 					
-					appendVisualiser(views, sensor.id, sensor.name, device, "knobs")
-					var callback = views[sensor.id]
+					var sensorID = appendVisualiser(views, sensor.name, device, "knobs")
+					var callback = views[sensorID]
 					callback(value - bounds.min)
 				}
 			} catch (e) {
-				console.log("JSON data problem: " + e.message)
+				console.log("JSON data problem: " + e.message + " on line " + e.lineNumber)
 			}
 		});
 		

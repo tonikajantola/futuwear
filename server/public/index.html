@@ -139,7 +139,7 @@
 				var sensors = json(resp)["sensors"]
 				var uuid = json(resp)["uuid"]
 				
-				uuidNames[json(resp)["name"]]
+				uuidNames[uuid] = json(resp)["name"]
 				
 				var device = uuidNames[uuid]
 				

@@ -107,6 +107,8 @@ while running:
                     
                 if config_received and "sensorData" in inData:
                     forwardToServer(inData)
+                #elif not config_received:
+                    #bt.sendData('{"request":"configuration"}\n')
             except Exception as e:
                 print("Error: " + str(e))
     except KeyboardInterrupt:

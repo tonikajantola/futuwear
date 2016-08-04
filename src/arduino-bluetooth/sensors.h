@@ -15,6 +15,7 @@ typedef enum {
 
 typedef struct FilteredValue {
     bool            invert;
+    bool            noAutoRange;
     int             raw_min;
     int             raw_max;
     float           filtered;

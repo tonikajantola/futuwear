@@ -11,10 +11,11 @@ bool ledBlink = false;
 Sensor sensorList[NUM_SENSORS] = {
     {RESISTOR_DIVIDER, "L_Shoulder_Y_Rot",  A2, {0}},
     {RESISTOR_DIVIDER, "R_Shoulder_Y_Rot",  A4, {0}},
-    {RESISTOR_DIVIDER, "L_Shoulder_X_Rot",  A1, {0}},
+    {RESISTOR_DIVIDER, "L_Shoulder_X_Rot",  A1, {1}},
     {RESISTOR_DIVIDER, "R_Shoulder_X_Rot",  10, {0}},
     {RESISTOR_DIVIDER, "Back_X",            9, {0}},
-    {RESISTOR_DIVIDER, "Back_Y",            8, {0}}
+    {RESISTOR_DIVIDER, "Back_Y",            8, {0}},
+    {RESISTOR_DIVIDER, "R_Pressure",        A0, {1}}
     //,
     //{RESISTOR_DIVIDER, "Stretch2", A2, {0}},
     //{RESISTOR_DIVIDER, "Stretch3", A3, {0}},
@@ -42,6 +43,7 @@ void filter_value(int raw, FilteredValue* f) {
     f->filtered = SMOOTH_FACTOR*raw + (1 - SMOOTH_FACTOR)*f->filtered;
 
     f->out = map(round(f->filtered), f->raw_min, f->raw_max, 0, 1000);
+    if (f->invert) {f->out = 1000 - f->out;}
 }
 
 void sensors_init() {

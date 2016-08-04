@@ -148,7 +148,7 @@ void send_sensor_data() {
 }
 
 void send_configuration() {
-    char output[256];
+    char output[200];
     Serial.println("kek");
     {
         StaticJsonBuffer<50> buffer;

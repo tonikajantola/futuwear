@@ -11,7 +11,7 @@ import numpy
 import time
 
 plt.ion()
-plt.rc('axes', prop_cycle=(cycler('color', ['r', 'g', 'b', 'y', 'c', 'm', 'k'])))
+#plt.rc('axes', prop_cycle=(cycler('color', ['r', 'g', 'b', 'y', 'c', 'm', 'k'])))
 
 hist_len = 100
 
@@ -30,6 +30,9 @@ def update_line(sensor, data):
     ydata[sensor] = ydata[sensor][1:]
 bt.init()
 
+#plt.show()
+
+plt.show()
 lastDraw = time.time()
 running = True
 while running:
@@ -57,7 +60,7 @@ while running:
             pass
             #print('updated data')
             #print("")
-        if (time.time() - lastDraw) > 0.01:
+        if (time.time() - lastDraw) > 0.001:
             #print('updated plot')
             for sensor in ydata:
                 lines[sensor].set_xdata(numpy.arange(hist_len))
@@ -68,8 +71,9 @@ while running:
                     pass#print("ERROR: " + str(e))
             print("")
             plt.draw()
+            #plt.show()
+            plt.pause(0.0001)
             lastDraw = time.time()
-            plt.show()
         #sock.send(data)
     except KeyboardInterrupt:
         running = False

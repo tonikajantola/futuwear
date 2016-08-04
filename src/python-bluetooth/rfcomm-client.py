@@ -88,6 +88,7 @@ while running:
             #send line_buf[0] over socketIO    
             try:
                 inData = json.loads(bt.nextLine())
+                print("Buffer length is " + str(len(bt.line_buf)))
                 
                 if "configuration" in inData:
                     print("Fetched configuration from device")

@@ -5,7 +5,7 @@
 
 //Global measurement smoothing factor
 #define SMOOTH_FACTOR 0.03f
-#define NUM_SENSORS 6
+#define NUM_SENSORS 7
 #define SENSOR_MEASURE_INTERVAL 2
 #define SENSOR_UPDATE_INTERVAL 50  //milliseconds
 
@@ -14,6 +14,8 @@ typedef enum {
 } sensor_class;
 
 typedef struct FilteredValue {
+    bool            invert;
+    bool            noAutoRange;
     int             raw_min;
     int             raw_max;
     float           filtered;

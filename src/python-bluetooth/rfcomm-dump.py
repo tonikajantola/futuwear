@@ -2,6 +2,7 @@ import bluetooth_handler as bt
 
 try:
     bt.init()
+    bt.sendData('{"request":"configuration"}')
     while True:
         bt.readData()
         while (bt.dataAvailable()):

@@ -30,6 +30,9 @@ def update_line(sensor, data):
     ydata[sensor] = ydata[sensor][1:]
 bt.init()
 
+#plt.show()
+
+plt.show()
 lastDraw = time.time()
 running = True
 while running:
@@ -39,31 +42,38 @@ while running:
         while (bt.dataAvailable()):
             try:
                 js = json.loads(bt.nextLine());
-                for sensor in js:
-                    #s_name  = sensor["name"]
-                    print(sensor)
-                    s_value = js[sensor]
-                    print(s_value)
-                    s_name = sensor#sensor["collection"][0]["value"]
+                if "sensorData" in js:
+                    s_name  = js["sensorData"]["name"]
+                    #print(s_name)
+                    s_value = js["sensorData"]["value"]
+                    #print(s_value)
                     if not s_name in ydata:
                         print('added new line')
                         ydata[s_name] = [0]*hist_len
                         lines[s_name], = plt.plot(ydata[s_name], label=s_name)
                         plt.legend()
                     update_line(s_name, s_value)
-                changed = True
+                    changed = True
             except Exception as e:
                 print("ERROR: " + str(e));
         if changed:
-            print('updated data')
+            pass
+            #print('updated data')
+            #print("")
+        if (time.time() - lastDraw) > 0.001:
+            #print('updated plot')
             for sensor in ydata:
                 lines[sensor].set_xdata(numpy.arange(hist_len))
                 lines[sensor].set_ydata(ydata[sensor])
-            if (time.time() - lastDraw) > 0.01:
-                print('updated plot')
-                plt.draw()
-                lastDraw = time.time()
-                plt.show()
+                try:
+                    print("{0}: {1:04d}, \t".format(sensor, ydata[sensor][-1]), end='')
+                except Exception as e:
+                    pass#print("ERROR: " + str(e))
+            print("")
+            plt.draw()
+            #plt.show()
+            plt.pause(0.0001)
+            lastDraw = time.time()
         #sock.send(data)
     except KeyboardInterrupt:
         running = False

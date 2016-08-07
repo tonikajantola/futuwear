@@ -88,6 +88,7 @@ while running:
             #send line_buf[0] over socketIO    
             try:
                 inData = json.loads(bt.nextLine())
+                print("Buffer length is " + str(len(bt.line_buf)))
                 
                 if "configuration" in inData:
                     print("Fetched configuration from device")
@@ -107,6 +108,8 @@ while running:
                     
                 if config_received and "sensorData" in inData:
                     forwardToServer(inData)
+                #elif not config_received:
+                    #bt.sendData('{"request":"configuration"}\n')
             except Exception as e:
                 print("Error: " + str(e))
     except KeyboardInterrupt:

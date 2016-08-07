@@ -1,7 +1,3 @@
-const UI_PORT = 8080	 // Port to serve HTML UI on
-const NOTIFY_PORT = 8001 // Port to serve notification socket on
-const SOCKET_SERVER = "http://futuwear.tunk.org:13337/"; // Where to listen to Vör messages
-
 const options = {
 	analyzation: {
 		riskyMuscles: ["Back_Y", "Back_X"], // Muscles that should be excercised every now and then
@@ -10,12 +6,18 @@ const options = {
 		period: 60, // Seconds to wait before analyzing/warning again
 		historyMins: 1, // When analyzing data, how far back should data be gotten from?
 		deviationThreshold: 30 // For riskyMuscles, how much should the std be so that a notification won't fire
-	}
+	},
+	
+	UI_PORT: 8080, // Port to serve HTML UI on
+	NOTIFY_PORT: 8001, // Port to serve notification socket on
+	SOCKET_SERVER: "http://futuwear.tunk.org:13337/", // Where to listen to Vör messages
+	
+	averaging: 1 // Period of time to average when fetching data (60 => 1 minute averages)
 }
 
 // Remember when a device has gone through its last analysis / been warned
 var analysisTimestamps = {} // {"devicename": new Date()}
-var warningsTimestamps = {}
+var warningsTimestamps = {} // {"devicename": new Date()}
 
 // Remember which socket clients want notifications for which devices
 var deviceClients = {} // {"devicename": ["socketid1", "socketid2"]}
@@ -29,6 +31,8 @@ const socketIO = require('socket.io-client');
 const socketServer = require('socket.io')
 const mysql = require('mysql');
 const crypto = require('crypto');
+
+const db = require("./connection-strings")
 
 
 var app = express();
@@ -45,9 +49,14 @@ app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
 
 /* Method to get archived sensor data with */
 app.get('/fetch', function (req, res) {
-	var content = req.query.data // TODO: Safety
-	content = JSON.parse(content)
-	getData(parseInt(content.time0), parseInt(content.timeT), req, res)
+	try {
+		var content = req.query.data
+		content = JSON.parse(content)
+		getData(parseInt(content.time0), parseInt(content.timeT), req, res)
+	} catch (e) {
+		nodeLog("Could not get sensor data: " + e)
+		res.send(JSON.stringify({error: JSON.stringify(e)}, null, 3));
+	}
 });
 
 /* Method to register a new device with */
@@ -87,8 +96,8 @@ app.get('/register', function (req, res) {
 app.get('/sensors', getSensors);
 
 
-app.listen(UI_PORT, function () {
-	nodeLog('Serving on port ' + UI_PORT.toString());
+app.listen(options.UI_PORT, function () {
+	nodeLog('Serving on port ' + options.UI_PORT.toString());
 });
 
 
@@ -96,7 +105,7 @@ app.listen(UI_PORT, function () {
 // Notification socket management //
 ////////////////////////////////////
 
-var ioServer = socketServer.listen(NOTIFY_PORT)
+var ioServer = socketServer.listen(options.NOTIFY_PORT)
 
 ioServer.on('connection', function (socket) {
 	socket.emit("id", {id: socket.id}) // Give the user their socket ID
@@ -111,7 +120,7 @@ ioServer.on('connection', function (socket) {
 			for (var i = 0; i < devices.length; i++) {
 				var deviceName = devices[i]
 				
-				var clientlist = deviceClients[deviceName] || []// TODO: Clean up on disconnect
+				var clientlist = deviceClients[deviceName] || [] // TODO: Clean up on disconnect if this causes problems
 				if (clientlist.indexOf(id) < 0)
 					clientlist.push(id) // Channel notifications to this socket
 				
@@ -130,11 +139,11 @@ ioServer.on('connection', function (socket) {
 // Vör socket management //
 ///////////////////////////
 
-const client = socketIO.connect(SOCKET_SERVER);
+const client = socketIO.connect(options.SOCKET_SERVER);
 
-client.on('connect', () => nodeLog(`Connected to Vör socket ${SOCKET_SERVER}`));
-client.on('disconnect', () => nodeLog(`Client socket disconnected ${SOCKET_SERVER} :  ${new Date()}`));
-client.on('reconnect_attempt', error => console.error(`Error - cannot connect to ${SOCKET_SERVER} : ${error} : ${new Date()}`));
+client.on('connect', () => nodeLog(`Connected to Vör socket ${options.SOCKET_SERVER}`));
+client.on('disconnect', () => nodeLog(`Client socket disconnected ${options.SOCKET_SERVER} :  ${new Date()}`));
+client.on('reconnect_attempt', error => console.error(`Error - cannot connect to ${options.SOCKET_SERVER} : ${error} : ${new Date()}`));
 client.on('error', error => console.error(`Error - socket connection: ${error} : ${new Date()}`));
 
 // Listen to vör messages
@@ -161,7 +170,7 @@ client.on('message', msg => {
 				var sensors = payload.sensors
 				
 				// Hash the sensor payload 
-				md5.update(JSON.stringify(sensors) + uuid + pin); // TODO: Consider SHA256?
+				md5.update(JSON.stringify(sensors) + uuid + pin);
 				var computedHash = md5.digest('hex')
 				var receivedHash = payload.token
 				
@@ -208,8 +217,6 @@ client.on('message', msg => {
 /////////////////////////
 // Manage the database //
 /////////////////////////
-
-const db = require("./connection-strings")
 var c;
 
 // Wrap the database connection inside a function, so that it can be re-established on disconnect
@@ -238,7 +245,6 @@ function maintainConnection() {
 }
 maintainConnection();
 
-var accuracy = 1 			// Seconds, ie. what to average at (60 => 1 minute averages)
 
 /* Method to extract archived sensor data (JSON) */
 function getData(time1, timeT, req, res) {
@@ -258,7 +264,7 @@ function getData(time1, timeT, req, res) {
 				ORDER BY logged DESC \
 				LIMIT 43200;'
 				
-	var q = c.query(sql, [time0, timeT, devices, accuracy], function(err, result) {
+	var q = c.query(sql, [time0, timeT, devices, options.averaging], function(err, result) {
 		res.setHeader('Content-Type', 'application/json');
 		
 		if (!err) {
@@ -303,7 +309,7 @@ function analyzeData(ownerKey, triggerSensor, triggerValue) {
 	
 	analysisTimestamps[ownerKey] = new Date()
 	
-	var analysis = c.query(sql, [now - period * 60, now, [ownerKey], accuracy], function(err, result) {
+	var analysis = c.query(sql, [now - period * 60, now, [ownerKey]], function(err, result) {
 				
 		if (err)
 			return nodeLog("Mysql error while analyzing from archive: " + JSON.stringify(err))
@@ -464,7 +470,7 @@ function getUserDevices(req) {
 }
 
 function notify(device, title, message) {
-	console.log("Notifying " + device + ": " + message)
+	nodeLog("Notifying " + device + ": " + message)
 	var clients = deviceClients[device] || []
 	clients.forEach(function (elem, i, arr) {
 		ioServer.to(elem).emit(device, {title: title, message: message})

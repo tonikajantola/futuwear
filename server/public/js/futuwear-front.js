@@ -15,34 +15,33 @@ function json(data) {
 }
 
 // FROM http://stackoverflow.com/questions/3177836/how-to-format-time-since-xxx-e-g-4-minutes-ago-similar-to-stack-exchange-site
-		function timeSince(date) {
+function timeSince(date) {
 
-			var seconds = Math.floor((new Date() - date) / 1000);
+	var seconds = Math.floor((new Date() - date) / 1000);
 
-			var interval = Math.floor(seconds / 31536000);
+	var interval = Math.floor(seconds / 31536000);
 
-			if (interval > 1) {
-				return interval + " years";
-			}
-			interval = Math.floor(seconds / 2592000);
-			if (interval > 1) {
-				return interval + " months";
-			}
-			interval = Math.floor(seconds / 86400);
-			if (interval > 1) {
-				return interval + " days";
-			}
-			interval = Math.floor(seconds / 3600);
-			if (interval > 1) {
-				return interval + " hours";
-			}
-			interval = Math.floor(seconds / 60);
-			if (interval > 1) {
-				return interval + " minutes";
-			}
-			return Math.floor(seconds) + " seconds";
-		}
-		
+	if (interval > 1) {
+		return interval + " years";
+	}
+	interval = Math.floor(seconds / 2592000);
+	if (interval > 1) {
+		return interval + " months";
+	}
+	interval = Math.floor(seconds / 86400);
+	if (interval > 1) {
+		return interval + " days";
+	}
+	interval = Math.floor(seconds / 3600);
+	if (interval > 1) {
+		return interval + " hours";
+	}
+	interval = Math.floor(seconds / 60);
+	if (interval > 1) {
+		return interval + " minutes";
+	}
+	return Math.floor(seconds) + " seconds";
+}
 
 
 function createCookie(name,value,days) {
@@ -72,7 +71,7 @@ function removeCookie(name) {
 
 var deviceColors = {}
 
-function appendVisualiser(viewContainer, sensorName, device, containerID) {
+function appendVisualiser(viewContainer, sensorName, device, containerID, is3D) {
 	
 	var sensorID = (sensorName + "_" + device).replace(/\W/g, '_')
 	
@@ -92,7 +91,6 @@ function appendVisualiser(viewContainer, sensorName, device, containerID) {
 		});
 		
 		var domify = function (newVal) {
-			console.log("Domifying " + sensorID)
 			$("#sensor-" + sensorID)
 				.val(newVal)
 				.trigger('change');
@@ -100,7 +98,7 @@ function appendVisualiser(viewContainer, sensorName, device, containerID) {
 		
 		viewContainer[sensorID] = function(newVal) {
 		
-			if (sensorName.indexOf("_") > -1) // Assuming Torso-related names always have an underscore
+			if (is3D) 
 				postToFrame(sensorName, newVal)
 			
 			domify(newVal)
@@ -136,11 +134,6 @@ function postToFrame(callbackID, sensorValue) {
 var torsoVisible = false
 var bounds = {min: 0, max: 1000}
 var views = {} // List of callback functions
-
-
-
-
-		
 		
 function timeString(hours, minutes, seconds) {
 	var clock = [hours, minutes, seconds]

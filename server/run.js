@@ -5,12 +5,17 @@ const SOCKET_SERVER = "http://futuwear.tunk.org:13337/"; // Where to listen to V
 const options = {
 	analyzation: {
 		riskyMuscles: ["Back_Y", "Back_X"], // Muscles that should be excercised every now and then
-		period: 60 //Seconds
+		criticalMuscles: ["R_Pressure", "L_Pressure"], // Muscles that should remain under criticalThreshold
+		criticalThreshold: 500,
+		period: 60, // Seconds to wait before analyzing/warning again
+		historyMins: 1, // When analyzing data, how far back should data be gotten from?
+		deviationThreshold: 30 // For riskyMuscles, how much should the std be so that a notification won't fire
 	}
 }
 
-// Remember when a device has gone through its last analysis
+// Remember when a device has gone through its last analysis / been warned
 var analysisTimestamps = {} // {"devicename": new Date()}
+var warningsTimestamps = {}
 
 // Remember which socket clients want notifications for which devices
 var deviceClients = {} // {"devicename": ["socketid1", "socketid2"]}
@@ -45,7 +50,7 @@ app.get('/fetch', function (req, res) {
 	getData(parseInt(content.time0), parseInt(content.timeT), req, res)
 });
 
-/* Method to register a new sensor with */
+/* Method to register a new device with */
 app.get('/register', function (req, res) {
 		
 	try {
@@ -113,7 +118,7 @@ ioServer.on('connection', function (socket) {
 				deviceClients[deviceName] = clientlist
 			}
 			
-			if (devices.length > 0) notify(devices[0], "Hello world!", "The notification system is connected. /" + new Date())
+			//if (devices.length > 0) notify(devices[0], "Hello world!", "The notification system is connected. /" + new Date())
 			
 		} catch (e) {
 			
@@ -270,9 +275,18 @@ function getData(time1, timeT, req, res) {
 }
 
 /* Method to analyze posture variation over time*/
-function analyzeData(ownerKey) {
+function analyzeData(ownerKey, triggerSensor, triggerValue) {
+	
+	var tooSoon = warningsTimestamps[ownerKey] && (new Date() - warningsTimestamps[ownerKey]) < options.analyzation.period * 1000
+	
+	if (!tooSoon && options.analyzation.criticalMuscles.indexOf(triggerSensor) >= 0 && triggerValue >= options.analyzation.criticalThreshold) {
+		notify(ownerKey, "Watch out!","Sensor " + triggerSensor + " is under excessive strain. <!--" + triggerValue + "-->") // 
+		warningsTimestamps[ownerKey] = new Date();
+	}
+
+	//// Analyze standard deviation
 		
-	var tooSoon = !analysisTimestamps[ownerKey] || (new Date() - analysisTimestamps[ownerKey]) < options.analyzation.period * 1000 // Only run this every options.analyzation.period seconds, because it's an intensive process
+	tooSoon = !analysisTimestamps[ownerKey] || (new Date() - analysisTimestamps[ownerKey]) < options.analyzation.period * 1000 // Only run this every options.analyzation.period seconds, because it's an intensive process
 	
 	if (tooSoon)
 		return analysisTimestamps[ownerKey] = analysisTimestamps[ownerKey] || new Date()
@@ -285,7 +299,7 @@ function analyzeData(ownerKey) {
 				LIMIT 100;'
 				
 	var now = Math.ceil(Date.now()/1000)
-	var period = 60 // Mins 
+	var period = options.analyzation.historyMins // Mins 
 	
 	analysisTimestamps[ownerKey] = new Date()
 	
@@ -301,7 +315,9 @@ function analyzeData(ownerKey) {
 			if (options.analyzation.riskyMuscles.indexOf(sensor.sensorName) < 0) 
 				continue
 			
-			notify(sensor.device, "You've been still for a while now", sensor.sensorName + " needs a shake, because it's standard deviation is " +sensor.std) // FIXME: Only fire when relevant
+			if (parseInt(sensor.std) < options.analyzation.deviationThreshold)
+				notify(sensor.device, "Get up and take a break.<!-- STD is " +sensor.std + "-->", "Your " + sensor.sensorName + " has been still for a while")
+			else nodeLog(sensor.device + "'s " + sensor.sensorName + " is fine, std=" + sensor.std)
 		}		
 	});
 }
@@ -312,9 +328,11 @@ function saveData(deviceName, sensorName, val, failCallback) {
 	// First make sure that the sensor exists
 	c.query('SELECT DISTINCT ID FROM Sensors WHERE name=? AND ownerKey=?;', [sensorName, deviceName], function(err, result) {
 		try {
+			if (err)
+				throw new Error("Problem with sensor!");
 			var sensorExists = result.length > 0
 			if (!sensorExists) {
-				var id = sensorName + "_" + Math.round(Math.random()*1000000)
+				var id = sensorName + "-" + deviceName
 				saveSensor(id, sensorName, deviceName) // Register the sensor
 				
 				throw new Error("Sensor " + sensorName + " for device " + deviceName + " had not been registered.");
@@ -323,7 +341,7 @@ function saveData(deviceName, sensorName, val, failCallback) {
 			var sensorID = result[0].ID
 			var insertion = {sensorID: sensorID, val: val} // Information to INSERT INTO the "Data" table
 			
-			analyzeData(deviceName)
+			analyzeData(deviceName, sensorName, val)
 			
 			c.query('INSERT INTO Data SET ?;', insertion, function(err, result) {
 				if (err)
@@ -381,6 +399,7 @@ function getSensors(req, res) {
 		res.setHeader('Content-Type', 'application/json');
 		
 		if (!err) {			
+			nodeLog("No sensors found for user.")
 			res.send(JSON.stringify(result, null, 3));	
 		}
 		else  {

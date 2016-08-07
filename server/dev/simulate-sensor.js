@@ -6,23 +6,49 @@ var serial = "1234"
 var uuid = "1:2:3:4"
 const crypto = require('crypto');
 
-var variation = 40
+var variation = 50
+var variation1 = 20
+var rands = {}
+
+var max = 1000
+var min = 0
 
 
-function rand(min, max) {
+function rand(id) {
 	var random = Math.random()
 	var addition = (random - 0.5) * 2 * variation
+	var current = isNaN(rands[id]) ? 500 : rands[id]
 	current = Math.floor(current + addition)
 	if (current > max)
 		current = max
 	else if (current < min) {
 		current = min
 	}
+	rands[id] = current
 	return current//Math.floor(Math.random() * (max - min)) + min
 }
 
+var avg = 500
+function keepSteady() {
+	var random = Math.random()
+	var addition = (random - 0.5) * 2 * variation1
+	current1 = Math.floor(current1 + addition)
+	if (current1 > 525)
+		current1 = 525
+	else if (current1 < 475) {
+		current1 = 475
+	}
+	return current1//Math.floor(Math.random() * (max - min)) + min
+	
+}
 
-var current = 500
+var current1 = 500
+
+var pressure = 3
+
+var triggerElbow = process.argv.length > 2
+if (triggerElbow)
+	pressure = 600
 
 
 function payload() {
@@ -30,12 +56,37 @@ function payload() {
 			[{
 				"name": "Back_X",
 				"collection": [{
-					"value": 500
+					"value": keepSteady(0, 1000)
 				}]
 			},{
 				"name": "Back_Y",
 				"collection": [{
-					"value": rand(0, 1000)
+					"value": rand(1)
+				}]
+			},{
+				"name": "L_Shoulder_X_Rot",
+				"collection": [{
+					"value": rand(2)
+				}]
+			},{
+				"name": "L_Shoulder_Y_Rot",
+				"collection": [{
+					"value": rand(3)
+				}]
+			},{
+				"name": "R_Shoulder_X_Rot",
+				"collection": [{
+					"value": rand(4)
+				}]
+			},{
+				"name": "R_Shoulder_Y_Rot",
+				"collection": [{
+					"value": rand(5)
+				}]
+			},{
+				"name": "R_Pressure",
+				"collection": [{
+					"value": pressure
 				}]
 			}]
 		}

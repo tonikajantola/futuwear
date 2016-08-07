@@ -85,6 +85,7 @@
 				<iframe style="border:0px;" id="torso">Your browser doesn't support iframes, so we can't visualise real-time posture data.</iframe>
 			</div>
 		</div>
+		<div id="multi-device-notify"></div>
 		<br><br><hr><br>
 		
 		<textarea id="lastMsg" style="display:none;width:100%;min-height:10em;"></textarea><br>
@@ -117,17 +118,6 @@
 			console.log("Registered " + devices.join(" and "))
 		})
 		
-		var uuidNames = {}
-		
-		node.on("uuid-confirm", function(resp) {
-			try {
-				var translation = json(resp)				
-				uuidNames[translation.uuid] = translation.name
-				console.log("Got UUID for " + translation.name)
-			} catch (e) {
-				console.log("JSON data problem in UUID conversion: " + e.message)
-			}
-		});
 		
 		
 		vor.on('message', function(resp){
@@ -137,20 +127,16 @@
 			
 			try {
 				var sensors = json(resp)["sensors"]
-				var uuid = json(resp)["uuid"]
+				var uuid = json(resp)["uuid"]				
+				var device = json(resp)["name"]
 				
-				uuidNames[uuid] = json(resp)["name"]
+				var deviceInCookie = devices.indexOf(device)
 				
-				var device = uuidNames[uuid]
-				
-				if (sensors == undefined || uuid == undefined)
-					throw new Error("A required field in vör message is absent.")
-				else if (typeof device == "undefined")
-					return console.log("Discarded vör message")
+				if (sensors == undefined || uuid == undefined || device == undefined || deviceInCookie < 0)
+					throw new Error("Discarding irrelevant Vör message.")
 				else if (!sensors[0])
 					sensors = [sensors] // Deal with single-sensor JSON data
-				
-				console.log("Received readings from " + sensors.length + " sensors.")
+					
 			
 				// Iterate through all the received sensors
 				for (var i = 0; i < sensors.length; i++) {
@@ -160,7 +146,12 @@
 					var sensor = sensors[i]
 					var value = parseInt(sensor.collection[0].value)
 					
-					var sensorID = appendVisualiser(views, sensor.name, device, "knobs")
+					var supports3dAnimation = sensor.name.indexOf("_") > -1 && deviceInCookie == 0 // Assuming Torso-related names always have an underscore
+					
+					if (supports3dAnimation && devices.length > 1)
+						$("#multi-device-notify").html("Only <b>" + devices[0] + "</b> will be visualized.")
+					
+					var sensorID = appendVisualiser(views, sensor.name, device, "knobs", supports3dAnimation) 
 					var callback = views[sensorID]
 					callback(value - bounds.min)
 				}
@@ -188,6 +179,7 @@
 					break;
 				default:
 					deviceMsg += "You are watching <strong>"+devices.length+"</strong> devices <a href='#' onclick='showDevices(this)'>(show)</a>"
+					
 					break;
 			}
 			for (var i = 0; i < devices.length; i++) {

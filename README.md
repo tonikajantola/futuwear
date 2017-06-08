@@ -1,8 +1,6 @@
 Futuwear - the posture-tracking smart shirt project
 ================
 
-https://protopaja.aalto.fi/asiakkaat/futurice/
-
 Contents
 ----------------
 * **Blender/** 3D visualization source files (for web UI)
